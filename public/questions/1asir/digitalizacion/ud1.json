@@ -1,0 +1,236 @@
+[
+    {
+        "title": "Tema 1: Digitalización y Transformación Digital"
+    },
+    {
+        "question": "¿Qué caracteriza a la Primera Revolución Industrial (1784-1870)?",
+        "options": [
+            "Uso de la electricidad y producción en masa",
+            "Automatización mediante ordenadores",
+            "Producción mecanizada impulsada por la máquina de vapor",
+            "Conectividad digital y robótica avanzada"
+        ],
+        "answer": 2,
+        "explanation": "La Primera Revolución Industrial marcó el paso de una producción artesanal a una mecanizada, gracias a la invención de la máquina de vapor. "
+    },
+    {
+        "question": "¿Qué permitió la electricidad en la Segunda Revolución Industrial?",
+        "options": [
+            "La automatización completa con robots",
+            "La producción en masa mediante motores eléctricos y la cadena de montaje",
+            "El inicio de la era digital",
+            "La sustitución del carbón por energía nuclear"
+        ],
+        "answer": 1,
+        "explanation": "La electricidad posibilitó la independencia mecánica y la producción en masa con la cadena de montaje. "
+    },
+    {
+        "question": "¿Cuál fue el principal avance de la Tercera Revolución Industrial?",
+        "options": [
+            "El uso de vapor en las fábricas",
+            "La mecanización de procesos agrícolas",
+            "La automatización mediante electrónica y ordenadores",
+            "La introducción de la electricidad"
+        ],
+        "answer": 2,
+        "explanation": "Se caracteriza por la automatización de la producción con ordenadores, robots y sistemas electrónicos. "
+    },
+    {
+        "question": "¿Qué define a la Cuarta Revolución Industrial o Industria 4.0?",
+        "options": [
+            "El paso de la automatización a la autonomía de los sistemas mediante tecnologías digitales",
+            "El uso masivo de vapor para generar energía",
+            "La invención del telégrafo y la radio",
+            "El aumento de fábricas de hierro"
+        ],
+        "answer": 0,
+        "explanation": "La Industria 4.0 combina el mundo físico y digital con tecnologías habilitadoras como IoT, IA, cloud computing y robótica. "
+    },
+    {
+        "question": "¿Qué es un sistema ciberfísico según el documento?",
+        "options": [
+            "Un robot que almacena datos en la nube",
+            "Un sistema que integra la parte física con la digital mediante redes y algoritmos",
+            "Una máquina industrial desconectada de internet",
+            "Un programa informático sin hardware asociado"
+        ],
+        "answer": 1,
+        "explanation": "Los sistemas ciberfísicos combinan sensores, actuadores y software conectados en red para optimizar procesos. "
+    },
+    {
+        "question": "¿Qué diferencia hay entre digitalización y transformación digital?",
+        "options": [
+            "Son exactamente lo mismo",
+            "La digitalización es convertir lo físico a digital, la transformación digital implica un cambio estratégico global",
+            "La digitalización afecta solo a marketing, la transformación solo a producción",
+            "La transformación digital solo aplica a empresas tecnológicas"
+        ],
+        "answer": 1,
+        "explanation": "La digitalización convierte información física en digital; la transformación digital implica un rediseño integral del negocio apoyado en tecnología. "
+    },
+    {
+        "question": "¿Qué importancia tiene un plan de digitalización?",
+        "options": [
+            "Sirve solo para comprar equipos informáticos",
+            "Permite estructurar la transición digital mediante diagnóstico, objetivos y recursos",
+            "Se usa para sustituir trabajadores por robots",
+            "Es una guía únicamente para el departamento de IT"
+        ],
+        "answer": 1,
+        "explanation": "Un plan de digitalización ofrece una hoja de ruta con diagnóstico, objetivos, alineación estratégica, recursos y gestión del cambio. "
+    },
+    {
+        "question": "¿Qué objetivos tiene la Agenda España Digital?",
+        "options": [
+            "Impulsar la digitalización centrada en las personas y el crecimiento económico sostenible",
+            "Eliminar la burocracia en las empresas",
+            "Privatizar los servicios tecnológicos públicos",
+            "Reducir el uso de internet en zonas rurales"
+        ],
+        "answer": 0,
+        "explanation": "España Digital busca transformar el país digitalmente poniendo a las personas en el centro y potenciando la economía digital. "
+    },
+    {
+        "question": "¿Cuál de las siguientes es un aspecto clave de la transformación digital?",
+        "options": [
+            "Digitalización de procesos y uso de datos para la toma de decisiones",
+            "Aumento de los procesos manuales",
+            "Eliminar el liderazgo ejecutivo",
+            "Evitar la colaboración digital"
+        ],
+        "answer": 0,
+        "explanation": "Los aspectos clave incluyen digitalización de procesos, análisis de datos, experiencia del cliente, colaboración e innovación. "
+    },
+    {
+        "question": "¿Cuál de estos tipos de transformación digital redefine la propuesta de valor del negocio?",
+        "options": [
+            "Transformación de procesos empresariales",
+            "Transformación del modelo de negocio",
+            "Transformación del dominio empresarial",
+            "Transformación cultural"
+        ],
+        "answer": 1,
+        "explanation": "La transformación del modelo de negocio revisa la propuesta de valor y los canales de ingresos mediante herramientas digitales. "
+    },
+    {
+        "question": "¿Qué diferencia hay entre entorno IT y entorno OT?",
+        "options": [
+            "IT gestiona información y software, OT controla procesos físicos y maquinaria",
+            "IT trabaja en fábricas, OT en oficinas",
+            "OT se encarga de marketing y ventas",
+            "IT maneja robots industriales exclusivamente"
+        ],
+        "answer": 0,
+        "explanation": "El entorno IT gestiona datos e infraestructura digital; OT gestiona procesos físicos e industriales en tiempo real. "
+    },
+    {
+        "question": "¿Qué beneficios aporta la convergencia entre IT y OT?",
+        "options": [
+            "Duplica los sistemas y aumenta los costes",
+            "Facilita la eficiencia, innovación y toma de decisiones basadas en datos",
+            "Reduce la automatización industrial",
+            "Evita la comunicación entre departamentos"
+        ],
+        "answer": 1,
+        "explanation": "La integración IT-OT permite mayor eficiencia, agilidad e innovación mediante datos unificados y procesos conectados. "
+    },
+    {
+        "question": "¿Qué tecnologías destacan en la digitalización en planta?",
+        "options": [
+            "Gemelos digitales, IoT, realidad aumentada y sistemas de control avanzado",
+            "ERP y blockchain",
+            "CRM y redes sociales",
+            "Bases de datos SQL y hojas de cálculo"
+        ],
+        "answer": 0,
+        "explanation": "La digitalización operativa aplica IoT, gemelos digitales, RA/RV y automatización para optimizar procesos industriales. "
+    },
+    {
+        "question": "¿Qué herramientas son claves en la digitalización en negocio?",
+        "options": [
+            "ERP, big data, inteligencia artificial y cloud computing",
+            "PLC y sensores industriales",
+            "Dispositivos de control físico",
+            "Motores eléctricos y poleas"
+        ],
+        "answer": 0,
+        "explanation": "A nivel empresarial, destacan ERP, big data, IA, blockchain, cloud e IoT para gestión integral y estrategia digital. "
+    },
+    {
+        "question": "¿Qué ventajas ofrece una transformación digital integral?",
+        "options": [
+            "Aumento de costes y rigidez operativa",
+            "Automatización, decisiones basadas en datos, mejora de experiencia y seguridad",
+            "Eliminación del trabajo humano",
+            "Mayor dependencia manual"
+        ],
+        "answer": 1,
+        "explanation": "Una digitalización total ofrece eficiencia, análisis inteligente, experiencia del cliente mejorada y ciberseguridad. "
+    },
+    {
+        "question": "¿Qué riesgo principal se menciona al implantar tecnología en la empresa?",
+        "options": [
+            "El exceso de innovación",
+            "La dependencia tecnológica y la necesidad de ciberseguridad",
+            "El bajo coste de mantenimiento",
+            "La falta de empleados"
+        ],
+        "answer": 1,
+        "explanation": "La implantación tecnológica genera dependencia y requiere estrategias sólidas de ciberseguridad y planes de contingencia. "
+    },
+    {
+        "question": "¿Qué papel juega la cultura organizacional en la transformación digital?",
+        "options": [
+            "No tiene relevancia",
+            "Debe cambiar para fomentar la innovación, la formación y la adaptabilidad",
+            "Solo aplica al departamento de recursos humanos",
+            "Debe evitar la automatización"
+        ],
+        "answer": 1,
+        "explanation": "La cultura organizacional es esencial: fomenta apertura al cambio, aprendizaje continuo y aceptación de la tecnología. "
+    },
+    {
+        "question": "¿Qué es un ERP según el texto?",
+        "options": [
+            "Un programa de edición de texto",
+            "Un sistema integrado de planificación de recursos empresariales",
+            "Una red social corporativa",
+            "Un hardware de automatización"
+        ],
+        "answer": 1,
+        "explanation": "ERP (Enterprise Resource Planning) integra la gestión de finanzas, RR.HH. y logística en una sola plataforma. "
+    },
+    {
+        "question": "¿Cuál es un ejemplo de transformación digital del dominio empresarial?",
+        "options": [
+            "Uso de drones y sensores para optimizar cultivos",
+            "Implementar un programa de formación",
+            "Abrir un canal de e-commerce",
+            "Crear una app móvil para clientes"
+        ],
+        "answer": 0,
+        "explanation": "En el dominio empresarial se integran tecnologías digitales para optimizar operaciones específicas del sector, como la agricultura. "
+    },
+    {
+        "question": "¿Qué busca la transformación digital de procesos empresariales?",
+        "options": [
+            "Reducir la eficiencia",
+            "Eliminar la digitalización",
+            "Optimizar flujos de trabajo mediante automatización",
+            "Aumentar la burocracia interna"
+        ],
+        "answer": 2,
+        "explanation": "Pretende reingeniería y optimización de flujos de trabajo internos y externos con tecnología digital. "
+    },
+    {
+        "question": "¿Por qué es clave la ciberseguridad en la digitalización?",
+        "options": [
+            "Porque los datos y sistemas digitales requieren protección frente a amenazas",
+            "Porque ralentiza los procesos digitales",
+            "Porque impide usar redes públicas",
+            "Porque sustituye a la formación del personal"
+        ],
+        "answer": 0,
+        "explanation": "La digitalización aumenta la exposición a riesgos, por lo que la ciberseguridad protege la integridad y confidencialidad. "
+    }
+]

@@ -1,0 +1,456 @@
+[
+    {
+        "title": "Unidad Didáctica 1: Señales y Sistemas de Transmisión"
+    },
+    {
+        "question": "¿Qué estudia la capa física según el documento?",
+        "options": [
+            "El diseño de aplicaciones",
+            "La transmisión de bits como señales a través de un medio",
+            "La gestión de sesiones entre procesos",
+            "El cifrado de extremo a extremo"
+        ],
+        "answer": 1,
+        "explanation": "La capa física se ocupa de la transmisión de bits a lo largo de un canal de comunicación, convirtiendo datos en señales electromagnéticas adecuadas para el medio. "
+    },
+    {
+        "question": "¿Qué se debe hacer con la información antes de enviarla por una red?",
+        "options": [
+            "Convertirla directamente a paquetes IP",
+            "Transformarla en señales electromagnéticas",
+            "Comprimirla con ZIP",
+            "Compilarla a lenguaje máquina"
+        ],
+        "answer": 1,
+        "explanation": "La información, incluso si está en bits, debe transformarse en energía en forma de señales electromagnéticas para ser transmitida por el medio. "
+    },
+    {
+        "question": "¿Cuál de las siguientes NO es una tecnología de transmisión citada?",
+        "options": [
+            "Ondas eléctricas en conductores",
+            "Ondas de radio por el espacio",
+            "Ondas luminosas por fibra",
+            "Ondas gravitacionales en vacío"
+        ],
+        "answer": 3,
+        "explanation": "Se citan ondas eléctricas en conductores, ondas de radio u otras de mayor frecuencia y ondas luminosas en fibra, no ondas gravitacionales. "
+    },
+    {
+        "question": "Analógico indica…",
+        "options": [
+            "Valores discretos sin intermedios",
+            "Valores continuos dentro de un rango",
+            "Datos siempre binarios",
+            "Señales únicamente de baja frecuencia"
+        ],
+        "answer": 1,
+        "explanation": "Analógico se refiere a magnitudes continuas; digital, a valores discretos. "
+    },
+    {
+        "question": "Un ejemplo de dato analógico mencionado es:",
+        "options": [
+            "Archivo JSON",
+            "Voz humana",
+            "Clave RSA",
+            "Dirección IP"
+        ],
+        "answer": 1,
+        "explanation": "La voz humana se cita como un ejemplo de dato analógico que genera una onda continua en el aire. "
+    },
+    {
+        "question": "Un ejemplo de dato digital citado es:",
+        "options": [
+            "Señal de radio AM",
+            "Temperatura ambiente",
+            "Bits almacenados en memoria",
+            "Sonido acústico"
+        ],
+        "answer": 2,
+        "explanation": "Los datos en memoria como ceros y unos son un ejemplo de dato digital que puede convertirse en señal digital. "
+    },
+    {
+        "question": "Una señal digital se caracteriza por:",
+        "options": [
+            "Transiciones instantáneas entre valores definidos",
+            "Cambios suaves e infinitos valores intermedios",
+            "Siempre ser periódica",
+            "No poder representarse en el tiempo"
+        ],
+        "answer": 0,
+        "explanation": "La señal digital tiene un número limitado de valores con transiciones instantáneas; la analógica cambia suavemente. "
+    },
+    {
+        "question": "Una señal analógica simple (onda seno) se describe completamente por:",
+        "options": [
+            "Amplitud, periodo o frecuencia y fase",
+            "Voltaje y corriente únicamente",
+            "Código de línea y sincronía",
+            "Tasa de bit y paridad"
+        ],
+        "answer": 0,
+        "explanation": "La onda seno queda determinada por amplitud, periodo/frecuencia y fase. "
+    },
+    {
+        "question": "La amplitud se mide típicamente en:",
+        "options": [
+            "Voltios, amperios o vatios",
+            "Bits por segundo",
+            "Hertz",
+            "Metros por segundo"
+        ],
+        "answer": 0,
+        "explanation": "Según el tipo de señal puede expresarse en V, A o W; es la altura de la señal. "
+    },
+    {
+        "question": "Relación correcta entre periodo (T) y frecuencia (f):",
+        "options": [
+            "f = T",
+            "f = 1/T",
+            "T = f",
+            "T = f^2"
+        ],
+        "answer": 1,
+        "explanation": "Periodo y frecuencia son inversos: f = 1/T y T = 1/f. "
+    },
+    {
+        "question": "La frecuencia puede interpretarse como:",
+        "options": [
+            "Velocidad de cambio con respecto al tiempo",
+            "Cantidad de energía almacenada",
+            "Número de bits por paquete",
+            "Longitud de onda en metros"
+        ],
+        "answer": 0,
+        "explanation": "El texto destaca la frecuencia como medida de la velocidad de cambio temporal de la señal. "
+    },
+    {
+        "question": "La fase mide:",
+        "options": [
+            "El retardo en el dominio de la frecuencia",
+            "La posición de la onda respecto al instante 0",
+            "La energía total de una señal",
+            "La relación señal/ruido"
+        ],
+        "answer": 1,
+        "explanation": "La fase describe el desplazamiento de la onda en el eje temporal respecto al tiempo cero, en grados o radianes. "
+    },
+    {
+        "question": "Un desplazamiento de 180° equivale a:",
+        "options": [
+            "Un periodo completo",
+            "La mitad de un periodo",
+            "Un cuarto de periodo",
+            "Dos periodos"
+        ],
+        "answer": 1,
+        "explanation": "360° corresponde a un periodo completo; 180° a medio periodo; 90° a un cuarto. "
+    },
+    {
+        "question": "Una señal periódica se define como aquella que:",
+        "options": [
+            "Tiene valores aleatorios",
+            "Se repite continuamente en el tiempo",
+            "Es siempre digital",
+            "No puede descomponerse"
+        ],
+        "answer": 1,
+        "explanation": "Una señal es periódica si su patrón se repite a lo largo del tiempo de forma continua. "
+    },
+    {
+        "question": "Una señal analógica compuesta se puede descomponer en:",
+        "options": [
+            "Pulsos rectangulares",
+            "Una colección de ondas seno",
+            "Ruido blanco",
+            "Armónicos únicamente pares"
+        ],
+        "answer": 1,
+        "explanation": "Cualquier señal periódica puede representarse como suma de senoidales (análisis de Fourier). "
+    },
+    {
+        "question": "Un gráfico en el dominio del tiempo muestra:",
+        "options": [
+            "Amplitud frente a frecuencia",
+            "Fase frente a amplitud",
+            "Amplitud frente al tiempo",
+            "Frecuencia frente a fase"
+        ],
+        "answer": 2,
+        "explanation": "La traza temporal representa la amplitud instantánea como función del tiempo. "
+    },
+    {
+        "question": "Un gráfico en el dominio de la frecuencia muestra:",
+        "options": [
+            "Amplitud máxima frente a frecuencia",
+            "Tiempo frente a amplitud",
+            "Fase frente a tiempo",
+            "Frecuencia frente a tiempo"
+        ],
+        "answer": 0,
+        "explanation": "La traza espectral relaciona la amplitud (habitualmente máxima) con las frecuencias presentes. "
+    },
+    {
+        "question": "El espectro de frecuencia de una señal es:",
+        "options": [
+            "La potencia total disipada",
+            "La colección de frecuencias componente que contiene",
+            "La relación señal/ruido",
+            "La fase media de la señal"
+        ],
+        "answer": 1,
+        "explanation": "El espectro recoge todas las componentes senoidales que constituyen la señal. "
+    },
+    {
+        "question": "El ancho de banda de una señal se define como:",
+        "options": [
+            "La suma de todas las frecuencias",
+            "La diferencia entre la mayor y menor frecuencia del espectro",
+            "La potencia media en vatios",
+            "El área bajo la curva temporal"
+        ],
+        "answer": 1,
+        "explanation": "Es el rango de frecuencias: f_max − f_min en las componentes significativas de la señal. "
+    },
+    {
+        "question": "Señales de baja frecuencia en frecuencia corresponden a:",
+        "options": [
+            "Periodos cortos en el tiempo",
+            "Periodos largos en el tiempo",
+            "Amplitudes nulas",
+            "Fase constante cero"
+        ],
+        "answer": 1,
+        "explanation": "Baja frecuencia implica periodo largo en el dominio del tiempo y viceversa. "
+    },
+    {
+        "question": "Una señal que cambia rápidamente en el tiempo se corresponde con:",
+        "options": [
+            "Frecuencias altas",
+            "Frecuencias bajas",
+            "Amplitud cero",
+            "Periodo infinito"
+        ],
+        "answer": 0,
+        "explanation": "Cambios rápidos implican frecuencias altas en el dominio de la frecuencia. "
+    },
+    {
+        "question": "¿Qué término describe la descomposición de una señal compuesta en senoidales?",
+        "options": [
+            "Transformada de Laplace",
+            "Análisis de Fourier",
+            "Interpolación de Lagrange",
+            "Transformada Z"
+        ],
+        "answer": 1,
+        "explanation": "El análisis de Fourier permite representar señales periódicas como suma de senoidales. "
+    },
+    {
+        "question": "En el dominio de la frecuencia, una señal compuesta se visualiza como:",
+        "options": [
+            "Una única curva continua",
+            "Una serie de componentes independientes",
+            "Una nube de puntos aleatoria",
+            "Un único pico a f=0"
+        ],
+        "answer": 1,
+        "explanation": "El gráfico espectral muestra barras/picos por cada componente con su amplitud relativa. "
+    },
+    {
+        "question": "En señales digitales, en lugar de periodo y frecuencia se usan:",
+        "options": [
+            "Intervalo de bit y tasa de bit",
+            "Voltaje y corriente",
+            "Latencia y jitter",
+            "Amplitud y fase"
+        ],
+        "answer": 0,
+        "explanation": "Para señales típicamente aperiódicas se emplean intervalo de bit (tiempo por bit) y tasa de bit (bps). "
+    },
+    {
+        "question": "El intervalo de bit es:",
+        "options": [
+            "Número de bits por segundo",
+            "Tiempo necesario para enviar un bit",
+            "Número de símbolos por baudio",
+            "Retardo de propagación"
+        ],
+        "answer": 1,
+        "explanation": "Intervalo de bit: duración temporal de un bit individual en la transmisión. "
+    },
+    {
+        "question": "La tasa de bit (bit rate) es:",
+        "options": [
+            "El inverso del periodo de la portadora",
+            "El número de bits enviados por segundo (bps)",
+            "El número de muestras por ciclo",
+            "La diferencia de fases entre armónicos"
+        ],
+        "answer": 1,
+        "explanation": "La tasa de bit mide bits por segundo transmitidos, expresada en bps. "
+    },
+    {
+        "question": "Una señal digital ideal contiene:",
+        "options": [
+            "Un número finito de armónicos",
+            "Un número infinito de armónicos",
+            "Solo la componente continua",
+            "Únicamente armónicos pares"
+        ],
+        "answer": 1,
+        "explanation": "Una señal digital puede descomponerse en infinitas senoidales (armónicos) de distintas amplitudes, frecuencias y fases. "
+    },
+    {
+        "question": "¿Por qué una señal digital se distorsiona en un medio real?",
+        "options": [
+            "Porque ningún medio transmite todo el espectro infinito",
+            "Porque el receptor no tiene reloj",
+            "Porque la amplitud siempre es nula",
+            "Porque no existe ruido térmico"
+        ],
+        "answer": 0,
+        "explanation": "Los medios reales limitan el rango de frecuencias transferibles, provocando cierta corrupción de la forma de onda. "
+    },
+    {
+        "question": "El espectro significativo de una señal digital es:",
+        "options": [
+            "Todas las frecuencias posibles",
+            "Solo las componentes cuyas amplitudes son relevantes para reconstruir la señal",
+            "Las frecuencias por debajo de 50 Hz",
+            "La componente continua exclusivamente"
+        ],
+        "answer": 1,
+        "explanation": "Se pueden transmitir las componentes con amplitud suficiente; su rango define el ancho de banda significativo. "
+    },
+    {
+        "question": "El ancho de banda significativo se refiere a:",
+        "options": [
+            "La potencia mínima necesaria",
+            "El rango de frecuencias con amplitud relevante para reconstruir la señal con mínima distorsión",
+            "La suma de amplitudes de todos los armónicos",
+            "La fase promedio del espectro"
+        ],
+        "answer": 1,
+        "explanation": "Es el intervalo de frecuencias de las componentes significativas que permiten una reconstrucción razonablemente fiel. "
+    },
+    {
+        "question": "En la representación temporal de una señal compuesta se aprecia mejor:",
+        "options": [
+            "La independencia de cada componente",
+            "La interacción entre componentes en la forma de onda total",
+            "La potencia promedio por frecuencia",
+            "La densidad espectral de ruido"
+        ],
+        "answer": 1,
+        "explanation": "La traza en el tiempo muestra cómo se combinan las senoidales para formar la señal resultante. "
+    },
+    {
+        "question": "En la representación frecuencial de una señal compuesta se aprecia mejor:",
+        "options": [
+            "La forma de onda exacta en el tiempo",
+            "Las frecuencias relativas y sus amplitudes",
+            "La variación de fase en el tiempo",
+            "El retardo de propagación"
+        ],
+        "answer": 1,
+        "explanation": "El dominio de la frecuencia ofrece una vista concisa de componentes y sus amplitudes relativas. "
+    },
+    {
+        "question": "Una señal analógica simple NO puede:",
+        "options": [
+            "Describirse por amplitud, frecuencia y fase",
+            "Descomponerse en señales más simples",
+            "Representarse en el dominio del tiempo",
+            "Tener amplitud máxima"
+        ],
+        "answer": 1,
+        "explanation": "Una onda seno es indivisible en señales más simples; por eso se denomina simple. "
+    },
+    {
+        "question": "Para una onda seno, la amplitud máxima representa:",
+        "options": [
+            "La fase inicial",
+            "El valor más alto sobre el eje vertical",
+            "El tiempo por ciclo",
+            "La frecuencia angular"
+        ],
+        "answer": 1,
+        "explanation": "La amplitud máxima es el pico respecto al eje temporal; mide la altura de la señal. "
+    },
+    {
+        "question": "La ecuación genérica de una onda seno del documento es:",
+        "options": [
+            "Q(t)=M*sen(ω*t+φ)",
+            "Q(t)=M*e^{jωt}",
+            "Q(t)=M*cos(φ)",
+            "Q(t)=M*t+ω"
+        ],
+        "answer": 0,
+        "explanation": "Se proporciona explícitamente la forma Q(t)=M·sen(ω·t+φ) para describir una senoidal. "
+    },
+    {
+        "question": "En una señal digital simple, un '1' puede codificarse como:",
+        "options": [
+            "Voltaje positivo",
+            "Voltaje negativo exclusivamente",
+            "Siempre cero voltios",
+            "Cambio de fase de 90°"
+        ],
+        "answer": 0,
+        "explanation": "El ejemplo muestra 1 como voltaje positivo y 0 como voltaje cero en una codificación básica. "
+    },
+    {
+        "question": "Si f = 80 Hz y otra señal tiene 40 Hz, entonces:",
+        "options": [
+            "La de 40 Hz completa el ciclo el doble de rápido",
+            "La de 80 Hz tarda el doble por ciclo",
+            "La de 40 Hz tarda el doble por ciclo",
+            "Ambas tardan lo mismo"
+        ],
+        "answer": 2,
+        "explanation": "Menor frecuencia implica mayor periodo: 40 Hz completa cada ciclo en el doble de tiempo que 80 Hz. "
+    },
+    {
+        "question": "¿Qué magnitud NO se mide explícitamente en la traza temporal?",
+        "options": [
+            "Amplitud instantánea",
+            "Fase",
+            "Tiempo",
+            "Variación de amplitud"
+        ],
+        "answer": 1,
+        "explanation": "En la traza temporal no se lee directamente ni fase ni frecuencia; se observa amplitud vs. tiempo. "
+    },
+    {
+        "question": "Para calcular el ancho de banda del espectro entre f_min y f_max se utiliza:",
+        "options": [
+            "f_max + f_min",
+            "f_max − f_min",
+            "f_max × f_min",
+            "f_max / f_min"
+        ],
+        "answer": 1,
+        "explanation": "El ancho de banda es la diferencia entre la mayor y la menor frecuencia del espectro. "
+    },
+    {
+        "question": "Una señal digital puede reconstruirse con distorsión mínima si:",
+        "options": [
+            "Se transmiten todas las infinitas componentes",
+            "Se transmiten las componentes con amplitud significativa por encima de un umbral",
+            "Solo se envía la componente continua",
+            "Se elimina el ancho de banda"
+        ],
+        "answer": 1,
+        "explanation": "Transmitiendo el espectro significativo se logra una réplica razonable pese a la imposibilidad de enviar el espectro completo. "
+    },
+    {
+        "question": "¿Qué relación describe mejor 'señal compuesta' en frecuencia?",
+        "options": [
+            "Una sola frecuencia con amplitud variable",
+            "Múltiples frecuencias con amplitudes específicas",
+            "Solo ruido de fondo",
+            "Fase constante en todas las componentes"
+        ],
+        "answer": 1,
+        "explanation": "La señal compuesta posee varias senoidales; el dominio frecuencial muestra sus amplitudes relativas. "
+    }
+]

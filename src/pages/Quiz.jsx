@@ -1,0 +1,194 @@
+import { useState, useEffect, useMemo } from 'react'
+import { useParams, Link } from 'react-router-dom'
+
+export default function Quiz() {
+  const { grado, curso, unidad } = useParams()
+  const [allQuestions, setAllQuestions] = useState(null)
+  const [pageTitle, setPageTitle] = useState('')
+  const [error, setError] = useState(false)
+  const [answers, setAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    fetch(`/questions/${grado}/${curso}/${unidad}.json`)
+      .then((r) => {
+        if (!r.ok) throw new Error(r.status)
+        return r.json()
+      })
+      .then((data) => {
+        if (Array.isArray(data) && data[0] && data[0].title) {
+          setPageTitle(data[0].title)
+          setAllQuestions(data.slice(1))
+        } else {
+          setAllQuestions(data)
+        }
+      })
+      .catch(() => setError(true))
+  }, [grado, curso, unidad])
+
+  // Select 15 random questions (stable until page reloads)
+  const questions = useMemo(() => {
+    if (!allQuestions) return []
+    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
+    return shuffled.slice(0, 15)
+  }, [allQuestions])
+
+  useEffect(() => {
+    if (pageTitle) document.title = pageTitle
+  }, [pageTitle])
+
+  const answeredCount = Object.keys(answers).length
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
+
+  function handleSelect(qIndex, optionIndex) {
+    if (submitted) return
+    setAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }))
+  }
+
+  function handleSubmit() {
+    setSubmitted(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function handleRetry() {
+    window.location.reload()
+  }
+
+  // ─── Loading / Error ───
+  if (error) {
+    return (
+      <div className="page-wrap">
+        <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+        <div className="error-msg">
+          No se encontraron preguntas para <strong>{curso?.toUpperCase()}/{unidad?.toUpperCase()}</strong>
+        </div>
+      </div>
+    )
+  }
+
+  if (!allQuestions) {
+    return (
+      <div className="page-wrap">
+        <div className="loading">
+          <div className="spinner" />
+          Cargando preguntas…
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Results ───
+  if (submitted) {
+    const score = questions.reduce(
+      (acc, q, i) => acc + (answers[i] === q.answer ? 1 : 0),
+      0
+    )
+
+    return (
+      <div className="page-wrap">
+        <div className="quiz-container results">
+          <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+
+          <div className="results-summary">
+            <h2>Resultado</h2>
+            <div className="score-display">
+              {score}/{questions.length}
+            </div>
+            <p className="score-label">
+              {score === questions.length
+                ? '¡Perfecto! 🎉'
+                : score >= questions.length * 0.7
+                ? '¡Buen trabajo! 💪'
+                : 'Sigue practicando 📚'}
+            </p>
+          </div>
+
+          {questions.map((q, i) => {
+            const userAnswer = answers[i] ?? null
+            const isCorrect = userAnswer === q.answer
+
+            return (
+              <div
+                key={i}
+                className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
+                <h4>
+                  <span className="question-number">{i + 1}.</span> {q.question}
+                </h4>
+                <p className={`answer-row ${isCorrect ? 'user-correct' : 'user-incorrect'}`}>
+                  <strong>Tu respuesta:</strong>{' '}
+                  {userAnswer !== null ? q.options[userAnswer] : 'No respondida'}
+                </p>
+                <p className="answer-row">
+                  <strong>Respuesta correcta:</strong> {q.options[q.answer]}
+                </p>
+                {q.explanation && (
+                  <div className="explanation-box">
+                    <strong>Explicación:</strong> {q.explanation}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          <button className="retry-btn" onClick={handleRetry}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ─── Quiz Form ───
+  return (
+    <div className="page-wrap">
+      <div className="quiz-container">
+        <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+
+        <div className="quiz-header">
+          <h1>{pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`}</h1>
+          <div className="quiz-progress">
+            <span>{answeredCount}/{questions.length} respondidas</span>
+            <div className="quiz-progress-bar">
+              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+        </div>
+
+        {questions.map((q, qi) => (
+          <div
+            key={qi}
+            className="question-card"
+            style={{ animationDelay: `${qi * 0.04}s` }}
+          >
+            <h3>
+              <span className="question-number">{qi + 1}.</span> {q.question}
+            </h3>
+            <div>
+              {q.options.map((option, oi) => (
+                <label
+                  key={oi}
+                  className={`option-label ${answers[qi] === oi ? 'selected' : ''}`}
+                  onClick={() => handleSelect(qi, oi)}
+                >
+                  <input
+                    type="radio"
+                    name={`q${qi}`}
+                    checked={answers[qi] === oi}
+                    onChange={() => handleSelect(qi, oi)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        <button className="submit-btn" onClick={handleSubmit}>
+          Enviar Respuestas
+        </button>
+      </div>
+    </div>
+  )
+}

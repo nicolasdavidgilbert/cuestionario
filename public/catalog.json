@@ -1,0 +1,66 @@
+{
+  "grados": [
+    {
+      "id": "1asir",
+      "label": "1º ASIR",
+      "description": "Administración de Sistemas Informáticos en Red",
+      "courses": [
+        {
+          "id": "digitalizacion",
+          "label": "DIGITALIZACION",
+          "units": [
+            {
+              "id": "ud1",
+              "path": "/1asir/digitalizacion/ud1",
+              "title": "Tema 1: Digitalización y Transformación Digital"
+            }
+          ]
+        },
+        {
+          "id": "gtb",
+          "label": "GTB",
+          "units": [
+            {
+              "id": "ud2",
+              "path": "/1asir/gtb/ud2",
+              "title": "Tema 2: Realización de Consultas Básicas (1ª Parte)"
+            }
+          ]
+        },
+        {
+          "id": "idp",
+          "label": "IDP",
+          "units": [
+            {
+              "id": "ud1",
+              "path": "/1asir/idp/ud1",
+              "title": "Unidad Didáctica 1: Introducción a los Sistemas Operativos"
+            }
+          ]
+        },
+        {
+          "id": "pni",
+          "label": "PNI",
+          "units": [
+            {
+              "id": "ud1",
+              "path": "/1asir/pni/ud1",
+              "title": "Unidad Didáctica 1: Señales y Sistemas de Transmisión"
+            },
+            {
+              "id": "ud2",
+              "path": "/1asir/pni/ud2",
+              "title": "UD1: arquitectura de comunicaciones OSI-TCP/IP"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1bach",
+      "label": "1º BACH",
+      "description": "Bachillerato",
+      "courses": []
+    }
+  ]
+}
