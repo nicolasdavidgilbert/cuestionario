@@ -4,11 +4,8 @@ import { getQuizById } from '../lib/api'
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
   const [questions, setQuestions] = useState([])
-  const [currentQ, setCurrentQ] = useState(0)
-  const [selected, setSelected] = useState(null)
-  const [answered, setAnswered] = useState(false)
-  const [score, setScore] = useState(0)
-  const [finished, setFinished] = useState(false)
+  const [answers, setAnswers] = useState({})
+  const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
@@ -20,7 +17,9 @@ export default function UserQuiz({ id }) {
     try {
       const data = await getQuizById(Number(id))
       setQuiz(data)
-      setQuestions(data.questions || [])
+      const allQuestions = data.questions || []
+      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
+      setQuestions(shuffled.slice(0, 15))
     } catch (e) {
       setError(true)
     } finally {
@@ -28,31 +27,18 @@ export default function UserQuiz({ id }) {
     }
   }
 
-  const handleAnswer = (index) => {
-    if (answered) return
-    setSelected(index)
-    setAnswered(true)
-    if (index === questions[currentQ].answer) {
-      setScore(score + 1)
-    }
+  const handleSelect = (qIndex, optionIndex) => {
+    if (submitted) return
+    setAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }))
   }
 
-  const nextQuestion = () => {
-    if (currentQ < questions.length - 1) {
-      setCurrentQ(currentQ + 1)
-      setSelected(null)
-      setAnswered(false)
-    } else {
-      setFinished(true)
-    }
+  const handleSubmit = () => {
+    setSubmitted(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const restart = () => {
-    setCurrentQ(0)
-    setSelected(null)
-    setAnswered(false)
-    setScore(0)
-    setFinished(false)
+  const handleRetry = () => {
+    window.location.reload()
   }
 
   if (loading) {
@@ -72,75 +58,120 @@ export default function UserQuiz({ id }) {
     )
   }
 
-  if (finished) {
-    const percentage = Math.round((score / questions.length) * 100)
+  const answeredCount = Object.keys(answers).length
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
+
+  if (submitted) {
+    const score = questions.reduce(
+      (acc, q, i) => acc + (answers[i] === q.answer ? 1 : 0),
+      0
+    )
+
     return (
       <div className="page-wrap">
-        <div className="results-card">
-          <h2>¡Completado!</h2>
-          <div className="score-big">{score}/{questions.length}</div>
-          <div className="score-percentage">{percentage}% correctas</div>
-          <p className="score-message">
-            {percentage === 100 ? '¡Perfecto!' :
-             percentage >= 70 ? '¡Muy bien!' :
-             percentage >= 50 ? 'Sigue practicando' : 'Hay que repasar'}
-          </p>
-          <button onClick={restart} className="btn-restart">Reintentar</button>
+        <div className="quiz-container results">
+          <a href="/" className="quiz-back">← Volver al inicio</a>
+
+          <div className="results-summary">
+            <h2>Resultado</h2>
+            <div className="score-display">
+              {score}/{questions.length}
+            </div>
+            <p className="score-label">
+              {score === questions.length
+                ? '¡Perfecto!'
+                : score >= questions.length * 0.7
+                ? '¡Muy bien!'
+                : 'Sigue practicando'}
+            </p>
+          </div>
+
+          {questions.map((q, i) => {
+            const userAnswer = answers[i] ?? null
+            const isCorrect = userAnswer === q.answer
+
+            return (
+              <div
+                key={i}
+                className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}
+                style={{ animationDelay: `${i * 0.05}s` }}
+              >
+                <h4>
+                  <span className="question-number">{i + 1}.</span> {q.question}
+                </h4>
+                <p className={`answer-row ${isCorrect ? 'user-correct' : 'user-incorrect'}`}>
+                  <strong>Tu respuesta:</strong>{' '}
+                  {userAnswer !== null ? q.options[userAnswer] : 'No respondida'}
+                </p>
+                <p className="answer-row">
+                  <strong>Respuesta correcta:</strong> {q.options[q.answer]}
+                </p>
+                {q.explanation && (
+                  <div className="explanation-box">
+                    <strong>Explicación:</strong> {q.explanation}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+
+          <button className="retry-btn" onClick={handleRetry}>
+            Reintentar
+          </button>
         </div>
       </div>
     )
   }
 
-  const q = questions[currentQ]
-
   return (
     <div className="page-wrap">
-      <header className="quiz-header">
-        <div className="quiz-title-wrap">
+      <div className="quiz-container">
+        <a href="/" className="quiz-back">← Volver</a>
+
+        <div className="quiz-header">
           <h1>{quiz.title || 'Cuestionario'}</h1>
           {quiz.description && <p className="quiz-description">{quiz.description}</p>}
-        </div>
-        <div className="quiz-progress">
-          <span>{currentQ + 1}/{questions.length}</span>
-          <div className="progress-bar">
-            <div
-              className="progress-fill"
-              style={{ width: `${((currentQ + 1) / questions.length) * 100}%` }}
-            />
+          <div className="quiz-progress">
+            <span>{answeredCount}/{questions.length} respondidas</span>
+            <div className="quiz-progress-bar">
+              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
+            </div>
           </div>
         </div>
-      </header>
 
-      <div className="question-card">
-        <div className="question-text">{q.question}</div>
-
-        <div className="options-list">
-          {q.options.map((opt, i) => (
-            <button
-              key={i}
-              onClick={() => handleAnswer(i)}
-              disabled={answered}
-              className={`option-btn ${selected === i ? (i === q.answer ? 'correct' : 'wrong') : ''} ${answered && i === q.answer ? 'correct' : ''}`}
-            >
-              <span className="option-letter">{String.fromCharCode(65 + i)}</span>
-              <span className="option-text">{opt}</span>
-            </button>
-          ))}
-        </div>
-
-        {answered && (
-          <div className={`explanation ${selected === q.answer ? 'correct' : 'wrong'}`}>
-            <p><strong>{selected === q.answer ? '¡Correcto!' : 'Incorrecto'}</strong></p>
-            {q.explanation && <p>{q.explanation}</p>}
+        {questions.map((q, qi) => (
+          <div
+            key={qi}
+            className="question-card"
+            style={{ animationDelay: `${qi * 0.04}s` }}
+          >
+            <h3>
+              <span className="question-number">{qi + 1}.</span> {q.question}
+            </h3>
+            <div>
+              {q.options.map((option, oi) => (
+                <label
+                  key={oi}
+                  className={`option-label ${answers[qi] === oi ? 'selected' : ''}`}
+                  onClick={() => handleSelect(qi, oi)}
+                >
+                  <input
+                    type="radio"
+                    name={`q${qi}`}
+                    checked={answers[qi] === oi}
+                    onChange={() => handleSelect(qi, oi)}
+                  />
+                  <span>{option}</span>
+                </label>
+              ))}
+            </div>
           </div>
-        )}
-      </div>
+        ))}
 
-      {answered && (
-        <button onClick={nextQuestion} className="btn-next">
-          {currentQ < questions.length - 1 ? 'Siguiente →' : 'Ver resultado'}
+        <button className="submit-btn" onClick={handleSubmit}>
+          Enviar Respuestas
         </button>
-      )}
+      </div>
     </div>
   )
 }
