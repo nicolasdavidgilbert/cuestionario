@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
-import { createQuiz } from '../lib/api'
+import { createQuiz, getAllQuizzes } from '../lib/api'
 import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 
 export default function CreateQuiz() {
+  const [existingQuizzes, setExistingQuizzes] = useState([])
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -20,11 +21,36 @@ export default function CreateQuiz() {
   })
 
   useEffect(() => {
-    fetch('/catalog.json')
-      .then((r) => r.json())
-      .then(setCatalog)
-      .catch(() => setError('Error cargando cursos'))
+    loadData()
   }, [])
+
+  const loadData = async () => {
+    try {
+      const [catData, quizzes] = await Promise.all([
+        fetch('/catalog.json').then(r => r.json()),
+        getAllQuizzes()
+      ])
+      setCatalog(catData)
+      setExistingQuizzes(quizzes)
+    } catch (e) {
+      setError('Error cargando datos')
+    }
+  }
+
+  const getUniqueValues = (field) => {
+    const fromCatalog = catalog?.grados?.map(g => {
+      if (field === 'grado') return g.id
+      if (field === 'course_id') return g.courses?.map(c => c.id)
+      if (field === 'unidad') return g.courses?.flatMap(c => c.units?.map(u => u.id))
+      return []
+    }).flat().filter(Boolean) || []
+    
+    const fromQuizzes = existingQuizzes
+      .map(q => q[field])
+      .filter(Boolean)
+    
+    return [...new Set([...fromCatalog, ...fromQuizzes])]
+  }
 
   const parseJson = (jsonString, source = 'texto pegado') => {
     if (!jsonString.trim()) {
@@ -51,7 +77,8 @@ export default function CreateQuiz() {
         title: validation.data.title || '',
         description: validation.data.description || '',
         grado: validation.data.grado || quiz.grado,
-        course_id: validation.data.course_id || quiz.course_id
+        course_id: validation.data.course_id || quiz.course_id,
+        unidad: validation.data.unidad || quiz.unidad
       })
       setError('')
     } catch (e) {
@@ -102,11 +129,11 @@ export default function CreateQuiz() {
     }
     
     if (!quiz.grado) {
-      setError('Selecciona un grado')
+      setError('Selecciona o escribe un grado')
       return
     }
     if (!quiz.course_id) {
-      setError('Selecciona un curso')
+      setError('Selecciona o escribe un curso')
       return
     }
 
@@ -117,13 +144,13 @@ export default function CreateQuiz() {
       await createQuiz({
         title: quiz.title.trim(),
         description: quiz.description.trim(),
-        grado: quiz.grado,
-        course_id: quiz.course_id,
-        unidad: quiz.unidad,
+        grado: quiz.grado.trim().toLowerCase(),
+        course_id: quiz.course_id.trim().toLowerCase(),
+        unidad: quiz.unidad.trim().toLowerCase(),
         questions: preview.questions
       })
       
-      window.location.href = `/${quiz.grado}`
+      window.location.href = `/${quiz.grado.trim().toLowerCase()}`
     } catch (err) {
       setError('Error al guardar: ' + err.message)
       setLoading(false)
@@ -147,6 +174,10 @@ export default function CreateQuiz() {
       </div>
     )
   }
+
+  const grados = getUniqueValues('grado')
+  const cursos = getUniqueValues('course_id')
+  const unidades = getUniqueValues('unidad')
 
   return (
     <div className="page-wrap">
@@ -243,47 +274,52 @@ export default function CreateQuiz() {
 
             <div className="form-row">
               <div className="form-group">
-                <label>Grado *</label>
-                <select
+                <label>Grado * (escribe o selecciona)</label>
+                <input
+                  list="grados-list"
                   value={quiz.grado}
                   onChange={(e) => setQuiz({ ...quiz, grado: e.target.value, course_id: '', unidad: '' })}
-                >
-                  <option value="">Selecciona grado...</option>
-                  {catalog.grados.map((g) => (
-                    <option key={g.id} value={g.id}>{g.label}</option>
+                  placeholder="ej: 1asir, 2dam, 1bach"
+                />
+                <datalist id="grados-list">
+                  {grados.map(g => (
+                    <option key={g} value={g} />
                   ))}
-                </select>
+                </datalist>
               </div>
 
               <div className="form-group">
-                <label>Curso *</label>
-                <select
+                <label>Curso * (escribe o selecciona)</label>
+                <input
+                  list="cursos-list"
                   value={quiz.course_id}
                   onChange={(e) => setQuiz({ ...quiz, course_id: e.target.value, unidad: '' })}
+                  placeholder="ej: pni, digitalizacion, gtb"
                   disabled={!quiz.grado}
-                >
-                  <option value="">Selecciona curso...</option>
-                  {quiz.grado && catalog.grados.find((g) => g.id === quiz.grado)?.courses.map((c) => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
+                />
+                <datalist id="cursos-list">
+                  {cursos.map(c => (
+                    <option key={c} value={c} />
                   ))}
-                </select>
+                </datalist>
               </div>
             </div>
 
-            {quiz.grado && quiz.course_id && (
-              <div className="form-group">
-                <label>Unidad Didáctica</label>
-                <select
-                  value={quiz.unidad}
-                  onChange={(e) => setQuiz({ ...quiz, unidad: e.target.value })}
-                >
-                  <option value="">Selecciona unidad (opcional)...</option>
-                  {quiz.grado && catalog.grados.find((g) => g.id === quiz.grado)?.courses.find((c) => c.id === quiz.course_id)?.units.map((u) => (
-                    <option key={u.id} value={u.title || u.id}>{u.title || u.id}</option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label>Unidad (escribe o selecciona, opcional)</label>
+              <input
+                list="unidades-list"
+                value={quiz.unidad}
+                onChange={(e) => setQuiz({ ...quiz, unidad: e.target.value })}
+                placeholder="ej: ud1, ud2, tema1"
+                disabled={!quiz.grado || !quiz.course_id}
+              />
+              <datalist id="unidades-list">
+                {unidades.map(u => (
+                  <option key={u} value={u} />
+                ))}
+              </datalist>
+            </div>
 
             <details className="questions-preview">
               <summary>Ver preguntas ({preview.questions.length})</summary>
@@ -317,6 +353,7 @@ export default function CreateQuiz() {
   "description": "Descripción opcional",
   "grado": "1asir",
   "course_id": "pni",
+  "unidad": "ud1",
   "questions": [
     {
       "question": "¿Cuál es la pregunta?",
@@ -327,7 +364,7 @@ export default function CreateQuiz() {
   ]
 }`}</pre>
         <p className="help-note">
-          <strong>Nota:</strong> <code>answer</code> es el índice de la respuesta correcta (0-3).
+          <strong>Nota:</strong> <code>answer</code> es el índice de la respuesta correcta (0-3). El campo <code>unidad</code> es opcional.
         </p>
       </div>
     </div>

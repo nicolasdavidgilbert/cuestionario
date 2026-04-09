@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import { getQuizzesByGrado } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
   const [allQuestions, setAllQuestions] = useState(null)
@@ -6,23 +7,37 @@ export default function Quiz({ grado, curso, unidad }) {
   const [error, setError] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch(`/questions/${grado}/${curso}/${unidad}.json`)
-      .then((r) => {
-        if (!r.ok) throw new Error(r.status)
-        return r.json()
-      })
-      .then((data) => {
-        if (Array.isArray(data) && data[0] && data[0].title) {
-          setPageTitle(data[0].title)
-          setAllQuestions(data.slice(1))
-        } else {
-          setAllQuestions(data)
-        }
-      })
-      .catch(() => setError(true))
+    loadQuiz()
   }, [grado, curso, unidad])
+
+  const loadQuiz = async () => {
+    setLoading(true)
+    setError(false)
+    setAnswers({})
+    setSubmitted(false)
+    
+    try {
+      const quizzes = await getQuizzesByGrado(grado)
+      const quiz = quizzes.find(q => q.course_id === curso && q.unidad === unidad)
+      
+      if (!quiz) {
+        setError(true)
+        setLoading(false)
+        return
+      }
+      
+      setPageTitle(quiz.title || '')
+      const questions = quiz.questions || []
+      setAllQuestions(questions)
+    } catch (e) {
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const questions = useMemo(() => {
     if (!allQuestions) return []
@@ -62,7 +77,7 @@ export default function Quiz({ grado, curso, unidad }) {
     )
   }
 
-  if (!allQuestions) {
+  if (loading || !allQuestions) {
     return (
       <div className="page-wrap">
         <div className="loading">
@@ -91,10 +106,10 @@ export default function Quiz({ grado, curso, unidad }) {
             </div>
             <p className="score-label">
               {score === questions.length
-                ? '¡Perfecto! 🎉'
+                ? '¡Perfecto!'
                 : score >= questions.length * 0.7
-                ? '¡Buen trabajo! 💪'
-                : 'Sigue practicando 📚'}
+                ? '¡Muy bien!'
+                : 'Sigue practicando'}
             </p>
           </div>
 

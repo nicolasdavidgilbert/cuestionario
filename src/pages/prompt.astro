@@ -1,0 +1,179 @@
+---
+import Layout from '../layouts/Layout.astro'
+---
+
+<Layout title="Prompt para generar cuestionarios">
+  <div class="page-wrap">
+    <a href="/" class="quiz-back">← Volver</a>
+
+    <header class="home-header">
+      <h1>Prompt para generar cuestionarios</h1>
+      <p>Copia este prompt y úsalo en ChatGPT, Claude, Gemini, etc.</p>
+    </header>
+
+    <div class="prompt-card">
+      <div class="prompt-header">
+        <h2>Prompt</h2>
+        <button id="copy-btn" class="btn-copy">Copiar</button>
+      </div>
+      
+      <pre id="prompt-text"></pre>
+
+      <div class="prompt-actions">
+        <a href="/crear" class="btn-primary">Ir a crear cuestionario</a>
+      </div>
+    </div>
+
+    <div class="help-section">
+      <h3>Cómo usar</h3>
+      <ol>
+        <li>Copia el prompt de arriba</li>
+        <li>Pégalo en ChatGPT, Claude, Gemini, etc.</li>
+        <li>Añade el contenido del tema (texto, PDF, etc.)</li>
+        <li>Copia el JSON generado</li>
+        <li>Ve a <a href="/crear">/crear</a> y súbelo</li>
+      </ol>
+    </div>
+
+    <div class="help-section">
+      <h3>Ejemplo de campos</h3>
+      <ul>
+        <li><strong>grado</strong>: 1asir, 2dam, 1bach, etc.</li>
+        <li><strong>course_id</strong>: pni, digitalizacion, gtb, idp, etc.</li>
+        <li><strong>unidad</strong>: ud1, ud2, tema1, etc. (opcional)</li>
+      </ul>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const prompt = `Necesito que generes un cuestionario tipo test en formato JSON basado en el contenido que te proporcione.
+
+REGLAS:
+1. Genera entre 20 y 50 preguntas de tipo test.
+2. Cada pregunta debe tener exactamente 4 opciones de respuesta.
+3. Solo UNA opción debe ser correcta.
+4. Incluye una explicación para cada respuesta correcta.
+5. Las opciones incorrectas deben ser plausibles.
+6. La respuesta correcta debe estar en posiciones aleatorias (no siempre la primera).
+
+FORMATO JSON:
+{
+  "title": "Nombre del tema",
+  "description": "Descripción opcional",
+  "grado": "1asir",
+  "course_id": "pni",
+  "unidad": "ud1",
+  "questions": [
+    {
+      "question": "Texto de la pregunta",
+      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
+      "answer": 0,
+      "explanation": "Explicación breve."
+    }
+  ]
+}
+
+Donde "answer" es el índice (0-3) de la opción correcta.`;
+
+  const promptText = document.getElementById('prompt-text');
+  const copyBtn = document.getElementById('copy-btn');
+
+  if (promptText) promptText.textContent = prompt;
+  if (copyBtn) {
+    copyBtn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(prompt);
+      copyBtn.textContent = '¡Copiado!';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copiar';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  }
+</script>
+
+<style>
+  .prompt-card {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+  }
+
+  .prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .prompt-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+  }
+
+  .btn-copy {
+    padding: 8px 16px;
+    background: var(--c-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  .btn-copy:hover {
+    background: #7d6ff0;
+  }
+
+  .btn-copy.copied {
+    background: var(--c-correct);
+  }
+
+  #prompt-text {
+    background: var(--c-bg);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: var(--c-text-muted);
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .prompt-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+  }
+
+  .help-section {
+    background: var(--c-surface);
+    border: 1px solid var(--c-border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    margin-bottom: 16px;
+  }
+
+  .help-section h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .help-section ol, .help-section ul {
+    padding-left: 20px;
+    color: var(--c-text-muted);
+    line-height: 1.8;
+  }
+
+  .help-section a {
+    color: var(--c-accent);
+  }
+</style>

@@ -44,29 +44,19 @@ export default function MyQuizzes() {
       {quizzes.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon">📝</div>
-          <p>No hay cuestionarios creados todavía.</p>
+          <p>No hay cuestionarios todavía.</p>
           <a href="/crear" className="btn-primary">Crear el primero</a>
         </div>
       ) : (
-        <div className="quizzes-list">
+        <div className="unit-grid">
           {quizzes.map((quiz) => (
             <a
               key={quiz.id}
               href={`/user-quiz/${quiz.id}`}
-              className="quiz-card user-quiz-card"
+              className="unit-card"
             >
-              <div className="quiz-card-header">
-                <span className="quiz-badge">Usuario</span>
-                <span className="quiz-date">
-                  {new Date(quiz.created_at).toLocaleDateString('es-ES')}
-                </span>
-              </div>
-              <h3>{quiz.title || `Cuestionario #${quiz.id}`}</h3>
-              <p className="quiz-meta">{quiz.grado} · {quiz.unidad || quiz.course_id}</p>
-              {quiz.description && (
-                <p className="quiz-desc">{quiz.description}</p>
-              )}
-              <p className="quiz-questions">{(quiz.questions || []).length} preguntas</p>
+              <span className="unit-badge">{(quiz.unidad || quiz.course_id).toUpperCase()}</span>
+              {quiz.title && <span className="unit-title">{quiz.title}</span>}
             </a>
           ))}
         </div>

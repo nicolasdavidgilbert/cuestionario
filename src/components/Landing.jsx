@@ -40,6 +40,7 @@ export default function Landing() {
         <p>Elige tu curso para ver los cuestionarios disponibles</p>
         <div className="user-actions">
           <a href="/crear" className="btn-primary">+ Crear Cuestionario</a>
+          <a href="/prompt" className="btn-secondary">Prompt IA</a>
           <a href="/mis-cuestionarios" className="btn-secondary">Mis Cuestionarios</a>
         </div>
       </header>

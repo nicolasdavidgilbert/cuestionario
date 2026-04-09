@@ -1,15 +1,14 @@
-# 📝 Cuestionarios
+# Cuestionarios
 
 Aplicación web de cuestionarios interactivos construida con **Astro + React** y desplegada en **Vercel**.
 
-- Cuestionarios estáticos (JSON en repositorio)
-- Cuestionarios de usuarios (guardados en **Neon Postgres**)
+- Todos los cuestionarios se almacenan en **Neon Postgres**
 - Subida de JSON con validación automática
 - 100% funcional sin registro
 
 ---
 
-## 🚀 Inicio rápido
+## Inicio rápido
 
 ```bash
 # Instalar dependencias
@@ -20,25 +19,19 @@ pnpm dev          # → http://localhost:4321
 
 # Build de producción
 pnpm build        # → genera /dist
-pnpm preview      # → previsualizar el build
 ```
 
 ---
 
-## 📂 Estructura del proyecto
+## Estructura del proyecto
 
 ```
 cuestionarios/
 ├── public/
-│   ├── questions/                # Cuestionarios estáticos
-│   │   ├── 1asir/
-│   │   │   ├── pni/ud1.json
-│   │   │   └── digitalizacion/ud1.json
-│   │   └── 1bach/
-│   ├── catalog.json              # Auto-generado
+│   ├── catalog.json              # Catálogo de grados y cursos
 │   └── favicon.svg
 ├── src/
-│   ├── components/               # Componentes React
+│   ├── components/
 │   │   ├── Landing.jsx           # Página principal
 │   │   ├── Catalog.jsx           # Catálogo por grado
 │   │   ├── Quiz.jsx              # Cuestionario interactivo
@@ -50,28 +43,28 @@ cuestionarios/
 │   ├── lib/
 │   │   ├── api.ts                # Cliente de API
 │   │   └── quizValidator.ts      # Validador de JSON
-│   ├── pages/                    # Rutas de Astro
+│   ├── pages/
 │   │   ├── index.astro           # Landing
 │   │   ├── [grado].astro         # Catálogo por grado
-│   │   ├── [grado]/[curso]/[unidad].astro  # Quiz estático
+│   │   ├── [grado]/[curso]/[unidad].astro  # Cuestionario
 │   │   ├── crear.astro           # Crear cuestionario
 │   │   ├── mis-cuestionarios.astro  # Mis cuestionarios
 │   │   ├── user-quiz/[id].astro  # Reproducir cuestionario
-│   │   └── api/                  # API routes (serverless)
+│   │   └── api/
 │   │       ├── quizzes.ts
 │   │       └── quizzes/[id].ts
 │   └── styles/
 │       └── global.css            # Estilos
-├── astro.config.mjs
-├── neon-setup.sql               # SQL para crear tabla
+├── migrate-questions.sql         # SQL para importar preguntas existentes
+├── neon-setup.sql               # SQL para crear/actualizar tabla
 └── package.json
 ```
 
 ---
 
-## 👥 Cuestionarios de usuarios
+## Cuestionarios de usuarios
 
-Los usuarios pueden crear sus propios cuestionarios subiendo un archivo JSON.
+Los usuarios pueden crear sus propios cuestionariossubiendo un archivo JSON.
 
 ### Formato del JSON
 
@@ -81,6 +74,7 @@ Los usuarios pueden crear sus propios cuestionarios subiendo un archivo JSON.
   "description": "Cuestionario de ejemplo",
   "grado": "1asir",
   "course_id": "pni",
+  "unidad": "ud1",
   "questions": [
     {
       "question": "¿Cuál es la pregunta?",
@@ -95,17 +89,18 @@ Los usuarios pueden crear sus propios cuestionarios subiendo un archivo JSON.
 ### Campos obligatorios
 
 | Campo       | Descripción                           |
-|-------------|---------------------------------------|
-| `grado`     | ID del grado (ej: `1asir`, `1bach`)   |
+|------------|--------------------------------------|
+| `grado`    | ID del grado (ej: `1asir`, `1bach`)   |
 | `course_id` | ID del curso (ej: `pni`, `digitalizacion`) |
-| `questions` | Array con al menos 1 pregunta        |
+| `questions`| Array con al menos 1 pregunta         |
 
 ### Campos opcionales
 
 | Campo         | Descripción                      |
-|---------------|----------------------------------|
-| `title`       | Título del cuestionario          |
-| `description` | Descripción o notas             |
+|--------------|--------------------------------|
+| `title`       | Título del cuestionario           |
+| `description`| Descripción o notas              |
+| `unidad`     | ID de unidad (ej: `ud1`, `tema1`)|
 
 ### Validación
 
@@ -118,11 +113,11 @@ El sistema valida automáticamente:
 
 ---
 
-## 🤖 Prompt para generar JSON con IA
+## Prompt para generar JSON con IA
 
 Copia este prompt en ChatGPT, Claude, Gemini, etc. junto con el contenido del tema:
 
-````
+```
 Necesito que generes un cuestionario tipo test en formato JSON basado en el contenido que te proporcione.
 
 REGLAS:
@@ -134,12 +129,12 @@ REGLAS:
 6. La respuesta correcta debe estar en posiciones aleatorias (no siempre la primera).
 
 FORMATO JSON:
-```json
 {
   "title": "Nombre del tema",
   "description": "Descripción opcional",
   "grado": "1asir",
   "course_id": "pni",
+  "unidad": "ud1",
   "questions": [
     {
       "question": "Texto de la pregunta",
@@ -149,82 +144,54 @@ FORMATO JSON:
     }
   ]
 }
-```
 
 Donde "answer" es el índice (0-3) de la opción correcta.
-````
+```
 
 ### Cómo usar el JSON generado
 
-**Opción 1: Subir desde la web**
 1. Ve a `/crear`
-2. Arrastra el archivo JSON
-3. Selecciona grado y curso
+2. Arrastra el archivo JSON o pega el contenido
+3. Escribe o selecciona grado, curso y unidad
 4. Guarda
 
-**Opción 2: Añadir como cuestionario estático**
-1. Guarda el JSON en `public/questions/{grado}/{curso}/{unidad}.json`
-2. Ejecuta `pnpm dev`
-
 ---
 
-## ➕ Añadir cuestionarios estáticos
+## Base de datos (Neon)
 
-### Estructura de carpetas
+Los cuestionarios se guardan en **Neon Postgres**.
 
-```
-public/questions/{grado}/{curso}/{unidad}.json
-```
-
-Ejemplo: `public/questions/1asir/pni/ud3.json`
-
-### Formato (legacy - array)
-
-```json
-[
-    {
-        "title": "Unidad Didáctica 1: Nombre del Tema"
-    },
-    {
-        "question": "¿Cuál es la pregunta?",
-        "options": ["A", "B", "C", "D"],
-        "answer": 0,
-        "explanation": "Explicación."
-    }
-]
-```
-
-> **Nota:** La app selecciona 15 preguntas aleatorias por sesión.
-
----
-
-## 🗄️ Base de datos (Neon)
-
-Los cuestionarios de usuarios se guardan en **Neon Postgres**.
-
-### Tabla
+### Tabla (actualizada)
 
 ```sql
-CREATE TABLE user_quizzes (
+CREATE TABLE IF NOT EXISTS user_quizzes (
   id SERIAL PRIMARY KEY,
   title TEXT DEFAULT '',
   description TEXT DEFAULT '',
   grado TEXT NOT NULL,
   course_id TEXT NOT NULL,
+  unidad TEXT DEFAULT '',
   questions JSONB NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_user_quizzes_grado ON user_quizzes(grado);
+CREATE INDEX IF NOT EXISTS idx_user_quizzes_created ON user_quizzes(created_at DESC);
 ```
+
+### Migrar preguntas existentes
+
+Ejecuta `migrate-questions.sql` para importar las preguntas existentes a la DB.
 
 ### Variables de entorno
 
 | Variable      | Descripción              |
-|---------------|--------------------------|
+|---------------|------------------------|
 | `DATABASE_URL`| Connection string de Neon|
 
 ---
 
-## 🌐 Deploy en Vercel
+## Deploy en Vercel
 
 1. Sube a GitHub
 2. Conecta el repo a **Vercel**
@@ -243,12 +210,11 @@ pnpm dev
 
 ---
 
-## 📌 Resumen rápido
+## Resumen rápido
 
-| Quiero...                     | Dónde hacerlo                  |
-|-------------------------------|-------------------------------|
-| Practicar con cuestionarios   | Navega por los grados         |
-| Crear mi propio cuestionario  | `/crear` → subir JSON         |
-| Ver mis cuestionarios         | `/mis-cuestionarios`          |
-| Añadir cuestionario estático  | `public/questions/` + `pnpm dev` |
-| Generar preguntas con IA      | Usa el prompt de arriba       |
+| Quiero...                  | Dónde hacerlo             |
+|---------------------------|------------------------|
+| Practicar con cuestionarios | Navega por los grados    |
+| Crear mi cuestionario    | `/crear` → subir JSON |
+| Ver mis cuestionarios    | `/mis-cuestionarios`  |
+| Generar preguntas con IA | Copia el prompt de arriba |
