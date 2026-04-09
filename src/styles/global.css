@@ -832,12 +832,16 @@ body {
 
 /* ===================== User Quiz Card ===================== */
 .unit-card.user-quiz {
-  border-color: rgba(0, 184, 148, 0.3);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .unit-card.user-quiz .unit-badge {
-  background: rgba(0, 184, 148, 0.15);
-  color: var(--c-correct);
+  background: transparent;
+  padding: 0;
+}
+
+.user-badge-icon {
+  font-size: 1rem;
 }
 
 /* ===================== My Quizzes Page ===================== */

@@ -83,8 +83,12 @@ export default function Catalog({ grado }) {
               ))}
               {courseUserQuizzes.map((quiz) => (
                 <a key={quiz.id} href={`/user-quiz/${quiz.id}`} className="unit-card user-quiz">
-                  <span className="unit-badge">USER</span>
-                  <span className="unit-title">{quiz.title || `Cuestionario #${quiz.id}`}</span>
+                  <span className="unit-badge">
+                    <span className="user-badge-icon">👤</span>
+                  </span>
+                  <span className="unit-title">
+                    {quiz.title || `Cuestionario #${quiz.id}`}
+                  </span>
                 </a>
               ))}
             </div>
