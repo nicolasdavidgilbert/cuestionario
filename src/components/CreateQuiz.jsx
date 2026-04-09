@@ -4,7 +4,6 @@ import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 
 export default function CreateQuiz() {
   const [existingQuizzes, setExistingQuizzes] = useState([])
-  const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [inputMode, setInputMode] = useState('paste')
@@ -26,11 +25,7 @@ export default function CreateQuiz() {
 
   const loadData = async () => {
     try {
-      const [catData, quizzes] = await Promise.all([
-        fetch('/catalog.json').then(r => r.json()),
-        getAllQuizzes()
-      ])
-      setCatalog(catData)
+      const quizzes = await getAllQuizzes()
       setExistingQuizzes(quizzes)
     } catch (e) {
       setError('Error cargando datos')
@@ -38,18 +33,11 @@ export default function CreateQuiz() {
   }
 
   const getUniqueValues = (field) => {
-    const fromCatalog = catalog?.grados?.map(g => {
-      if (field === 'grado') return g.id
-      if (field === 'course_id') return g.courses?.map(c => c.id)
-      if (field === 'unidad') return g.courses?.flatMap(c => c.units?.map(u => u.id))
-      return []
-    }).flat().filter(Boolean) || []
-    
-    const fromQuizzes = existingQuizzes
+    const values = existingQuizzes
       .map(q => q[field])
       .filter(Boolean)
     
-    return [...new Set([...fromCatalog, ...fromQuizzes])]
+    return [...new Set(values)]
   }
 
   const parseJson = (jsonString, source = 'texto pegado') => {
@@ -167,7 +155,7 @@ export default function CreateQuiz() {
     }
   }
 
-  if (!catalog) {
+  if (loading) {
     return (
       <div className="page-wrap">
         <div className="loading">Cargando...</div>
