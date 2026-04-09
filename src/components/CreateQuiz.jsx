@@ -6,7 +6,8 @@ export default function CreateQuiz() {
   const [catalog, setCatalog] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [dragActive, setDragActive] = useState(false)
+  const [inputMode, setInputMode] = useState('paste')
+  const [jsonText, setJsonText] = useState('')
   const [preview, setPreview] = useState(null)
   const fileInputRef = useRef(null)
 
@@ -24,31 +25,37 @@ export default function CreateQuiz() {
       .catch(() => setError('Error cargando cursos'))
   }, [])
 
-  const handleDrag = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true)
-    } else if (e.type === 'dragleave') {
-      setDragActive(false)
+  const parseJson = (jsonString, source = 'texto pegado') => {
+    if (!jsonString.trim()) {
+      setError('El campo está vacío')
+      setPreview(null)
+      return
     }
-  }
 
-  const handleDrop = (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-    
-    const files = e.dataTransfer?.files
-    if (files && files[0]) {
-      handleFile(files[0])
-    }
-  }
+    try {
+      const json = JSON.parse(jsonString)
+      const validation = validateQuizJson(json)
+      
+      if (!validation.valid) {
+        setError(validation.errors.map(e => e.message).join('\n'))
+        setPreview(null)
+        return
+      }
 
-  const handleFileChange = (e) => {
-    const files = e.target.files
-    if (files && files[0]) {
-      handleFile(files[0])
+      setPreview({
+        ...validation.data,
+        source
+      })
+      setQuiz({
+        title: validation.data.title || '',
+        description: validation.data.description || '',
+        grado: validation.data.grado || quiz.grado,
+        course_id: validation.data.course_id || quiz.course_id
+      })
+      setError('')
+    } catch (e) {
+      setError('JSON inválido: ' + e.message)
+      setPreview(null)
     }
   }
 
@@ -60,30 +67,26 @@ export default function CreateQuiz() {
 
     try {
       const text = await file.text()
-      const json = JSON.parse(text)
-      
-      const validation = validateQuizJson(json)
-      
-      if (!validation.valid) {
-        setError(validation.errors.map(e => e.message).join('\n'))
-        setPreview(null)
-        return
-      }
-
-      setPreview({
-        ...validation.data,
-        fileName: file.name
-      })
-      setQuiz({
-        title: validation.data.title || '',
-        description: validation.data.description || '',
-        grado: validation.data.grado,
-        course_id: validation.data.course_id
-      })
-      setError('')
+      parseJson(text, file.name)
     } catch (e) {
-      setError('Error al leer el archivo JSON: ' + e.message)
+      setError('Error al leer el archivo: ' + e.message)
       setPreview(null)
+    }
+  }
+
+  const handleDrag = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+
+  const handleDrop = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const files = e.dataTransfer?.files
+    if (files && files[0]) {
+      setInputMode('file')
+      handleFile(files[0])
     }
   }
 
@@ -91,7 +94,9 @@ export default function CreateQuiz() {
     e.preventDefault()
     
     if (!preview) {
-      setError('Primero sube un archivo JSON válido')
+      setError(inputMode === 'paste' 
+        ? 'Primero pega un JSON válido' 
+        : 'Primero sube un archivo JSON válido')
       return
     }
     
@@ -123,6 +128,16 @@ export default function CreateQuiz() {
     }
   }
 
+  const clearAll = () => {
+    setPreview(null)
+    setJsonText('')
+    setQuiz({ title: '', description: '', grado: '', course_id: '' })
+    setError('')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
   if (!catalog) {
     return (
       <div className="page-wrap">
@@ -137,60 +152,84 @@ export default function CreateQuiz() {
 
       <header className="home-header">
         <h1>Crear Cuestionario</h1>
-        <p>Sube un archivo JSON con tu cuestionario</p>
+        <p>Sube un archivo JSON o pega el contenido</p>
       </header>
 
       <form onSubmit={handleSubmit} className="create-quiz-form">
-        <div 
-          className={`dropzone ${dragActive ? 'drag-active' : ''} ${preview ? 'has-file' : ''}`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-          />
-          
-          {preview ? (
-            <div className="dropzone-preview">
-              <div className="dropzone-icon">✓</div>
-              <p className="dropzone-filename">{preview.fileName}</p>
-              <p className="dropzone-info">{getPreviewMessage(preview)}</p>
-              <button 
-                type="button" 
-                className="btn-change-file"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setPreview(null)
-                  fileInputRef.current.value = ''
-                }}
-              >
-                Cambiar archivo
-              </button>
-            </div>
-          ) : (
-            <div className="dropzone-empty">
-              <div className="dropzone-icon">📄</div>
-              <p className="dropzone-text">
-                Arrastra tu archivo JSON aquí o <span className="dropzone-link">haz clic para seleccionar</span>
-              </p>
-              <p className="dropzone-hint">
-                Formato: {`{ grado, course_id, questions: [...] }`}
-              </p>
-            </div>
-          )}
+        <div className="input-mode-tabs">
+          <button
+            type="button"
+            className={`tab-btn ${inputMode === 'paste' ? 'active' : ''}`}
+            onClick={() => setInputMode('paste')}
+          >
+            Pegar JSON
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${inputMode === 'file' ? 'active' : ''}`}
+            onClick={() => setInputMode('file')}
+          >
+            Subir archivo
+          </button>
         </div>
+
+        {inputMode === 'paste' ? (
+          <div className="json-paste-area">
+            <textarea
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              placeholder={`Pega aquí el JSON generado por la IA...\n\nEjemplo:\n{\n  "title": "Mi Cuestionario",\n  "grado": "1asir",\n  "course_id": "pni",\n  "questions": [...]\n}`}
+              rows={12}
+              className="json-textarea"
+            />
+            <button
+              type="button"
+              onClick={() => parseJson(jsonText)}
+              className="btn-validate"
+            >
+              Validar JSON
+            </button>
+          </div>
+        ) : (
+          <div 
+            className={`dropzone ${preview ? 'has-file' : ''}`}
+            onDragEnter={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
+              style={{ display: 'none' }}
+            />
+            
+            {preview ? (
+              <div className="dropzone-preview">
+                <div className="dropzone-icon">✓</div>
+                <p className="dropzone-filename">{preview.source}</p>
+                <p className="dropzone-info">{getPreviewMessage(preview)}</p>
+              </div>
+            ) : (
+              <div className="dropzone-empty">
+                <div className="dropzone-icon">📄</div>
+                <p className="dropzone-text">
+                  Arrastra tu archivo JSON aquí o <span className="dropzone-link">haz clic para seleccionar</span>
+                </p>
+                <p className="dropzone-hint">
+                  Formato: {`{ grado, course_id, questions: [...] }`}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {preview && (
           <>
             <div className="form-group">
-              <label>Título (se toma del JSON, puedes editarlo)</label>
+              <label>Título (puedes editarlo)</label>
               <input
                 type="text"
                 value={quiz.title}
@@ -240,6 +279,10 @@ export default function CreateQuiz() {
                 ))}
               </div>
             </details>
+
+            <button type="button" onClick={clearAll} className="btn-clear">
+              Limpiar y empezar de nuevo
+            </button>
           </>
         )}
 
@@ -251,7 +294,7 @@ export default function CreateQuiz() {
       </form>
 
       <div className="json-format-help">
-        <h3>Formato del archivo JSON</h3>
+        <h3>Formato del JSON</h3>
         <pre>{`{
   "title": "Mi Cuestionario",
   "description": "Descripción opcional",
@@ -260,14 +303,14 @@ export default function CreateQuiz() {
   "questions": [
     {
       "question": "¿Cuál es la pregunta?",
-      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
+      "options": ["A", "B", "C", "D"],
       "answer": 0,
-      "explanation": "Explicación de la respuesta"
+      "explanation": "Explicación"
     }
   ]
 }`}</pre>
         <p className="help-note">
-          <strong>Nota:</strong> El campo <code>answer</code> indica el índice de la respuesta correcta (0-3).
+          <strong>Nota:</strong> <code>answer</code> es el índice de la respuesta correcta (0-3).
         </p>
       </div>
     </div>
