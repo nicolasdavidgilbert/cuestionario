@@ -16,7 +16,7 @@ export const GET: APIRoute = async ({ params }) => {
       })
     }
     
-    const rows = await sql('SELECT * FROM user_quizzes WHERE id = $1', [id])
+    const rows = await sql`SELECT * FROM user_quizzes WHERE id = ${id}`
     
     if (rows.length === 0) {
       return new Response(JSON.stringify({ message: 'Cuestionario no encontrado' }), {
@@ -31,7 +31,8 @@ export const GET: APIRoute = async ({ params }) => {
     })
   } catch (error) {
     console.error('GET quiz error:', error)
-    return new Response(JSON.stringify({ message: 'Error al obtener cuestionario' }), {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    return new Response(JSON.stringify({ message: 'Error al obtener cuestionario: ' + message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
@@ -49,12 +50,13 @@ export const DELETE: APIRoute = async ({ params }) => {
       })
     }
     
-    await sql('DELETE FROM user_quizzes WHERE id = $1', [id])
+    await sql`DELETE FROM user_quizzes WHERE id = ${id}`
     
     return new Response(null, { status: 204 })
   } catch (error) {
     console.error('DELETE quiz error:', error)
-    return new Response(JSON.stringify({ message: 'Error al eliminar cuestionario' }), {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    return new Response(JSON.stringify({ message: 'Error al eliminar cuestionario: ' + message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })

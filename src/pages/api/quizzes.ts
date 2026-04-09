@@ -11,9 +11,9 @@ export const GET: APIRoute = async ({ url }) => {
     
     let rows
     if (grado) {
-      rows = await sql('SELECT * FROM user_quizzes WHERE grado = $1 ORDER BY created_at DESC', [grado])
+      rows = await sql`SELECT * FROM user_quizzes WHERE grado = ${grado} ORDER BY created_at DESC`
     } else {
-      rows = await sql('SELECT * FROM user_quizzes ORDER BY created_at DESC')
+      rows = await sql`SELECT * FROM user_quizzes ORDER BY created_at DESC`
     }
     
     return new Response(JSON.stringify(rows), {
@@ -22,7 +22,8 @@ export const GET: APIRoute = async ({ url }) => {
     })
   } catch (error) {
     console.error('GET quizzes error:', error)
-    return new Response(JSON.stringify({ message: 'Error al obtener cuestionarios' }), {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    return new Response(JSON.stringify({ message: 'Error al obtener cuestionarios: ' + message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
@@ -42,18 +43,11 @@ export const POST: APIRoute = async ({ request }) => {
       })
     }
     
-    const rows = await sql(
-      `INSERT INTO user_quizzes (title, description, grado, course_id, questions)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-      [
-        title || '',
-        description || '',
-        grado,
-        course_id,
-        JSON.stringify(questions)
-      ]
-    )
+    const rows = await sql`
+      INSERT INTO user_quizzes (title, description, grado, course_id, questions)
+      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${JSON.stringify(questions)})
+      RETURNING *
+    `
     
     return new Response(JSON.stringify(rows[0]), {
       status: 201,
