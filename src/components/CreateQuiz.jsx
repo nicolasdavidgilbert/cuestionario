@@ -15,7 +15,8 @@ export default function CreateQuiz() {
     title: '',
     description: '',
     grado: '',
-    course_id: ''
+    course_id: '',
+    unidad: ''
   })
 
   useEffect(() => {
@@ -118,6 +119,7 @@ export default function CreateQuiz() {
         description: quiz.description.trim(),
         grado: quiz.grado,
         course_id: quiz.course_id,
+        unidad: quiz.unidad,
         questions: preview.questions
       })
       
@@ -131,7 +133,7 @@ export default function CreateQuiz() {
   const clearAll = () => {
     setPreview(null)
     setJsonText('')
-    setQuiz({ title: '', description: '', grado: '', course_id: '' })
+    setQuiz({ title: '', description: '', grado: '', course_id: '', unidad: '' })
     setError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -244,7 +246,7 @@ export default function CreateQuiz() {
                 <label>Grado *</label>
                 <select
                   value={quiz.grado}
-                  onChange={(e) => setQuiz({ ...quiz, grado: e.target.value, course_id: '' })}
+                  onChange={(e) => setQuiz({ ...quiz, grado: e.target.value, course_id: '', unidad: '' })}
                 >
                   <option value="">Selecciona grado...</option>
                   {catalog.grados.map((g) => (
@@ -257,7 +259,7 @@ export default function CreateQuiz() {
                 <label>Curso *</label>
                 <select
                   value={quiz.course_id}
-                  onChange={(e) => setQuiz({ ...quiz, course_id: e.target.value })}
+                  onChange={(e) => setQuiz({ ...quiz, course_id: e.target.value, unidad: '' })}
                   disabled={!quiz.grado}
                 >
                   <option value="">Selecciona curso...</option>
@@ -267,6 +269,21 @@ export default function CreateQuiz() {
                 </select>
               </div>
             </div>
+
+            {quiz.grado && quiz.course_id && (
+              <div className="form-group">
+                <label>Unidad Didáctica</label>
+                <select
+                  value={quiz.unidad}
+                  onChange={(e) => setQuiz({ ...quiz, unidad: e.target.value })}
+                >
+                  <option value="">Selecciona unidad (opcional)...</option>
+                  {quiz.grado && catalog.grados.find((g) => g.id === quiz.grado)?.courses.find((c) => c.id === quiz.course_id)?.units.map((u) => (
+                    <option key={u.id} value={u.title || u.id}>{u.title || u.id}</option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <details className="questions-preview">
               <summary>Ver preguntas ({preview.questions.length})</summary>

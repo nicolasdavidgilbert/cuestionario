@@ -62,7 +62,7 @@ export default function MyQuizzes() {
                 </span>
               </div>
               <h3>{quiz.title || `Cuestionario #${quiz.id}`}</h3>
-              <p className="quiz-meta">{quiz.grado} · {quiz.course_id}</p>
+              <p className="quiz-meta">{quiz.grado} · {quiz.unidad || quiz.course_id}</p>
               {quiz.description && (
                 <p className="quiz-desc">{quiz.description}</p>
               )}

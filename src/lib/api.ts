@@ -6,6 +6,7 @@ export interface ApiQuiz {
   description: string | null
   grado: string
   course_id: string
+  unidad: string
   questions: unknown[]
   created_at: string
 }
@@ -15,6 +16,7 @@ export interface CreateQuizPayload {
   description: string
   grado: string
   course_id: string
+  unidad: string
   questions: unknown[]
 }
 

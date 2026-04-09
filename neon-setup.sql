@@ -1,12 +1,14 @@
 -- Neon Database Setup
 -- Run this SQL in your Neon dashboard (console.neon.tech)
 
+-- Tabla principal de quizzes de usuario
 CREATE TABLE IF NOT EXISTS user_quizzes (
   id SERIAL PRIMARY KEY,
   title TEXT DEFAULT '',
   description TEXT DEFAULT '',
   grado TEXT NOT NULL,
   course_id TEXT NOT NULL,
+  unidad TEXT DEFAULT '',
   questions JSONB NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );

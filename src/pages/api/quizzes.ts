@@ -34,7 +34,7 @@ export const POST: APIRoute = async ({ request }) => {
   try {
     const body = await request.json()
     
-    const { title, description, grado, course_id, questions } = body
+    const { title, description, grado, course_id, unidad, questions } = body
     
     if (!grado || !course_id || !Array.isArray(questions) || questions.length === 0) {
       return new Response(JSON.stringify({ message: 'Datos inválidos' }), {
@@ -44,8 +44,8 @@ export const POST: APIRoute = async ({ request }) => {
     }
     
     const rows = await sql`
-      INSERT INTO user_quizzes (title, description, grado, course_id, questions)
-      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${JSON.stringify(questions)})
+      INSERT INTO user_quizzes (title, description, grado, course_id, unidad, questions)
+      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${unidad || ''}, ${JSON.stringify(questions)})
       RETURNING *
     `
     
