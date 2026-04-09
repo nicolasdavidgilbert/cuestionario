@@ -1,0 +1,346 @@
+[
+    {
+        "title": "Big Data"
+    },
+    {
+        "question": "¿Cuándo se sitúan los orígenes del big data?",
+        "options": [
+            "A partir de 2005",
+            "En los años 90",
+            "En las décadas de 1960 y 1970",
+            "Con la aparición de Internet"
+        ],
+        "answer": 2,
+        "explanation": "El documento indica que el origen del big data se remonta a las décadas de 1960 y 1970 con los primeros sistemas informáticos. :contentReference[oaicite:0]{index=0}"
+    },
+    {
+        "question": "¿Qué hecho marcó el punto de inflexión del big data?",
+        "options": [
+            "La creación de bases de datos relacionales",
+            "El crecimiento de Internet y redes sociales",
+            "La aparición de ordenadores personales",
+            "El desarrollo de TCP/IP"
+        ],
+        "answer": 1,
+        "explanation": "El crecimiento exponencial de Internet y plataformas digitales a partir de 2005 impulsó el big data. :contentReference[oaicite:1]{index=1}"
+    },
+    {
+        "question": "¿Qué tecnología permitió procesar grandes volúmenes de datos de forma distribuida?",
+        "options": [
+            "SQL",
+            "Linux",
+            "Apache Hadoop",
+            "Ethernet"
+        ],
+        "answer": 2,
+        "explanation": "Apache Hadoop permitió almacenar y procesar datos de forma distribuida y eficiente. :contentReference[oaicite:2]{index=2}"
+    },
+    {
+        "question": "¿Qué tipo de bases de datos surgieron para adaptarse a nuevos tipos de datos?",
+        "options": [
+            "Relacionales",
+            "NoSQL",
+            "Jerárquicas",
+            "Locales"
+        ],
+        "answer": 1,
+        "explanation": "Las bases de datos NoSQL se diseñaron para manejar datos estructurados y no estructurados. :contentReference[oaicite:3]{index=3}"
+    },
+    {
+        "question": "¿Qué es el big data?",
+        "options": [
+            "Un sistema operativo",
+            "Un lenguaje de programación",
+            "Tecnologías para gestionar grandes datos",
+            "Un tipo de base de datos"
+        ],
+        "answer": 2,
+        "explanation": "El big data se define como el conjunto de tecnologías para gestionar grandes volúmenes de datos. :contentReference[oaicite:4]{index=4}"
+    },
+    {
+        "question": "¿Qué indica la 'V' de volumen?",
+        "options": [
+            "Velocidad",
+            "Cantidad de datos",
+            "Calidad de datos",
+            "Tipo de datos"
+        ],
+        "answer": 1,
+        "explanation": "Volumen se refiere a la gran cantidad de datos generados. :contentReference[oaicite:5]{index=5}"
+    },
+    {
+        "question": "¿Qué describe la velocidad en big data?",
+        "options": [
+            "Tamaño de datos",
+            "Rapidez de generación y procesamiento",
+            "Formato de datos",
+            "Seguridad"
+        ],
+        "answer": 1,
+        "explanation": "La velocidad indica la rapidez con la que se generan y procesan los datos. :contentReference[oaicite:6]{index=6}"
+    },
+    {
+        "question": "¿Qué indica la variedad?",
+        "options": [
+            "Calidad",
+            "Cantidad",
+            "Diversidad de formatos",
+            "Velocidad"
+        ],
+        "answer": 2,
+        "explanation": "Variedad hace referencia a los distintos formatos de datos. :contentReference[oaicite:7]{index=7}"
+    },
+    {
+        "question": "¿Qué significa veracidad?",
+        "options": [
+            "Velocidad",
+            "Fiabilidad de datos",
+            "Volumen",
+            "Formato"
+        ],
+        "answer": 1,
+        "explanation": "La veracidad se refiere a la calidad y fiabilidad de los datos. :contentReference[oaicite:8]{index=8}"
+    },
+    {
+        "question": "¿Qué es la variabilidad?",
+        "options": [
+            "Cantidad",
+            "Cambio en estructura o frecuencia",
+            "Velocidad",
+            "Calidad"
+        ],
+        "answer": 1,
+        "explanation": "La variabilidad indica inconsistencias en formato o frecuencia de los datos. :contentReference[oaicite:9]{index=9}"
+    },
+    {
+        "question": "¿Cuál es el objetivo del valor en big data?",
+        "options": [
+            "Guardar datos",
+            "Transformarlos en información útil",
+            "Eliminar datos",
+            "Reducir tamaño"
+        ],
+        "answer": 1,
+        "explanation": "El valor consiste en obtener información útil para decisiones. :contentReference[oaicite:10]{index=10}"
+    },
+    {
+        "question": "¿Qué diferencia hay entre dato e información?",
+        "options": [
+            "Ninguna",
+            "El dato tiene contexto",
+            "La información es el dato procesado",
+            "La información no sirve"
+        ],
+        "answer": 2,
+        "explanation": "La información es el resultado de procesar datos. :contentReference[oaicite:11]{index=11}"
+    },
+    {
+        "question": "¿Qué es el ciclo de vida del dato?",
+        "options": [
+            "Un software",
+            "Un proceso de transformación de datos",
+            "Una base de datos",
+            "Un algoritmo"
+        ],
+        "answer": 1,
+        "explanation": "Es el proceso que convierte datos en conocimiento útil. :contentReference[oaicite:12]{index=12}"
+    },
+    {
+        "question": "¿Cuál es la primera fase del ciclo del dato?",
+        "options": [
+            "Análisis",
+            "Procesamiento",
+            "Generación de datos",
+            "Interpretación"
+        ],
+        "answer": 2,
+        "explanation": "El ciclo comienza con la generación de datos. :contentReference[oaicite:13]{index=13}"
+    },
+    {
+        "question": "¿Qué se hace en la fase de captura?",
+        "options": [
+            "Eliminar datos",
+            "Guardar datos",
+            "Analizar datos",
+            "Interpretar datos"
+        ],
+        "answer": 1,
+        "explanation": "Se almacenan los datos para su procesamiento. :contentReference[oaicite:14]{index=14}"
+    },
+    {
+        "question": "¿Qué se hace en el procesamiento?",
+        "options": [
+            "Eliminar routers",
+            "Limpiar y transformar datos",
+            "Crear redes",
+            "Transmitir datos"
+        ],
+        "answer": 1,
+        "explanation": "Se limpian y transforman los datos para analizarlos. :contentReference[oaicite:15]{index=15}"
+    },
+    {
+        "question": "¿Qué se busca en el análisis?",
+        "options": [
+            "Eliminar datos",
+            "Encontrar patrones",
+            "Reducir memoria",
+            "Crear hardware"
+        ],
+        "answer": 1,
+        "explanation": "Se buscan patrones y relaciones en los datos. :contentReference[oaicite:16]{index=16}"
+    },
+    {
+        "question": "¿Qué ocurre en la interpretación?",
+        "options": [
+            "Eliminar datos",
+            "Tomar decisiones",
+            "Guardar datos",
+            "Transmitir datos"
+        ],
+        "answer": 1,
+        "explanation": "Se toman decisiones basadas en los resultados. :contentReference[oaicite:17]{index=17}"
+    },
+    {
+        "question": "¿Qué es la ciencia de datos?",
+        "options": [
+            "Una base de datos",
+            "Una disciplina para extraer conocimiento",
+            "Un sistema operativo",
+            "Un hardware"
+        ],
+        "answer": 1,
+        "explanation": "La ciencia de datos combina técnicas para extraer información valiosa. :contentReference[oaicite:18]{index=18}"
+    },
+    {
+        "question": "¿Qué disciplina se centra en interpretar el presente?",
+        "options": [
+            "Data science",
+            "Data analytics",
+            "Machine learning",
+            "Cloud computing"
+        ],
+        "answer": 1,
+        "explanation": "El data analytics analiza el presente para tomar decisiones. :contentReference[oaicite:19]{index=19}"
+    },
+    {
+        "question": "¿Qué permite el almacenamiento por niveles?",
+        "options": [
+            "Eliminar datos",
+            "Organizar datos según su valor",
+            "Reducir velocidad",
+            "Duplicar datos"
+        ],
+        "answer": 1,
+        "explanation": "Permite organizar datos según importancia y uso. :contentReference[oaicite:20]{index=20}"
+    },
+    {
+        "question": "¿Qué tipo de datos están en el nivel crítico?",
+        "options": [
+            "Datos antiguos",
+            "Datos poco usados",
+            "Datos esenciales",
+            "Datos duplicados"
+        ],
+        "answer": 2,
+        "explanation": "Son datos esenciales para el negocio. :contentReference[oaicite:21]{index=21}"
+    },
+    {
+        "question": "¿Qué tipo de almacenamiento usa el nivel frío?",
+        "options": [
+            "RAM",
+            "SSD",
+            "Cintas magnéticas",
+            "Cache"
+        ],
+        "answer": 2,
+        "explanation": "Se usan sistemas lentos y baratos como cintas. :contentReference[oaicite:22]{index=22}"
+    },
+    {
+        "question": "¿Qué ventaja principal tiene el almacenamiento por niveles?",
+        "options": [
+            "Mayor coste",
+            "Reducción de costes",
+            "Menor eficiencia",
+            "Más errores"
+        ],
+        "answer": 1,
+        "explanation": "Reduce costes al optimizar recursos. :contentReference[oaicite:23]{index=23}"
+    },
+    {
+        "question": "¿Qué permite el análisis de clientes?",
+        "options": [
+            "Eliminar datos",
+            "Comprender comportamiento",
+            "Reducir redes",
+            "Eliminar usuarios"
+        ],
+        "answer": 1,
+        "explanation": "Permite entender preferencias y hábitos. :contentReference[oaicite:24]{index=24}"
+    },
+    {
+        "question": "¿Qué mejora el big data en logística?",
+        "options": [
+            "Errores",
+            "Procesos",
+            "Usuarios",
+            "Hardware"
+        ],
+        "answer": 1,
+        "explanation": "Optimiza procesos como rutas y stock. :contentReference[oaicite:25]{index=25}"
+    },
+    {
+        "question": "¿Qué permite el marketing basado en datos?",
+        "options": [
+            "Eliminar publicidad",
+            "Personalizar campañas",
+            "Reducir ventas",
+            "Eliminar clientes"
+        ],
+        "answer": 1,
+        "explanation": "Permite campañas personalizadas. :contentReference[oaicite:26]{index=26}"
+    },
+    {
+        "question": "¿Qué permite detectar el big data en seguridad?",
+        "options": [
+            "Errores de red",
+            "Fraudes",
+            "Usuarios",
+            "Hardware"
+        ],
+        "answer": 1,
+        "explanation": "Permite detectar fraudes analizando patrones. :contentReference[oaicite:27]{index=27}"
+    },
+    {
+        "question": "¿Qué empresa usa big data para recomendaciones?",
+        "options": [
+            "Microsoft",
+            "Amazon",
+            "Intel",
+            "Oracle"
+        ],
+        "answer": 1,
+        "explanation": "Amazon usa big data para recomendaciones personalizadas. :contentReference[oaicite:28]{index=28}"
+    },
+    {
+        "question": "¿Qué empresa usa big data para contenido audiovisual?",
+        "options": [
+            "Spotify",
+            "Netflix",
+            "Zara",
+            "UPS"
+        ],
+        "answer": 1,
+        "explanation": "Netflix analiza hábitos de visualización. :contentReference[oaicite:29]{index=29}"
+    },
+    {
+        "question": "¿Qué empresa optimiza rutas con big data?",
+        "options": [
+            "Amazon",
+            "UPS",
+            "Spotify",
+            "Netflix"
+        ],
+        "answer": 1,
+        "explanation": "UPS usa big data para optimizar rutas. :contentReference[oaicite:30]{index=30}"
+    }
+]
