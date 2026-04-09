@@ -1,18 +1,28 @@
 import { useState, useEffect } from 'react'
+import { getQuizzesByGrado, getAllQuizzes } from '../lib/api'
 
 export default function Landing() {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/catalog.json')
-      .then((r) => {
-        if (!r.ok) throw new Error(r.status)
-        return r.json()
-      })
-      .then(setCatalog)
-      .catch(() => setError(true))
+    loadCatalog()
   }, [])
+
+  const loadCatalog = async () => {
+    try {
+      const res = await fetch('/api/quizzes?type=catalog')
+      if (!res.ok) throw new Error('Failed to fetch')
+      const data = await res.json()
+      setCatalog(data)
+    } catch (e) {
+      console.error(e)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (error) {
     return (
@@ -22,7 +32,7 @@ export default function Landing() {
     )
   }
 
-  if (!catalog) {
+  if (loading || !catalog) {
     return (
       <div className="page-wrap">
         <div className="loading">
@@ -46,31 +56,39 @@ export default function Landing() {
       </header>
 
       <div className="grado-grid">
-        {catalog.grados.map((grado, i) => {
-          const hasCourses = grado.courses.length > 0
-          const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
+        {catalog.grados.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">📚</div>
+            <p>No hay cuestionarios todavía.</p>
+            <a href="/crear" className="btn-primary">Crear el primero</a>
+          </div>
+        ) : (
+          catalog.grados.map((grado, i) => {
+            const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
+            const hasCourses = totalUnits > 0
 
-          return (
-            <a
-              key={grado.id}
-              href={`/${grado.id}`}
-              className={`grado-card ${!hasCourses ? 'empty' : ''}`}
-              style={{ animationDelay: `${i * 0.1}s` }}
-            >
-              <div className="grado-icon">{grado.label.charAt(0)}</div>
-              <div className="grado-info">
-                <span className="grado-label">{grado.label}</span>
-                <span className="grado-desc">{grado.description}</span>
-                <span className="grado-meta">
-                  {hasCourses
-                    ? `${grado.courses.length} asignatura${grado.courses.length > 1 ? 's' : ''} · ${totalUnits} tema${totalUnits > 1 ? 's' : ''}`
-                    : 'Próximamente'}
-                </span>
-              </div>
-              <span className="grado-arrow">→</span>
-            </a>
-          )
-        })}
+            return (
+              <a
+                key={grado.id}
+                href={`/${grado.id}`}
+                className={`grado-card ${!hasCourses ? 'empty' : ''}`}
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                <div className="grado-icon">{grado.label.charAt(0)}</div>
+                <div className="grado-info">
+                  <span className="grado-label">{grado.label}</span>
+                  <span className="grado-desc">{grado.description || 'Curso'}</span>
+                  <span className="grado-meta">
+                    {hasCourses
+                      ? `${grado.courses.length} asignatura${grado.courses.length > 1 ? 's' : ''} · ${totalUnits} tema${totalUnits > 1 ? 's' : ''}`
+                      : 'Sin cuestionarios'}
+                  </span>
+                </div>
+                <span className="grado-arrow">→</span>
+              </a>
+            )
+          })
+        )}
       </div>
     </div>
   )

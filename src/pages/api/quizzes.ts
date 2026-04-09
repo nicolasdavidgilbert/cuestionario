@@ -8,12 +8,21 @@ const sql = neon(import.meta.env.DATABASE_URL)
 export const GET: APIRoute = async ({ url }) => {
   try {
     const grado = url.searchParams.get('grado')
+    const type = url.searchParams.get('type')
     
     let rows
     if (grado) {
       rows = await sql`SELECT * FROM user_quizzes WHERE grado = ${grado} ORDER BY created_at DESC`
     } else {
       rows = await sql`SELECT * FROM user_quizzes ORDER BY created_at DESC`
+    }
+
+    if (type === 'catalog') {
+      const catalog = buildCatalog(rows)
+      return new Response(JSON.stringify(catalog), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      })
     }
     
     return new Response(JSON.stringify(rows), {
@@ -28,6 +37,59 @@ export const GET: APIRoute = async ({ url }) => {
       headers: { 'Content-Type': 'application/json' }
     })
   }
+}
+
+function buildCatalog(quizzes: any[]) {
+  const gradoMap = new Map()
+  
+  for (const quiz of quizzes) {
+    const g = quiz.grado
+    const c = quiz.course_id
+    const u = quiz.unidad || c
+    
+    if (!gradoMap.has(g)) {
+      gradoMap.set(g, {
+        id: g,
+        label: g.toUpperCase(),
+        description: '',
+        courses: new Map()
+      })
+    }
+    
+    const grado = gradoMap.get(g)
+    const courses = grado.courses
+    
+    if (!courses.has(c)) {
+      courses.set(c, {
+        id: c,
+        label: c.toUpperCase(),
+        units: new Map()
+      })
+    }
+    
+    const course = courses.get(c)
+    const units = course.units
+    
+    if (!units.has(u)) {
+      units.set(u, {
+        id: u,
+        title: quiz.title || ''
+      })
+    }
+  }
+  
+  const grados = Array.from(gradoMap.values()).map(g => ({
+    id: g.id,
+    label: g.label,
+    description: g.description,
+    courses: Array.from(g.courses.values()).map(c => ({
+      id: c.id,
+      label: c.label,
+      units: Array.from(c.units.values()).map(u => u)
+    }))
+  }))
+  
+  return { grados }
 }
 
 export const POST: APIRoute = async ({ request }) => {
