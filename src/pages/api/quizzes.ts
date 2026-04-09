@@ -61,7 +61,8 @@ export const POST: APIRoute = async ({ request }) => {
     })
   } catch (error) {
     console.error('POST quiz error:', error)
-    return new Response(JSON.stringify({ message: 'Error al crear cuestionario' }), {
+    const message = error instanceof Error ? error.message : 'Error desconocido'
+    return new Response(JSON.stringify({ message: 'Error al crear cuestionario: ' + message }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     })
