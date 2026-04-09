@@ -1,0 +1,8 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import UserQuiz from '../../components/UserQuiz.jsx'
+const { id } = Astro.params
+---
+<Layout title="Cuestionario">
+  <UserQuiz id={id} client:load />
+</Layout>

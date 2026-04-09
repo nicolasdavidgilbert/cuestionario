@@ -1,0 +1,324 @@
+[
+    {
+        "title": "Análisis del Nivel de Red"
+    },
+    {
+        "question": "¿Cuántas capas tiene el modelo OSI?",
+        "options": [
+            "5",
+            "6",
+            "7",
+            "8"
+        ],
+        "answer": 2,
+        "explanation": "El modelo OSI tiene siete capas numeradas según el documento. :contentReference[oaicite:0]{index=0}"
+    },
+    {
+        "question": "¿Qué función principal tiene la capa de red?",
+        "options": [
+            "Control de errores físicos",
+            "Direccionamiento lógico y enrutamiento",
+            "Gestión de sesiones",
+            "Cifrado de datos"
+        ],
+        "answer": 1,
+        "explanation": "La capa de red proporciona direccionamiento lógico y enrutamiento de paquetes. :contentReference[oaicite:1]{index=1}"
+    },
+    {
+        "question": "¿Qué unidad de datos utiliza la capa de red?",
+        "options": [
+            "Segmento",
+            "Trama",
+            "Bit",
+            "Datagrama"
+        ],
+        "answer": 3,
+        "explanation": "La capa de red utiliza paquetes o datagramas. :contentReference[oaicite:2]{index=2}"
+    },
+    {
+        "question": "¿Qué protocolo pertenece a la capa de red?",
+        "options": [
+            "TCP",
+            "UDP",
+            "IP",
+            "HTTP"
+        ],
+        "answer": 2,
+        "explanation": "IP es el protocolo principal de la capa de red. :contentReference[oaicite:3]{index=3}"
+    },
+    {
+        "question": "¿Cómo es el protocolo IP?",
+        "options": [
+            "Orientado a conexión",
+            "Confiable",
+            "Sin conexión y no confiable",
+            "Seguro"
+        ],
+        "answer": 2,
+        "explanation": "IP es un protocolo sin conexión y no confiable. :contentReference[oaicite:4]{index=4}"
+    },
+    {
+        "question": "¿Qué significa que IP sea no confiable?",
+        "options": [
+            "No usa direcciones",
+            "No garantiza la entrega",
+            "No usa routers",
+            "No tiene cabecera"
+        ],
+        "answer": 1,
+        "explanation": "No garantiza que los paquetes lleguen a destino. :contentReference[oaicite:5]{index=5}"
+    },
+    {
+        "question": "¿Qué tamaño tiene la cabecera mínima de IP?",
+        "options": [
+            "10 bytes",
+            "20 bytes",
+            "32 bytes",
+            "64 bytes"
+        ],
+        "answer": 1,
+        "explanation": "La cabecera mínima de IP es de 20 bytes. :contentReference[oaicite:6]{index=6}"
+    },
+    {
+        "question": "¿Qué campo indica el tiempo de vida de un paquete?",
+        "options": [
+            "Protocolo",
+            "TTL",
+            "Checksum",
+            "IHL"
+        ],
+        "answer": 1,
+        "explanation": "TTL indica el tiempo de vida o número de saltos. :contentReference[oaicite:7]{index=7}"
+    },
+    {
+        "question": "¿Qué campo identifica el protocolo superior?",
+        "options": [
+            "TTL",
+            "IHL",
+            "Protocolo",
+            "ID"
+        ],
+        "answer": 2,
+        "explanation": "El campo protocolo indica la capa superior. :contentReference[oaicite:8]{index=8}"
+    },
+    {
+        "question": "¿Qué garantiza el checksum?",
+        "options": [
+            "Integridad de los datos",
+            "Integridad de la cabecera",
+            "Velocidad",
+            "Seguridad"
+        ],
+        "answer": 1,
+        "explanation": "El checksum solo verifica la cabecera. :contentReference[oaicite:9]{index=9}"
+    },
+    {
+        "question": "¿Qué hacen los routers con las direcciones IP?",
+        "options": [
+            "Las eliminan",
+            "Las traducen",
+            "Las usan para decidir rutas",
+            "Las almacenan"
+        ],
+        "answer": 2,
+        "explanation": "Se usan para decidir por dónde enviar los paquetes. :contentReference[oaicite:10]{index=10}"
+    },
+    {
+        "question": "¿Qué tienen configurado los hosts?",
+        "options": [
+            "Solo IP",
+            "IP, máscara y router",
+            "Solo MAC",
+            "Solo DNS"
+        ],
+        "answer": 1,
+        "explanation": "Los hosts tienen IP, máscara y gateway. :contentReference[oaicite:11]{index=11}"
+    },
+    {
+        "question": "¿Qué operación usan los hosts para obtener su red?",
+        "options": [
+            "OR",
+            "SUMA",
+            "AND",
+            "XOR"
+        ],
+        "answer": 2,
+        "explanation": "Se aplica AND entre IP y máscara. :contentReference[oaicite:12]{index=12}"
+    },
+    {
+        "question": "Si el destino está en la misma red, ¿qué hace el host?",
+        "options": [
+            "Envía al router",
+            "Descarta",
+            "Envía directamente",
+            "Reinicia"
+        ],
+        "answer": 2,
+        "explanation": "Envía directamente a la MAC del destino. :contentReference[oaicite:13]{index=13}"
+    },
+    {
+        "question": "Si el destino no está en la red, ¿qué hace el host?",
+        "options": [
+            "Envía broadcast",
+            "Envía al router",
+            "Descarta",
+            "Duplica"
+        ],
+        "answer": 1,
+        "explanation": "Envía el paquete al router. :contentReference[oaicite:14]{index=14}"
+    },
+    {
+        "question": "¿Qué tienen configurado los routers?",
+        "options": [
+            "Solo IP",
+            "Interfaces y tabla de rutas",
+            "Solo MAC",
+            "Solo DNS"
+        ],
+        "answer": 1,
+        "explanation": "Los routers tienen interfaces y tabla de enrutamiento. :contentReference[oaicite:15]{index=15}"
+    },
+    {
+        "question": "¿Qué hace un router si el destino es su propia IP?",
+        "options": [
+            "Reenvía",
+            "Descarta",
+            "Procesa el paquete",
+            "Duplica"
+        ],
+        "answer": 2,
+        "explanation": "El router procesa el paquete si es para él. :contentReference[oaicite:16]{index=16}"
+    },
+    {
+        "question": "¿Qué hace un router si no encuentra ruta?",
+        "options": [
+            "Reinicia",
+            "Envía broadcast",
+            "Usa ruta por defecto",
+            "Duplica"
+        ],
+        "answer": 2,
+        "explanation": "Usa la ruta por defecto si existe. :contentReference[oaicite:17]{index=17}"
+    },
+    {
+        "question": "¿Qué ocurre si no hay ruta por defecto?",
+        "options": [
+            "Reenvía igual",
+            "Descarta el paquete",
+            "Lo guarda",
+            "Lo duplica"
+        ],
+        "answer": 1,
+        "explanation": "El router descarta el paquete. :contentReference[oaicite:18]{index=18}"
+    },
+    {
+        "question": "¿Qué representa 0.0.0.0 en rutas?",
+        "options": [
+            "Broadcast",
+            "Loopback",
+            "Ruta por defecto",
+            "Error"
+        ],
+        "answer": 2,
+        "explanation": "Indica la ruta por defecto. :contentReference[oaicite:19]{index=19}"
+    },
+    {
+        "question": "¿Qué es una ruta de host?",
+        "options": [
+            "Red completa",
+            "Un único host",
+            "Broadcast",
+            "Router"
+        ],
+        "answer": 1,
+        "explanation": "Se refiere a un único host con máscara /32. :contentReference[oaicite:20]{index=20}"
+    },
+    {
+        "question": "¿Qué indica la métrica en rutas?",
+        "options": [
+            "IP",
+            "Prioridad",
+            "Coste",
+            "MAC"
+        ],
+        "answer": 2,
+        "explanation": "La métrica indica el coste de la ruta. :contentReference[oaicite:21]{index=21}"
+    },
+    {
+        "question": "¿Qué ruta se elige si hay varias?",
+        "options": [
+            "La primera",
+            "La más corta",
+            "La más específica",
+            "La más larga"
+        ],
+        "answer": 2,
+        "explanation": "Se elige la ruta con máscara más larga. :contentReference[oaicite:22]{index=22}"
+    },
+    {
+        "question": "Si dos rutas tienen misma máscara, ¿qué se usa?",
+        "options": [
+            "Orden",
+            "Métrica menor",
+            "IP menor",
+            "TTL"
+        ],
+        "answer": 1,
+        "explanation": "Se usa la de menor métrica. :contentReference[oaicite:23]{index=23}"
+    },
+    {
+        "question": "¿Qué indica Gateway en tabla de rutas?",
+        "options": [
+            "Destino",
+            "Interfaz",
+            "Siguiente salto",
+            "IP origen"
+        ],
+        "answer": 2,
+        "explanation": "Es la IP del siguiente router. :contentReference[oaicite:24]{index=24}"
+    },
+    {
+        "question": "¿Qué indica la interfaz en la tabla?",
+        "options": [
+            "Router",
+            "Salida",
+            "Destino",
+            "IP"
+        ],
+        "answer": 1,
+        "explanation": "Es la interfaz usada para enviar el paquete. :contentReference[oaicite:25]{index=25}"
+    },
+    {
+        "question": "¿Qué es loopback?",
+        "options": [
+            "Internet",
+            "Red local",
+            "El propio host",
+            "Router"
+        ],
+        "answer": 2,
+        "explanation": "Es la dirección interna del propio sistema. :contentReference[oaicite:26]{index=26}"
+    },
+    {
+        "question": "¿Qué es multidifusión?",
+        "options": [
+            "Unicast",
+            "Broadcast",
+            "Multicast",
+            "Anycast"
+        ],
+        "answer": 2,
+        "explanation": "Se refiere a envío a múltiples destinos. :contentReference[oaicite:27]{index=27}"
+    },
+    {
+        "question": "¿Qué es difusión limitada?",
+        "options": [
+            "Broadcast global",
+            "Broadcast local",
+            "Multicast",
+            "Unicast"
+        ],
+        "answer": 1,
+        "explanation": "Es un broadcast limitado a la red local. :contentReference[oaicite:28]{index=28}"
+    }
+]

@@ -13,6 +13,11 @@
               "id": "ud1",
               "path": "/1asir/digitalizacion/ud1",
               "title": "Tema 1: Digitalización y Transformación Digital"
+            },
+            {
+              "id": "ud5",
+              "path": "/1asir/digitalizacion/ud5",
+              "title": ""
             }
           ]
         },
@@ -51,6 +56,21 @@
               "id": "ud2",
               "path": "/1asir/pni/ud2",
               "title": "UD1: arquitectura de comunicaciones OSI-TCP/IP"
+            },
+            {
+              "id": "ud7-1",
+              "path": "/1asir/pni/ud7-1",
+              "title": "Funcionamiento de un router"
+            },
+            {
+              "id": "ud7-2",
+              "path": "/1asir/pni/ud7-2",
+              "title": "Administración de Routers y Rutas Estáticas"
+            },
+            {
+              "id": "ud7-3",
+              "path": "/1asir/pni/ud7-3",
+              "title": "Análisis del Nivel de Red"
             }
           ]
         }

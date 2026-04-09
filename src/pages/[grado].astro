@@ -1,0 +1,8 @@
+---
+import Layout from '../layouts/Layout.astro'
+import Catalog from '../components/Catalog.jsx'
+const { grado } = Astro.params
+---
+<Layout title={grado ? `${grado} - Cuestionarios` : 'Cuestionarios'}>
+  <Catalog grado={grado} client:load />
+</Layout>

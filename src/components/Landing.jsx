@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
 
 export default function Landing() {
   const [catalog, setCatalog] = useState(null)
@@ -39,6 +38,10 @@ export default function Landing() {
       <header className="landing-header">
         <h1>Cuestionarios</h1>
         <p>Elige tu curso para ver los cuestionarios disponibles</p>
+        <div className="user-actions">
+          <a href="/crear" className="btn-primary">+ Crear Cuestionario</a>
+          <a href="/mis-cuestionarios" className="btn-secondary">Mis Cuestionarios</a>
+        </div>
       </header>
 
       <div className="grado-grid">
@@ -47,9 +50,9 @@ export default function Landing() {
           const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
 
           return (
-            <Link
+            <a
               key={grado.id}
-              to={`/${grado.id}`}
+              href={`/${grado.id}`}
               className={`grado-card ${!hasCourses ? 'empty' : ''}`}
               style={{ animationDelay: `${i * 0.1}s` }}
             >
@@ -64,7 +67,7 @@ export default function Landing() {
                 </span>
               </div>
               <span className="grado-arrow">→</span>
-            </Link>
+            </a>
           )
         })}
       </div>

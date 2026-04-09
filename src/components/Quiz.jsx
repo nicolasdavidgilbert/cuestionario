@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useParams, Link } from 'react-router-dom'
 
-export default function Quiz() {
-  const { grado, curso, unidad } = useParams()
+export default function Quiz({ grado, curso, unidad }) {
   const [allQuestions, setAllQuestions] = useState(null)
   const [pageTitle, setPageTitle] = useState('')
   const [error, setError] = useState(false)
@@ -26,7 +24,6 @@ export default function Quiz() {
       .catch(() => setError(true))
   }, [grado, curso, unidad])
 
-  // Select 15 random questions (stable until page reloads)
   const questions = useMemo(() => {
     if (!allQuestions) return []
     const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
@@ -54,11 +51,10 @@ export default function Quiz() {
     window.location.reload()
   }
 
-  // ─── Loading / Error ───
   if (error) {
     return (
       <div className="page-wrap">
-        <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+        <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
         <div className="error-msg">
           No se encontraron preguntas para <strong>{curso?.toUpperCase()}/{unidad?.toUpperCase()}</strong>
         </div>
@@ -77,7 +73,6 @@ export default function Quiz() {
     )
   }
 
-  // ─── Results ───
   if (submitted) {
     const score = questions.reduce(
       (acc, q, i) => acc + (answers[i] === q.answer ? 1 : 0),
@@ -87,7 +82,7 @@ export default function Quiz() {
     return (
       <div className="page-wrap">
         <div className="quiz-container results">
-          <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+          <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
 
           <div className="results-summary">
             <h2>Resultado</h2>
@@ -140,11 +135,10 @@ export default function Quiz() {
     )
   }
 
-  // ─── Quiz Form ───
   return (
     <div className="page-wrap">
       <div className="quiz-container">
-        <Link to={`/${grado}`} className="quiz-back">← Volver al catálogo</Link>
+        <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
 
         <div className="quiz-header">
           <h1>{pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`}</h1>

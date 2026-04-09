@@ -4,11 +4,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node generate-catalog.js && vite",
-    "build": "node generate-catalog.js && vite build",
-    "preview": "vite preview"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/react": "^5.0.3",
+    "@astrojs/vercel": "^10.0.4",
+    "@neondatabase/serverless": "^1.0.2",
+    "astro": "^6.1.5",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.14.0"
@@ -17,7 +21,6 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
-    "typescript": "~6.0.2",
-    "vite": "^8.0.4"
+    "typescript": "~6.0.2"
   }
 }

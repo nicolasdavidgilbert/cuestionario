@@ -1,0 +1,8 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import Quiz from '../../../components/Quiz.jsx'
+const { grado, curso, unidad } = Astro.params
+---
+<Layout title={`${unidad} - ${curso} - ${grado}`}>
+  <Quiz grado={grado} curso={curso} unidad={unidad} client:load />
+</Layout>
