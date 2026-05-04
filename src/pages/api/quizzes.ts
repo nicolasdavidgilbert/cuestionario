@@ -1,41 +1,120 @@
 import type { APIRoute } from 'astro'
 import { neon } from '@neondatabase/serverless'
+import { validateQuizJson } from '../../lib/quizValidator'
+import { normalizeSlug } from '../../lib/slug'
+import { getDatabaseUrl } from '../../lib/server/env'
+import { jsonResponse, serverErrorResponse } from '../../lib/server/http'
+import { rateLimit } from '../../lib/server/rateLimit'
+import { logAudit } from '../../lib/server/audit'
+import { getQuizHash } from '../../lib/server/hash'
 
 export const prerender = false
 
-const sql = neon(import.meta.env.DATABASE_URL)
+function getSql() {
+  return neon(getDatabaseUrl())
+}
 
-export const GET: APIRoute = async ({ url }) => {
+export const GET: APIRoute = async ({ request, url }) => {
   try {
-    const grado = url.searchParams.get('grado')
+    const sql = getSql()
+    const grado = normalizeSlug(url.searchParams.get('grado'))
     const type = url.searchParams.get('type')
+    const q = String(url.searchParams.get('q') || '').trim()
+    const owner = url.searchParams.get('owner')
+    const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
+    const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100)
+    const offset = Math.max(Number(url.searchParams.get('offset') || 0), 0)
     
     let rows
-    if (grado) {
-      rows = await sql`SELECT * FROM user_quizzes WHERE grado = ${grado} ORDER BY created_at DESC`
+    let totalRows
+    const search = `%${q}%`
+
+    if (type === 'catalog') {
+      if (grado) {
+        rows = await sql`SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes WHERE deleted_at IS NULL AND grado = ${grado} ORDER BY created_at DESC`
+      } else {
+        rows = await sql`SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes WHERE deleted_at IS NULL ORDER BY created_at DESC`
+      }
+    } else if (owner === 'me' && ownerToken && q) {
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND owner_token = ${ownerToken}
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`
+        SELECT COUNT(*)::int AS count FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND owner_token = ${ownerToken}
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+      `
+    } else if (owner === 'me' && ownerToken) {
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL AND owner_token = ${ownerToken}
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`SELECT COUNT(*)::int AS count FROM user_quizzes WHERE deleted_at IS NULL AND owner_token = ${ownerToken}`
+    } else if (grado && q) {
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND grado = ${grado}
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`
+        SELECT COUNT(*)::int AS count FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND grado = ${grado}
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+      `
+    } else if (grado) {
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL AND grado = ${grado}
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`SELECT COUNT(*)::int AS count FROM user_quizzes WHERE deleted_at IS NULL AND grado = ${grado}`
+    } else if (q) {
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`
+        SELECT COUNT(*)::int AS count FROM user_quizzes
+        WHERE deleted_at IS NULL
+          AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
+      `
     } else {
-      rows = await sql`SELECT * FROM user_quizzes ORDER BY created_at DESC`
+      rows = await sql`
+        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        WHERE deleted_at IS NULL
+        ORDER BY created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `
+      totalRows = await sql`SELECT COUNT(*)::int AS count FROM user_quizzes WHERE deleted_at IS NULL`
     }
 
     if (type === 'catalog') {
       const catalog = buildCatalog(rows)
-      return new Response(JSON.stringify(catalog), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return jsonResponse(catalog)
     }
     
-    return new Response(JSON.stringify(rows), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    const response = jsonResponse(rows)
+    response.headers.set('X-Total-Count', String(totalRows?.[0]?.count ?? rows.length))
+    return response
   } catch (error) {
     console.error('GET quizzes error:', error)
-    const message = error instanceof Error ? error.message : 'Error desconocido'
-    return new Response(JSON.stringify({ message: 'Error al obtener cuestionarios: ' + message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return serverErrorResponse('Error al obtener cuestionarios', error)
   }
 }
 
@@ -94,33 +173,46 @@ function buildCatalog(quizzes: any[]) {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    const limitError = rateLimit(request, { key: 'create-quiz', limit: 20, windowMs: 60 * 60 * 1000 })
+    if (limitError) return limitError
+
+    const sql = getSql()
     const body = await request.json()
-    
-    const { title, description, grado, course_id, unidad, questions } = body
-    
-    if (!grado || !course_id || !Array.isArray(questions) || questions.length === 0) {
-      return new Response(JSON.stringify({ message: 'Datos inválidos' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+
+    const validation = validateQuizJson(body)
+
+    if (!validation.valid || !validation.data) {
+      return jsonResponse({ message: validation.errors.map((error) => error.message).join('\n') }, 400)
     }
-    
+
+    const { title, description, questions } = validation.data
+    const grado = normalizeSlug(validation.data.grado)
+    const course_id = normalizeSlug(validation.data.course_id)
+    const unidad = normalizeSlug(validation.data.unidad)
+    const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
+    const quizHash = getQuizHash({ title, grado, course_id, unidad, questions })
+
+    const duplicateRows = await sql`
+      SELECT id FROM user_quizzes
+      WHERE deleted_at IS NULL AND quiz_hash = ${quizHash}
+      LIMIT 1
+    `
+
+    if (duplicateRows.length > 0) {
+      return jsonResponse({ message: 'Este cuestionario ya existe', id: duplicateRows[0].id }, 409)
+    }
+
     const rows = await sql`
-      INSERT INTO user_quizzes (title, description, grado, course_id, unidad, questions)
-      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${unidad || ''}, ${JSON.stringify(questions)})
+      INSERT INTO user_quizzes (title, description, grado, course_id, unidad, questions, quiz_hash, owner_token)
+      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${unidad || ''}, ${JSON.stringify(questions)}, ${quizHash}, ${ownerToken})
       RETURNING *
     `
+
+    await logAudit(sql, 'quiz_created', { quiz_id: rows[0].id, grado, course_id, unidad })
     
-    return new Response(JSON.stringify(rows[0]), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return jsonResponse(rows[0], 201)
   } catch (error) {
     console.error('POST quiz error:', error)
-    const message = error instanceof Error ? error.message : 'Error desconocido'
-    return new Response(JSON.stringify({ message: 'Error al crear cuestionario: ' + message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return serverErrorResponse('Error al crear cuestionario', error)
   }
 }

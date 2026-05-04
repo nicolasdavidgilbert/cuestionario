@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { getQuizById } from '../lib/api'
+import { deleteQuiz, getQuizById, reportQuiz } from '../lib/api'
+import { getOwnerToken } from '../lib/ownerToken'
 
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -8,6 +9,12 @@ export default function UserQuiz({ id }) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportType, setReportType] = useState('Contenido incorrecto')
+  const [reportReason, setReportReason] = useState('')
+  const [reportMessage, setReportMessage] = useState('')
+  const [reporting, setReporting] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
     loadQuiz()
@@ -15,7 +22,7 @@ export default function UserQuiz({ id }) {
 
   const loadQuiz = async () => {
     try {
-      const data = await getQuizById(Number(id))
+      const data = await getQuizById(Number(id), getOwnerToken())
       setQuiz(data)
       const allQuestions = data.questions || []
       const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
@@ -39,6 +46,35 @@ export default function UserQuiz({ id }) {
 
   const handleRetry = () => {
     window.location.reload()
+  }
+
+  const handleReport = async (e) => {
+    e.preventDefault()
+
+    setReporting(true)
+    try {
+      await reportQuiz(Number(id), `${reportType}: ${reportReason.trim()}`)
+      setReportReason('')
+      setReportMessage('Reporte enviado. Gracias por avisar.')
+    } catch (error) {
+      setReportMessage(error.message)
+    } finally {
+      setReporting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!window.confirm('¿Eliminar este cuestionario? Se ocultará del catálogo.')) return
+
+    setDeleting(true)
+    try {
+      await deleteQuiz(Number(id), getOwnerToken())
+      window.location.href = '/mis-cuestionarios'
+    } catch (error) {
+      setReportOpen(true)
+      setReportMessage('No se pudo eliminar: ' + error.message)
+      setDeleting(false)
+    }
   }
 
   if (loading) {
@@ -70,7 +106,7 @@ export default function UserQuiz({ id }) {
     return (
       <div className="page-wrap">
         <div className="quiz-container results">
-          <a href="/" className="quiz-back">← Volver al inicio</a>
+          <a href="/" className="quiz-back"><span>←</span> Volver al inicio</a>
 
           <div className="results-summary">
             <h2>Resultado</h2>
@@ -116,7 +152,7 @@ export default function UserQuiz({ id }) {
           })}
 
           <button className="retry-btn" onClick={handleRetry}>
-            Reintentar
+            <span>🔄</span> Reintentar
           </button>
         </div>
       </div>
@@ -138,6 +174,51 @@ export default function UserQuiz({ id }) {
             </div>
           </div>
         </div>
+
+        <div className="quiz-actions">
+          <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
+            <span>{reportOpen ? '✕' : '🚩'}</span>
+            {reportOpen ? 'Cerrar reporte' : 'Reportar'}
+          </button>
+          {quiz.can_delete && (
+            <button type="button" className="btn-clear btn-danger" onClick={handleDelete} disabled={deleting}>
+              <span>{deleting ? '⏳' : '🗑️'}</span>
+              {deleting ? 'Eliminando...' : 'Eliminar mi cuestionario'}
+            </button>
+          )}
+        </div>
+
+        {reportOpen && (
+          <section className="report-box" aria-label="Reportar cuestionario">
+            <h2><span>🚩</span> Reportar este cuestionario</h2>
+            <form onSubmit={handleReport}>
+              <label>
+                Motivo
+                <select value={reportType} onChange={(e) => setReportType(e.target.value)}>
+                  <option>Contenido incorrecto</option>
+                  <option>Preguntas repetidas</option>
+                  <option>Opciones confusas</option>
+                  <option>Contenido ofensivo</option>
+                  <option>Otro problema</option>
+                </select>
+              </label>
+              <label>
+                Explica qué pasa
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Describe el problema para poder revisarlo"
+                  rows={4}
+                  maxLength={500}
+                />
+              </label>
+              <button type="submit" className="btn-validate" disabled={!reportReason.trim() || reporting}>
+                {reporting ? 'Enviando...' : 'Enviar reporte'}
+              </button>
+              {reportMessage && <p className="help-note">{reportMessage}</p>}
+            </form>
+          </section>
+        )}
 
         {questions.map((q, qi) => (
           <div
@@ -169,7 +250,7 @@ export default function UserQuiz({ id }) {
         ))}
 
         <button className="submit-btn" onClick={handleSubmit}>
-          Enviar Respuestas
+          <span>🚀</span> Enviar Respuestas
         </button>
       </div>
     </div>

@@ -1,13 +1,19 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getQuizzesByGrado } from '../lib/api'
+import { getQuizzesByGrado, reportQuiz } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
+  const [quizId, setQuizId] = useState(null)
   const [allQuestions, setAllQuestions] = useState(null)
   const [pageTitle, setPageTitle] = useState('')
   const [error, setError] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportType, setReportType] = useState('Contenido incorrecto')
+  const [reportReason, setReportReason] = useState('')
+  const [reportMessage, setReportMessage] = useState('')
+  const [reporting, setReporting] = useState(false)
 
   useEffect(() => {
     loadQuiz()
@@ -18,10 +24,12 @@ export default function Quiz({ grado, curso, unidad }) {
     setError(false)
     setAnswers({})
     setSubmitted(false)
+    setReportOpen(false)
+    setReportMessage('')
     
     try {
       const quizzes = await getQuizzesByGrado(grado)
-      const quiz = quizzes.find(q => q.course_id === curso && q.unidad === unidad)
+      const quiz = quizzes.find(q => q.course_id === curso && (q.unidad || q.course_id) === unidad)
       
       if (!quiz) {
         setError(true)
@@ -29,6 +37,7 @@ export default function Quiz({ grado, curso, unidad }) {
         return
       }
       
+      setQuizId(quiz.id)
       setPageTitle(quiz.title || '')
       const questions = quiz.questions || []
       setAllQuestions(questions)
@@ -66,10 +75,26 @@ export default function Quiz({ grado, curso, unidad }) {
     window.location.reload()
   }
 
+  const handleReport = async (e) => {
+    e.preventDefault()
+    if (!quizId) return
+
+    setReporting(true)
+    try {
+      await reportQuiz(Number(quizId), `${reportType}: ${reportReason.trim()}`)
+      setReportReason('')
+      setReportMessage('Reporte enviado. Gracias por avisar.')
+    } catch (error) {
+      setReportMessage(error.message)
+    } finally {
+      setReporting(false)
+    }
+  }
+
   if (error) {
     return (
       <div className="page-wrap">
-        <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
+        <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
         <div className="error-msg">
           No se encontraron preguntas para <strong>{curso?.toUpperCase()}/{unidad?.toUpperCase()}</strong>
         </div>
@@ -97,7 +122,7 @@ export default function Quiz({ grado, curso, unidad }) {
     return (
       <div className="page-wrap">
         <div className="quiz-container results">
-          <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
+          <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
 
           <div className="results-summary">
             <h2>Resultado</h2>
@@ -143,7 +168,7 @@ export default function Quiz({ grado, curso, unidad }) {
           })}
 
           <button className="retry-btn" onClick={handleRetry}>
-            Reintentar
+            <span>🔄</span> Reintentar
           </button>
         </div>
       </div>
@@ -153,7 +178,7 @@ export default function Quiz({ grado, curso, unidad }) {
   return (
     <div className="page-wrap">
       <div className="quiz-container">
-        <a href={`/${grado}`} className="quiz-back">← Volver al catálogo</a>
+        <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
 
         <div className="quiz-header">
           <h1>{pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`}</h1>
@@ -164,6 +189,45 @@ export default function Quiz({ grado, curso, unidad }) {
             </div>
           </div>
         </div>
+
+        <div className="quiz-actions">
+          <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
+            <span>{reportOpen ? '✕' : '🚩'}</span>
+            {reportOpen ? 'Cerrar reporte' : 'Reportar'}
+          </button>
+        </div>
+
+        {reportOpen && (
+          <section className="report-box" aria-label="Reportar cuestionario">
+            <h2><span>🚩</span> Reportar este cuestionario</h2>
+            <form onSubmit={handleReport}>
+              <label>
+                Motivo
+                <select value={reportType} onChange={(e) => setReportType(e.target.value)}>
+                  <option>Contenido incorrecto</option>
+                  <option>Preguntas repetidas</option>
+                  <option>Opciones confusas</option>
+                  <option>Contenido ofensivo</option>
+                  <option>Otro problema</option>
+                </select>
+              </label>
+              <label>
+                Explica qué pasa
+                <textarea
+                  value={reportReason}
+                  onChange={(e) => setReportReason(e.target.value)}
+                  placeholder="Describe el problema para poder revisarlo"
+                  rows={4}
+                  maxLength={500}
+                />
+              </label>
+              <button type="submit" className="btn-validate" disabled={!reportReason.trim() || reporting}>
+                {reporting ? 'Enviando...' : 'Enviar reporte'}
+              </button>
+              {reportMessage && <p className="help-note">{reportMessage}</p>}
+            </form>
+          </section>
+        )}
 
         {questions.map((q, qi) => (
           <div
@@ -195,7 +259,7 @@ export default function Quiz({ grado, curso, unidad }) {
         ))}
 
         <button className="submit-btn" onClick={handleSubmit}>
-          Enviar Respuestas
+          <span>🚀</span> Enviar Respuestas
         </button>
       </div>
     </div>
