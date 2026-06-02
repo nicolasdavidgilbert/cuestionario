@@ -1,10 +1,35 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import Landing from '../components/Landing.jsx'
+import Landing, { FAQ_ITEMS } from '../components/Landing.jsx'
 import { getAdsenseConfig } from '../lib/server/env'
 
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
-<Layout title="Cuestionarios">
+<Layout
+  title="Cuestionarios tipo test con IA"
+  description="Crea cuestionarios tipo test desde PDF, organiza preguntas por curso y unidad, y practica exámenes online de forma rápida."
+  structuredData={[
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'Cuestionarios',
+      applicationCategory: 'EducationalApplication',
+      operatingSystem: 'Web',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ITEMS.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer
+        }
+      }))
+    }
+  ]}
+>
   <Landing client:load adsenseClient={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 </Layout>

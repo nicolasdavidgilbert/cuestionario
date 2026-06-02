@@ -2,6 +2,10 @@
 import Layout from '../layouts/Layout.astro'
 import MyQuizzes from '../components/MyQuizzes.jsx'
 ---
-<Layout title="Mis Cuestionarios">
+<Layout
+  title="Mis cuestionarios"
+  description="Panel privado para gestionar cuestionarios creados."
+  robots="noindex, nofollow"
+>
   <MyQuizzes client:load />
 </Layout>

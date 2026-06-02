@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /crear
+Disallow: /mis-cuestionarios
+Disallow: /user-quiz/
+
+Sitemap: https://cuestionario.online/sitemap.xml

@@ -2,6 +2,10 @@
 import Layout from '../layouts/Layout.astro'
 import CreateQuiz from '../components/CreateQuiz.jsx'
 ---
-<Layout title="Crear Cuestionario">
+<Layout
+  title="Crear cuestionario"
+  description="Crea cuestionarios tipo test desde PDF o JSON. Esta pantalla no se indexa porque es una herramienta interna de creación."
+  robots="noindex, nofollow"
+>
   <CreateQuiz client:load />
 </Layout>
