@@ -34,19 +34,52 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
   ]}
 >
   <div class="page-wrap landing">
-    <header class="landing-header">
-      <h1>Cuestionarios</h1>
-      <p>Elige tu curso para ver los cuestionarios disponibles</p>
-      <div class="user-actions">
-        <a href="/crear" class="btn-primary">+ Crear Cuestionario</a>
-        <a href="/prompt" class="btn-secondary">Prompt IA</a>
-        <a href="/mis-cuestionarios" class="btn-secondary">Mis Cuestionarios</a>
+    <header class="landing-header landing-hero">
+      <div class="hero-copy">
+        <p class="hero-eyebrow">Cuestionarios por curso, unidad y asignatura</p>
+        <h1>Estudia con tests sin perder tiempo montándolos</h1>
+        <p class="hero-subtitle">
+          Elige un curso y practica al momento. Si tienes apuntes en PDF, genera preguntas tipo test con IA y guárdalas para seguir estudiando.
+        </p>
+        <div class="user-actions">
+          <a href="#courses-heading" class="btn-primary">Ver cuestionarios</a>
+          <a href="/crear" class="btn-secondary">Crear desde PDF</a>
+        </div>
+        <div class="hero-proof" aria-label="Resumen de ventajas">
+          <span>Sin registro para practicar</span>
+          <span>PDF a preguntas</span>
+          <span>Organizado por unidades</span>
+        </div>
+      </div>
+
+      <div class="hero-panel" aria-label="Vista resumida del producto">
+        <div class="hero-panel__top">
+          <span class="hero-panel__badge">Modo estudio</span>
+          <span class="hero-panel__score">12/15</span>
+        </div>
+        <div class="hero-question-card">
+          <span class="question-number">Pregunta 8</span>
+          <p>¿Cuál es la idea principal del tema?</p>
+          <div class="hero-option is-correct">Respuesta correcta explicada</div>
+          <div class="hero-option">Distractor plausible</div>
+          <div class="hero-option">Otra opción del test</div>
+        </div>
+        <div class="hero-panel__footer">
+          <span>PDF largo dividido automáticamente</span>
+          <strong>Listo para practicar</strong>
+        </div>
       </div>
     </header>
 
-    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    <section class="landing-course-shell" aria-label="Acceso principal a cuestionarios">
+      <div class="course-shell-heading">
+        <p class="section-kicker">Empieza aquí</p>
+        <h2>Elige tu curso</h2>
+      </div>
+      <LandingCourses client:idle />
+    </section>
 
-    <LandingCourses client:idle />
+    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
     <section class="landing-info" aria-labelledby="project-heading">
       <div class="info-copy">
