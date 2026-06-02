@@ -33,9 +33,18 @@ export interface GeneratedQuizPayload extends CreateQuizPayload {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Error desconocido' }))
-    throw new Error(error.message || `HTTP ${response.status}`)
+    const contentType = response.headers.get('content-type') || ''
+
+    if (contentType.includes('application/json')) {
+      const error = await response.json().catch(() => null)
+      throw new Error(error?.message || `HTTP ${response.status}`)
+    }
+
+    const text = await response.text().catch(() => '')
+    const detail = text.trim().replace(/\s+/g, ' ').slice(0, 180)
+    throw new Error(detail ? `HTTP ${response.status}: ${detail}` : `HTTP ${response.status}`)
   }
+
   return response.json()
 }
 
