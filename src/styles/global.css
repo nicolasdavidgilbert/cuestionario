@@ -104,7 +104,6 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 40px 20px 80px;
-  animation: pageEnter 520ms var(--ease-premium) both;
 }
 
 /* ===================== Home / Catalog ===================== */
@@ -611,6 +610,18 @@ body {
   gap: 16px;
   width: 100%;
   max-width: 640px;
+  min-height: 420px;
+  transition: min-height 420ms var(--ease-premium);
+}
+
+.grado-grid.is-ready {
+  min-height: 0;
+}
+
+.course-list-transition {
+  display: grid;
+  gap: 16px;
+  animation: coursesSwap 420ms var(--ease-premium) both;
 }
 
 .grado-card {
@@ -962,6 +973,17 @@ body {
 @keyframes skeletonSheen {
   from { background-position: 120% 0; }
   to { background-position: -120% 0; }
+}
+
+@keyframes coursesSwap {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 
