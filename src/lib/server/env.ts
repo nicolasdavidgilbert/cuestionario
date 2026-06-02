@@ -33,6 +33,28 @@ export function getAdminApiKey(): string {
   return getOptionalEnv('ADMIN_API_KEY')
 }
 
+export function getContactEmail(): string {
+  return getOptionalEnv('NEXT_PUBLIC_CONTACT_EMAIL', 'contacto@cuestionario.online')
+}
+
+export function getAdsenseClient(): string {
+  return getOptionalEnv('NEXT_PUBLIC_ADSENSE_CLIENT')
+}
+
+export function isAdsEnabledFromEnv(): boolean {
+  return getOptionalEnv('NEXT_PUBLIC_ENABLE_ADS') === 'true'
+}
+
+export function getAdsenseConfig() {
+  const client = getAdsenseClient()
+
+  return {
+    client,
+    enabledByEnv: isAdsEnabledFromEnv(),
+    ready: isAdsEnabledFromEnv() && Boolean(client)
+  }
+}
+
 export function isProduction(): boolean {
   return import.meta.env.PROD === true
 }
