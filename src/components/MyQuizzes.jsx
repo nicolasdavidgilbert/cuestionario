@@ -77,22 +77,24 @@ export default function MyQuizzes() {
       </header>
 
       <form className="quiz-list-controls" onSubmit={handleSearchSubmit}>
+        <label className="sr-only" htmlFor="quiz-search">Buscar cuestionarios</label>
         <input
+          id="quiz-search"
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por título, curso, unidad..."
         />
-        <button type="submit" className="btn-validate"><span>🔍</span> Buscar</button>
+        <button type="submit" className="btn-validate"><span aria-hidden="true">⌕</span> Buscar</button>
       </form>
 
       {error && <div className="error-msg">{error}</div>}
 
       {quizzes.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon">📝</div>
+          <div className="empty-icon" aria-hidden="true">0</div>
           <p>No tienes cuestionarios creados en este navegador.</p>
-          <a href="/crear" className="btn-primary"><span>✨</span> Crear el primero</a>
+          <a href="/crear" className="btn-primary"><span aria-hidden="true">+</span> Crear el primero</a>
         </div>
       ) : (
         <div className="unit-grid">
@@ -104,7 +106,7 @@ export default function MyQuizzes() {
               </a>
               <div className="quiz-card-actions">
                 <a href={`/user-quiz/${quiz.id}`} className="btn-secondary">
-                  <span>📂</span> Abrir
+                  <span aria-hidden="true">↗</span> Abrir
                 </a>
                 <button
                   type="button"
@@ -112,7 +114,7 @@ export default function MyQuizzes() {
                   onClick={() => handleDelete(quiz.id)}
                   disabled={deletingId === quiz.id}
                 >
-                  <span>{deletingId === quiz.id ? '⏳' : '🗑️'}</span>
+                  <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
                   {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
                 </button>
               </div>

@@ -61,7 +61,7 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
       <div className="grado-grid">
         {catalog.grados.length === 0 ? (
           <div className="empty-state">
-            <div className="empty-icon">📚</div>
+            <div className="empty-icon" aria-hidden="true">0</div>
             <p>No hay cuestionarios todavía.</p>
             <a href="/crear" className="btn-primary">Crear el primero</a>
           </div>
@@ -87,7 +87,7 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
                       : 'Sin cuestionarios'}
                   </span>
                 </div>
-                <span className="grado-arrow">→</span>
+                <span className="grado-arrow" aria-hidden="true">→</span>
               </a>
             )
           })

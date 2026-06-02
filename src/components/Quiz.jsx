@@ -168,7 +168,7 @@ export default function Quiz({ grado, curso, unidad }) {
           })}
 
           <button className="retry-btn" onClick={handleRetry}>
-            <span>🔄</span> Reintentar
+            <span aria-hidden="true">↻</span> Reintentar
           </button>
         </div>
       </div>
@@ -184,7 +184,14 @@ export default function Quiz({ grado, curso, unidad }) {
           <h1>{pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`}</h1>
           <div className="quiz-progress">
             <span>{answeredCount}/{questions.length} respondidas</span>
-            <div className="quiz-progress-bar">
+            <div
+              className="quiz-progress-bar"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax={questions.length}
+              aria-valuenow={answeredCount}
+              aria-label="Progreso de respuestas"
+            >
               <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
             </div>
           </div>
@@ -192,14 +199,14 @@ export default function Quiz({ grado, curso, unidad }) {
 
         <div className="quiz-actions">
           <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
-            <span>{reportOpen ? '✕' : '🚩'}</span>
+            <span aria-hidden="true">{reportOpen ? '×' : '!'}</span>
             {reportOpen ? 'Cerrar reporte' : 'Reportar'}
           </button>
         </div>
 
         {reportOpen && (
           <section className="report-box" aria-label="Reportar cuestionario">
-            <h2><span>🚩</span> Reportar este cuestionario</h2>
+            <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
               <label>
                 Motivo
@@ -259,7 +266,7 @@ export default function Quiz({ grado, curso, unidad }) {
         ))}
 
         <button className="submit-btn" onClick={handleSubmit}>
-          <span>🚀</span> Enviar Respuestas
+          <span aria-hidden="true">✓</span> Enviar respuestas
         </button>
       </div>
     </div>

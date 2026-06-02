@@ -265,10 +265,12 @@ export default function CreateQuiz() {
       </header>
 
       <form onSubmit={handleSubmit} className="create-quiz-form">
-        <div className="input-mode-tabs">
+        <div className="input-mode-tabs" role="tablist" aria-label="Modo de carga">
           <button
             type="button"
             className={`tab-btn ${inputMode === 'pdf' ? 'active' : ''}`}
+            role="tab"
+            aria-selected={inputMode === 'pdf'}
             onClick={() => setInputMode('pdf')}
           >
             Subir PDF
@@ -276,6 +278,8 @@ export default function CreateQuiz() {
           <button
             type="button"
             className={`tab-btn ${inputMode === 'paste' ? 'active' : ''}`}
+            role="tab"
+            aria-selected={inputMode === 'paste'}
             onClick={() => setInputMode('paste')}
           >
             Pegar JSON
@@ -283,6 +287,8 @@ export default function CreateQuiz() {
           <button
             type="button"
             className={`tab-btn ${inputMode === 'file' ? 'active' : ''}`}
+            role="tab"
+            aria-selected={inputMode === 'file'}
             onClick={() => setInputMode('file')}
           >
             Subir archivo
@@ -291,8 +297,9 @@ export default function CreateQuiz() {
 
         <div className="form-row">
           <div className="form-group">
-            <label>Grado * (escribe o selecciona)</label>
+            <label htmlFor="quiz-grado">Grado * (escribe o selecciona)</label>
             <input
+              id="quiz-grado"
               list="grados-list"
               value={quiz.grado}
               onChange={(e) => setQuiz({ ...quiz, grado: e.target.value, course_id: '', unidad: '' })}
@@ -306,8 +313,9 @@ export default function CreateQuiz() {
           </div>
 
           <div className="form-group">
-            <label>Curso * (escribe o selecciona)</label>
+            <label htmlFor="quiz-course">Curso * (escribe o selecciona)</label>
             <input
+              id="quiz-course"
               list="cursos-list"
               value={quiz.course_id}
               onChange={(e) => setQuiz({ ...quiz, course_id: e.target.value, unidad: '' })}
@@ -323,8 +331,9 @@ export default function CreateQuiz() {
         </div>
 
         <div className="form-group">
-          <label>Unidad (escribe o selecciona, opcional)</label>
+          <label htmlFor="quiz-unit">Unidad (escribe o selecciona, opcional)</label>
           <input
+            id="quiz-unit"
             list="unidades-list"
             value={quiz.unidad}
             onChange={(e) => setQuiz({ ...quiz, unidad: e.target.value })}
@@ -341,6 +350,8 @@ export default function CreateQuiz() {
         {inputMode === 'paste' ? (
           <div className="json-paste-area">
             <textarea
+              id="quiz-json"
+              aria-label="JSON del cuestionario"
               value={jsonText}
               onChange={(e) => setJsonText(e.target.value)}
               placeholder={`Pega aquí el JSON generado por la IA...\n\nEjemplo:\n{\n  "title": "Mi Cuestionario",\n  "grado": "1asir",\n  "course_id": "pni",\n  "questions": [...]\n}`}
@@ -362,6 +373,10 @@ export default function CreateQuiz() {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInputRef.current?.click()}
+            role="button"
+            tabIndex={0}
+            aria-label="Seleccionar archivo JSON"
           >
             <input
               ref={fileInputRef}
@@ -379,7 +394,7 @@ export default function CreateQuiz() {
               </div>
             ) : (
               <div className="dropzone-empty">
-                <div className="dropzone-icon">📄</div>
+                <div className="dropzone-icon" aria-hidden="true">JSON</div>
                 <p className="dropzone-text">
                   Arrastra tu archivo JSON aquí o <span className="dropzone-link">haz clic para seleccionar</span>
                 </p>
@@ -396,6 +411,10 @@ export default function CreateQuiz() {
             onDragOver={handleDrag}
             onDrop={handleDrop}
             onClick={() => !generating && fileInputRef.current?.click()}
+            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !generating && fileInputRef.current?.click()}
+            role="button"
+            tabIndex={generating ? -1 : 0}
+            aria-label="Seleccionar archivo PDF"
           >
             <input
               ref={fileInputRef}
@@ -419,7 +438,7 @@ export default function CreateQuiz() {
               </div>
             ) : (
               <div className="dropzone-empty">
-                <div className="dropzone-icon">📕</div>
+                <div className="dropzone-icon" aria-hidden="true">PDF</div>
                 <p className="dropzone-text">
                   Arrastra tu PDF aquí o <span className="dropzone-link">haz clic para seleccionar</span>
                 </p>
@@ -434,8 +453,9 @@ export default function CreateQuiz() {
         {preview && (
           <>
             <div className="form-group">
-              <label>Título (puedes editarlo)</label>
+              <label htmlFor="quiz-title">Título (puedes editarlo)</label>
               <input
+                id="quiz-title"
                 type="text"
                 value={quiz.title}
                 onChange={(e) => setQuiz({ ...quiz, title: e.target.value })}

@@ -65,7 +65,7 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
 
       {gradoData.courses.length === 0 && (
         <div className="empty-state">
-          <div className="empty-icon">📚</div>
+          <div className="empty-icon" aria-hidden="true">0</div>
           <p>Aún no hay cuestionarios para este curso.</p>
           <a href="/crear" className="btn-primary">Crear cuestionario</a>
         </div>
