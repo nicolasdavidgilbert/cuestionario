@@ -44,30 +44,6 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
     }
   }
 
-  if (error) {
-    return (
-      <div className="page-wrap">
-        <div className="error-msg">No se pudo cargar la información.</div>
-      </div>
-    )
-  }
-
-  if (loading || !catalog) {
-    return (
-      <div className="page-wrap landing">
-        <header className="landing-header">
-          <h1>Cuestionarios</h1>
-          <p>Preparando los cursos disponibles</p>
-        </header>
-        <div className="skeleton-list" aria-label="Cargando cursos">
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-          <div className="skeleton-card" />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="page-wrap landing">
       <header className="landing-header">
@@ -85,7 +61,19 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
       <section className="grado-grid" aria-labelledby="courses-heading">
         <div className="section-kicker">Cuestionarios disponibles</div>
         <h2 id="courses-heading" className="sr-only">Cursos disponibles</h2>
-        {catalog.grados.length === 0 ? (
+        {loading || !catalog ? (
+          <div className="skeleton-list" aria-label="Cargando cursos">
+            <div className="skeleton-card" />
+            <div className="skeleton-card" />
+            <div className="skeleton-card" />
+          </div>
+        ) : error ? (
+          <div className="empty-state">
+            <div className="empty-icon" aria-hidden="true">!</div>
+            <p>No se pudo cargar la lista de cursos.</p>
+            <button type="button" className="btn-secondary" onClick={loadCatalog}>Reintentar</button>
+          </div>
+        ) : catalog.grados.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon" aria-hidden="true">0</div>
             <p>No hay cuestionarios todavía.</p>
