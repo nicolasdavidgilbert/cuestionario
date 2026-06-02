@@ -14,38 +14,6 @@ interface RequestGroqOptions {
 
 const GROQ_TIMEOUT_MS = 45000
 
-class ServerDOMMatrix {
-  a = 1
-  b = 0
-  c = 0
-  d = 1
-  e = 0
-  f = 0
-
-  constructor(init?: number[]) {
-    if (Array.isArray(init) && init.length >= 6) {
-      this.a = Number(init[0]) || 1
-      this.b = Number(init[1]) || 0
-      this.c = Number(init[2]) || 0
-      this.d = Number(init[3]) || 1
-      this.e = Number(init[4]) || 0
-      this.f = Number(init[5]) || 0
-    }
-  }
-
-  multiplySelf() { return this }
-  preMultiplySelf() { return this }
-  translate() { return this }
-  scale() { return this }
-  invertSelf() { return this }
-}
-
-function ensurePdfServerGlobals() {
-  if (typeof globalThis.DOMMatrix === 'undefined') {
-    globalThis.DOMMatrix = ServerDOMMatrix as unknown as typeof DOMMatrix
-  }
-}
-
 function normalizeExtractedText(text: string) {
   return text
     .replace(/\r\n/g, '\n')
@@ -60,18 +28,10 @@ function truncateForModel(text: string, maxChars = 50000) {
 }
 
 async function extractTextFromPdf(file: File) {
-  ensurePdfServerGlobals()
-
-  const { PDFParse } = await import('pdf-parse')
+  const pdfParse = (await import('pdf-parse')).default
   const buffer = Buffer.from(await file.arrayBuffer())
-  const parser = new PDFParse({ data: buffer })
-
-  try {
-    const result = await parser.getText()
-    return normalizeExtractedText(result.text || '')
-  } finally {
-    await parser.destroy()
-  }
+  const result = await pdfParse(buffer)
+  return normalizeExtractedText(result.text || '')
 }
 
 function buildPrompt({ text, grado, course_id, unidad, fileName, attempt }: { text: string; grado: string; course_id: string; unidad: string; fileName: string; attempt: number }) {
