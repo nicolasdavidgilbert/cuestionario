@@ -56,7 +56,7 @@ export default function Landing({ adsenseClient }) {
         </div>
       </header>
 
-      <AdSenseAd slot="1234567890" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
+      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
 
       <div className="grado-grid">
         {catalog.grados.length === 0 ? (
