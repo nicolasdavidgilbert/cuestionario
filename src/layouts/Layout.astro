@@ -89,8 +89,8 @@ const jsonLd = structuredData
         </div>
       </footer>
     </div>
-    {adsOnThisPage && <AdSenseManager client:load clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />}
-    <CookieConsentBanner client:load enabled={adsOnThisPage} />
+    {adsOnThisPage && <AdSenseManager client:idle clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />}
+    <CookieConsentBanner client:idle enabled={adsOnThisPage} />
   </body>
 </html>
 
