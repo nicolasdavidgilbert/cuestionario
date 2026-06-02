@@ -1,12 +1,38 @@
 import type { APIRoute } from 'astro'
 import { generateQuizFromPdf } from '../../lib/server/generateQuizFromPdf'
 import { normalizeSlug } from '../../lib/slug'
-import { jsonResponse, serverErrorResponse } from '../../lib/server/http'
+import { jsonResponse } from '../../lib/server/http'
 import { rateLimit } from '../../lib/server/rateLimit'
 
 export const prerender = false
 
 const MAX_PDF_SIZE_BYTES = 10 * 1024 * 1024
+
+function getPublicGenerateErrorMessage(error: unknown) {
+  const detail = error instanceof Error ? error.message : ''
+
+  if (/Falta configurar GROQ_API_KEY/i.test(detail)) {
+    return 'Falta configurar GROQ_API_KEY en el servidor. Revisa la variable de entorno en Vercel y redepliega.'
+  }
+
+  if (/No se pudo extraer texto del PDF|PDF escaneado/i.test(detail)) {
+    return detail
+  }
+
+  if (/Groq devolvió un error:/i.test(detail)) {
+    return detail
+  }
+
+  if (/aborted|timeout|timed out/i.test(detail)) {
+    return 'La generación tardó demasiado. Prueba con un PDF más corto o vuelve a intentarlo.'
+  }
+
+  if (/JSON|schema|preguntas|question|options|answer/i.test(detail)) {
+    return 'La IA respondió con un cuestionario inválido. Prueba de nuevo o usa un PDF con contenido más claro.'
+  }
+
+  return 'Error al generar cuestionario desde PDF. Revisa los logs de Vercel para ver el detalle técnico.'
+}
 
 export const POST: APIRoute = async ({ request }) => {
   try {
@@ -45,6 +71,6 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ ...quiz, source: `${file.name} (generado desde PDF)` })
   } catch (error) {
     console.error('POST generate quiz from pdf error:', error)
-    return serverErrorResponse('Error al generar cuestionario desde PDF', error)
+    return jsonResponse({ message: getPublicGenerateErrorMessage(error) }, 500)
   }
 }
