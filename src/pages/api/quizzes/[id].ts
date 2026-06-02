@@ -7,6 +7,14 @@ import { logAudit } from '../../../lib/server/audit'
 
 export const prerender = false
 
+function applyReadCacheHeaders(response: Response, hasOwnerToken: boolean) {
+  response.headers.set(
+    'Cache-Control',
+    hasOwnerToken ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
+  )
+  return response
+}
+
 function getSql() {
   return neon(getDatabaseUrl())
 }
@@ -32,7 +40,7 @@ export const GET: APIRoute = async ({ params, request }) => {
       return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
     }
     
-    return jsonResponse(rows[0])
+    return applyReadCacheHeaders(jsonResponse(rows[0]), Boolean(ownerToken))
   } catch (error) {
     console.error('GET quiz error:', error)
     return serverErrorResponse('Error al obtener cuestionario', error)
