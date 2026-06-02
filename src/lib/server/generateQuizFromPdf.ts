@@ -22,7 +22,7 @@ function normalizeExtractedText(text: string) {
     .trim()
 }
 
-function truncateForModel(text: string, maxChars = 50000) {
+function truncateForModel(text: string, maxChars = 18000) {
   if (text.length <= maxChars) return text
   return `${text.slice(0, maxChars)}\n\n[contenido truncado por longitud]`
 }
@@ -39,7 +39,7 @@ function buildPrompt({ text, grado, course_id, unidad, fileName, attempt }: { te
     ? `El valor exacto de "unidad" debe ser "${unidad}".`
     : 'El valor de "unidad" debe ser una cadena vacía si no se puede inferir nada mejor.'
   const retryInstruction = attempt > 1
-    ? '- IMPORTANTE: en el intento anterior no devolviste suficientes preguntas. Esta vez debes devolver como mínimo 20 preguntas completas y distintas.'
+    ? '- IMPORTANTE: en el intento anterior no devolviste suficientes preguntas. Esta vez debes devolver como mínimo 15 preguntas completas y distintas.'
     : ''
 
   return [
@@ -54,7 +54,7 @@ function buildPrompt({ text, grado, course_id, unidad, fileName, attempt }: { te
 
 Reglas:
 - Usa el contenido del documento como fuente principal.
-- Devuelve entre 20 y 50 preguntas.
+- Devuelve entre 15 y 25 preguntas.
 - Cada pregunta debe tener exactamente 4 opciones.
 - Solo una opción puede ser correcta.
 - "answer" debe ser un índice numérico entre 0 y 3.
@@ -91,8 +91,8 @@ function getQuizSchema() {
       unidad: { type: 'string' },
       questions: {
         type: 'array',
-        minItems: 20,
-        maxItems: 50,
+        minItems: 15,
+        maxItems: 25,
         items: {
           type: 'object',
           additionalProperties: false,
@@ -191,7 +191,7 @@ export async function generateQuizFromPdf(input: GenerateQuizInput): Promise<Qui
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Error desconocido')
 
-      if (!/minItems|20 preguntas|20 y 50 preguntas|schema/i.test(lastError.message) || attempt === 3) {
+      if (!/minItems|15 preguntas|15 y 25 preguntas|schema/i.test(lastError.message) || attempt === 3) {
         break
       }
     }
