@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getQuizzesByGrado } from '../lib/api'
+import { getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
 export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
@@ -16,9 +16,7 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
     setError(false)
     
     try {
-      const res = await fetch(`/api/quizzes?grado=${encodeURIComponent(grado)}&type=catalog`)
-      if (!res.ok) throw new Error('Failed to fetch')
-      const data = await res.json()
+      const data = await getQuizCatalog(grado)
       
       const found = data.grados?.find((g) => g.id === grado)
       if (!found || found.courses.length === 0) {

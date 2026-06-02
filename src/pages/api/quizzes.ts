@@ -10,6 +10,14 @@ import { getQuizHash } from '../../lib/server/hash'
 
 export const prerender = false
 
+function applyReadCacheHeaders(response: Response, hasOwnerToken: boolean) {
+  response.headers.set(
+    'Cache-Control',
+    hasOwnerToken ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
+  )
+  return response
+}
+
 function getSql() {
   return neon(getDatabaseUrl())
 }
@@ -106,10 +114,10 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     if (type === 'catalog') {
       const catalog = buildCatalog(rows)
-      return jsonResponse(catalog)
+      return applyReadCacheHeaders(jsonResponse(catalog), Boolean(ownerToken))
     }
     
-    const response = jsonResponse(rows)
+    const response = applyReadCacheHeaders(jsonResponse(rows), Boolean(ownerToken) || owner === 'me')
     response.headers.set('X-Total-Count', String(totalRows?.[0]?.count ?? rows.length))
     return response
   } catch (error) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
 const FAQ_ITEMS = [
@@ -33,9 +34,7 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
 
   const loadCatalog = async () => {
     try {
-      const res = await fetch('/api/quizzes?type=catalog')
-      if (!res.ok) throw new Error('Failed to fetch')
-      const data = await res.json()
+      const data = await getQuizCatalog()
       setCatalog(data)
     } catch (e) {
       console.error(e)
