@@ -34,15 +34,15 @@ export function getAdminApiKey(): string {
 }
 
 export function getContactEmail(): string {
-  return getOptionalEnv('NEXT_PUBLIC_CONTACT_EMAIL', 'contacto@cuestionario.online')
+  return getOptionalEnv('PUBLIC_CONTACT_EMAIL', 'contacto@cuestionario.online')
 }
 
 export function getAdsenseClient(): string {
-  return getOptionalEnv('NEXT_PUBLIC_ADSENSE_CLIENT')
+  return getOptionalEnv('PUBLIC_ADSENSE_CLIENT')
 }
 
 export function isAdsEnabledFromEnv(): boolean {
-  return getOptionalEnv('NEXT_PUBLIC_ENABLE_ADS') === 'true'
+  return getOptionalEnv('PUBLIC_ENABLE_ADS') === 'true'
 }
 
 export function getAdsenseConfig() {

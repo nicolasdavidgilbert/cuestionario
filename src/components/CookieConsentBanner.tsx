@@ -137,7 +137,7 @@ export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBa
 
           {!adsAllowed && (
             <p className="cookie-banner__note">
-              La publicidad seguirá desactivada hasta que `NEXT_PUBLIC_ENABLE_ADS` y `NEXT_PUBLIC_ADSENSE_CLIENT`
+              La publicidad seguirá desactivada hasta que `PUBLIC_ENABLE_ADS` y `PUBLIC_ADSENSE_CLIENT`
               estén configuradas.
             </p>
           )}
