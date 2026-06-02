@@ -58,11 +58,12 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
 
       <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={enabledByEnv} />
 
-      <section className="grado-grid" aria-labelledby="courses-heading">
+      <section className={`grado-grid ${loading || !catalog ? 'is-loading' : 'is-ready'}`} aria-labelledby="courses-heading">
         <div className="section-kicker">Cuestionarios disponibles</div>
         <h2 id="courses-heading" className="sr-only">Cursos disponibles</h2>
         {loading || !catalog ? (
-          <div className="skeleton-list" aria-label="Cargando cursos">
+          <div className="skeleton-list course-list-transition" aria-label="Cargando cursos">
+            <div className="skeleton-card" />
             <div className="skeleton-card" />
             <div className="skeleton-card" />
             <div className="skeleton-card" />
@@ -80,31 +81,33 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
             <a href="/crear" className="btn-primary">Crear el primero</a>
           </div>
         ) : (
-          catalog.grados.map((grado, i) => {
-            const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
-            const hasCourses = totalUnits > 0
+          <div className="course-list-transition">
+            {catalog.grados.map((grado, i) => {
+              const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
+              const hasCourses = totalUnits > 0
 
-            return (
-              <a
-                key={grado.id}
-                href={`/${grado.id}`}
-                className={`grado-card ${!hasCourses ? 'empty' : ''}`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="grado-icon">{grado.label.charAt(0)}</div>
-                <div className="grado-info">
-                  <span className="grado-label">{grado.label}</span>
-                  <span className="grado-desc">{grado.description || 'Curso'}</span>
-                  <span className="grado-meta">
-                    {hasCourses
-                      ? `${grado.courses.length} asignatura${grado.courses.length > 1 ? 's' : ''} · ${totalUnits} tema${totalUnits > 1 ? 's' : ''}`
-                      : 'Sin cuestionarios'}
-                  </span>
-                </div>
-                <span className="grado-arrow" aria-hidden="true">→</span>
-              </a>
-            )
-          })
+              return (
+                <a
+                  key={grado.id}
+                  href={`/${grado.id}`}
+                  className={`grado-card ${!hasCourses ? 'empty' : ''}`}
+                  style={{ animationDelay: `${i * 0.08}s` }}
+                >
+                  <div className="grado-icon">{grado.label.charAt(0)}</div>
+                  <div className="grado-info">
+                    <span className="grado-label">{grado.label}</span>
+                    <span className="grado-desc">{grado.description || 'Curso'}</span>
+                    <span className="grado-meta">
+                      {hasCourses
+                        ? `${grado.courses.length} asignatura${grado.courses.length > 1 ? 's' : ''} · ${totalUnits} tema${totalUnits > 1 ? 's' : ''}`
+                        : 'Sin cuestionarios'}
+                    </span>
+                  </div>
+                  <span className="grado-arrow" aria-hidden="true">→</span>
+                </a>
+              )
+            })}
+          </div>
         )}
       </section>
 

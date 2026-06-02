@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
+import { clearQuizCache, getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
   const cachedQuiz = getCachedQuizzesByGrado(grado)?.find(q => q.course_id === curso && (q.unidad || q.course_id) === unidad) || null
@@ -17,11 +17,12 @@ export default function Quiz({ grado, curso, unidad }) {
   const [reporting, setReporting] = useState(false)
 
   useEffect(() => {
+    if (cachedQuiz) return
     loadQuiz()
   }, [grado, curso, unidad])
 
   const loadQuiz = async () => {
-    setLoading(true)
+    setLoading(!allQuestions)
     setError(false)
     setAnswers({})
     setSubmitted(false)
@@ -73,6 +74,7 @@ export default function Quiz({ grado, curso, unidad }) {
   }
 
   function handleRetry() {
+    clearQuizCache()
     window.location.reload()
   }
 
