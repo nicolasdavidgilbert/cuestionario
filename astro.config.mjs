@@ -5,7 +5,11 @@ import vercel from '@astrojs/vercel'
 export default defineConfig({
   site: 'https://cuestionario.online',
   output: 'server',
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true
+    }
+  }),
   integrations: [react()],
   vite: {
     build: {
