@@ -97,7 +97,7 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
       <h2 id="faq-heading">FAQ sobre los cuestionarios</h2>
       <div class="faq-list">
         {FAQ_ITEMS.map((item) => (
-          <details key={item.question} class="faq-item">
+          <details class="faq-item">
             <summary>{item.question}</summary>
             <p>{item.answer}</p>
           </details>
