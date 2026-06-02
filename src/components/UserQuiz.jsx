@@ -152,7 +152,7 @@ export default function UserQuiz({ id }) {
           })}
 
           <button className="retry-btn" onClick={handleRetry}>
-            <span>🔄</span> Reintentar
+            <span aria-hidden="true">↻</span> Reintentar
           </button>
         </div>
       </div>
@@ -177,12 +177,12 @@ export default function UserQuiz({ id }) {
 
         <div className="quiz-actions">
           <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
-            <span>{reportOpen ? '✕' : '🚩'}</span>
+            <span aria-hidden="true">{reportOpen ? '×' : '!'}</span>
             {reportOpen ? 'Cerrar reporte' : 'Reportar'}
           </button>
           {quiz.can_delete && (
             <button type="button" className="btn-clear btn-danger" onClick={handleDelete} disabled={deleting}>
-              <span>{deleting ? '⏳' : '🗑️'}</span>
+              <span aria-hidden="true">{deleting ? '…' : '×'}</span>
               {deleting ? 'Eliminando...' : 'Eliminar mi cuestionario'}
             </button>
           )}
@@ -190,7 +190,7 @@ export default function UserQuiz({ id }) {
 
         {reportOpen && (
           <section className="report-box" aria-label="Reportar cuestionario">
-            <h2><span>🚩</span> Reportar este cuestionario</h2>
+            <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
               <label>
                 Motivo
@@ -250,7 +250,7 @@ export default function UserQuiz({ id }) {
         ))}
 
         <button className="submit-btn" onClick={handleSubmit}>
-          <span>🚀</span> Enviar Respuestas
+          <span aria-hidden="true">✓</span> Enviar respuestas
         </button>
       </div>
     </div>
