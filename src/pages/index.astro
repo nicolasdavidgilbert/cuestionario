@@ -44,9 +44,9 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
       </div>
     </header>
 
-    <AdSenseAd client:load slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
-    <LandingCourses client:load />
+    <LandingCourses client:idle />
 
     <section class="landing-info" aria-labelledby="project-heading">
       <div class="info-copy">
