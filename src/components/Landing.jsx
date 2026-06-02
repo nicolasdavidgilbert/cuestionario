@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getQuizCatalog } from '../lib/api'
+import { getCachedQuizCatalog, getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
 const FAQ_ITEMS = [
@@ -24,9 +24,9 @@ const FAQ_ITEMS = [
 export { FAQ_ITEMS }
 
 export default function Landing({ adsenseClient, enabledByEnv }) {
-  const [catalog, setCatalog] = useState(null)
+  const [catalog, setCatalog] = useState(() => getCachedQuizCatalog())
   const [error, setError] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(() => !getCachedQuizCatalog())
 
   useEffect(() => {
     loadCatalog()
@@ -54,10 +54,15 @@ export default function Landing({ adsenseClient, enabledByEnv }) {
 
   if (loading || !catalog) {
     return (
-      <div className="page-wrap">
-        <div className="loading">
-          <div className="spinner" />
-          Cargando…
+      <div className="page-wrap landing">
+        <header className="landing-header">
+          <h1>Cuestionarios</h1>
+          <p>Preparando los cursos disponibles</p>
+        </header>
+        <div className="skeleton-list" aria-label="Cargando cursos">
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
+          <div className="skeleton-card" />
         </div>
       </div>
     )

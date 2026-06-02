@@ -15,7 +15,7 @@ function canUseBrowserCache() {
   return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 }
 
-function getCachedValue<T>(key: string): T | null {
+export function getCachedValue<T>(key: string): T | null {
   const now = Date.now()
   const memoryEntry = memoryCache.get(key) as CacheEntry<T> | undefined
 
@@ -168,7 +168,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json()
 }
 
-function buildQuery(params: Record<string, string | number | undefined> = {}) {
+export function buildQuery(params: Record<string, string | number | undefined> = {}) {
   const searchParams = new URLSearchParams()
   Object.entries(params).forEach(([key, value]) => {
     if (key === 'ownerToken') return
@@ -215,6 +215,15 @@ export async function getQuizzesByGrado(grado: string, params: { limit?: number;
 
   const response = await fetch(`${API_BASE}/quizzes${query}`)
   return handleResponse<ApiQuiz[]>(response)
+}
+
+export function getCachedQuizCatalog(grado?: string): QuizCatalog | null {
+  return getCachedValue<QuizCatalog>(`catalog:${grado || 'all'}`)
+}
+
+export function getCachedQuizzesByGrado(grado: string, params: { limit?: number; offset?: number; q?: string } = { limit: 100 }): ApiQuiz[] | null {
+  const query = buildQuery({ limit: 100, ...params, grado })
+  return getCachedValue<ApiQuiz[]>(`quizzes-by-grado:${query}`)
 }
 
 export async function getQuizCatalog(grado?: string): Promise<QuizCatalog> {
