@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getQuizzesByGrado, getAllQuizzes } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
-export default function Landing({ adsenseClient }) {
+export default function Landing({ adsenseClient, enabledByEnv }) {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -56,7 +56,7 @@ export default function Landing({ adsenseClient }) {
         </div>
       </header>
 
-      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
+      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={enabledByEnv} />
 
       <div className="grado-grid">
         {catalog.grados.length === 0 ? (

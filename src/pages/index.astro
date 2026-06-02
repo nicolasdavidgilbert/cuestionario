@@ -3,8 +3,8 @@ import Layout from '../layouts/Layout.astro'
 import Landing from '../components/Landing.jsx'
 import { getAdsenseConfig } from '../lib/server/env'
 
-const { client: adsenseClient } = getAdsenseConfig()
+const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
 <Layout title="Cuestionarios">
-  <Landing client:load adsenseClient={adsenseClient} />
+  <Landing client:load adsenseClient={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 </Layout>
