@@ -89,7 +89,7 @@ export default function Catalog({ grado, adsenseClient }) {
         </section>
       ))}
 
-      <AdSenseAd slot="1234567890" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
+      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
     </div>
   )
 }
