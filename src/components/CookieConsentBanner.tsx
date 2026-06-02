@@ -1,130 +1,37 @@
 "use client";
 
 import { useEffect, useState } from 'react'
-import {
-  COOKIE_CONSENT_CHANGE_EVENT,
-  COOKIE_CONSENT_OPEN_EVENT,
-  defaultCookieConsent,
-  readCookieConsent,
-  type CookieConsent,
-  writeCookieConsent,
-} from '../lib/cookieConsent'
 
-function cloneConsent(consent: CookieConsent) {
-  return {
-    necessary: true,
-    analytics: consent.analytics,
-  }
+type CookieConsentBannerProps = {
+  enabled: boolean
 }
 
-export default function CookieConsentBanner() {
-  const [isOpen, setIsOpen] = useState(false)
-  const [draft, setDraft] = useState<CookieConsent>(defaultCookieConsent)
+export default function CookieConsentBanner({ enabled }: CookieConsentBannerProps) {
+  const [isOpen, setIsOpen] = useState(enabled)
 
   useEffect(() => {
-    const syncFromStorage = () => {
-      const stored = readCookieConsent()
-      if (stored) {
-        setDraft(cloneConsent(stored))
-        setIsOpen(false)
-        return
-      }
+    setIsOpen(enabled)
+  }, [enabled])
 
-      setDraft(defaultCookieConsent)
-      setIsOpen(true)
-    }
-
-    const openPanel = () => {
-      const stored = readCookieConsent()
-      setDraft(cloneConsent(stored ?? defaultCookieConsent))
-      setIsOpen(true)
-    }
-
-    syncFromStorage()
-    window.addEventListener(COOKIE_CONSENT_CHANGE_EVENT, syncFromStorage)
-    window.addEventListener(COOKIE_CONSENT_OPEN_EVENT, openPanel)
-    window.addEventListener('storage', syncFromStorage)
-
-    return () => {
-      window.removeEventListener(COOKIE_CONSENT_CHANGE_EVENT, syncFromStorage)
-      window.removeEventListener(COOKIE_CONSENT_OPEN_EVENT, openPanel)
-      window.removeEventListener('storage', syncFromStorage)
-    }
-  }, [])
-
-  const acceptAll = () => {
-    const next = { necessary: true, analytics: true }
-    writeCookieConsent(next)
-    setDraft(next)
-    setIsOpen(false)
-  }
-
-  const rejectAll = () => {
-    const next = { necessary: true, analytics: false }
-    writeCookieConsent(next)
-    setDraft(next)
-    setIsOpen(false)
-  }
-
-  const savePreferences = () => {
-    const next = {
-      necessary: true,
-      analytics: draft.analytics,
-    }
-
-    writeCookieConsent(next)
-    setDraft(next)
-    setIsOpen(false)
-  }
-
-  if (!isOpen) {
+  if (!enabled || !isOpen) {
     return null
   }
 
   return (
-    <section className="cookie-banner" role="dialog" aria-labelledby="cookie-banner-title" aria-live="polite">
+    <section className="cookie-banner" role="status" aria-labelledby="cookie-banner-title" aria-live="polite">
       <div className="cookie-banner__panel">
         <div className="cookie-banner__copy">
-          <p className="cookie-banner__eyebrow">Cookies y privacidad</p>
-          <h2 id="cookie-banner-title">Gestiona el uso de cookies</h2>
+          <p className="cookie-banner__eyebrow">Publicidad y cookies</p>
+          <h2 id="cookie-banner-title">Aviso sobre anuncios</h2>
           <p>
-            Usamos cookies necesarias para que la app funcione. La publicidad de AdSense se gestiona con
-            el mensaje de consentimiento de Google para EEE, Reino Unido y Suiza; este panel solo controla
-            cookies internas y analítica.
+            Este sitio usa Google AdSense. El consentimiento publicitario lo gestiona Google/CMP cuando
+            corresponde. No usamos este aviso para analítica ni para recoger información personal adicional.
           </p>
         </div>
 
-        <div className="cookie-banner__preferences">
-          <label className="cookie-toggle">
-            <span>
-              <strong>Necesarias</strong>
-              <small>Imprescindibles para sesión, navegación y seguridad.</small>
-            </span>
-            <input type="checkbox" checked readOnly />
-          </label>
-
-          <label className="cookie-toggle">
-            <span>
-              <strong>Analítica</strong>
-              <small>Nos ayuda a entender el uso de la app.</small>
-            </span>
-            <input
-              type="checkbox"
-              checked={draft.analytics}
-              onChange={(e) => setDraft((prev) => ({ ...prev, analytics: e.target.checked }))}
-            />
-          </label>
-        </div>
-
         <div className="cookie-banner__actions">
-          <button type="button" className="btn-secondary" onClick={rejectAll}>
-            Rechazar
-          </button>
-          <button type="button" className="btn-secondary" onClick={savePreferences}>
-            Guardar
-          </button>
-          <button type="button" className="btn-primary" onClick={acceptAll}>
-            Aceptar todo
+          <button type="button" className="btn-primary" onClick={() => setIsOpen(false)}>
+            Entendido
           </button>
         </div>
       </div>
