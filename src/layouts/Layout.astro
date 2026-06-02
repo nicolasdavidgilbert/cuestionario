@@ -33,25 +33,15 @@ const adsOnThisPage = canServeAdsOnPage(Astro.url.pathname, adsEnabledByEnv, ads
             <a href="/privacy-policy">Política de privacidad</a>
             <a href="/terms">Términos</a>
             <a href="/contact">Contacto</a>
-            <button type="button" class="site-footer__cookie-button" data-open-cookie-consent>
-              Configurar cookies
-            </button>
           </nav>
           <p class="site-footer__meta">
-            © {currentYear} cuestionario.online. Preparado para uso con Google AdSense y consentimiento en UE.
+            © {currentYear} cuestionario.online. Preparado para uso con Google AdSense y consentimiento de anuncios en UE.
           </p>
         </div>
       </footer>
     </div>
     {adsOnThisPage && <AdSenseManager client:load clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />}
-    <CookieConsentBanner client:load />
-    <script is:inline>
-      document.addEventListener('click', function (event) {
-        const target = event.target instanceof Element ? event.target.closest('[data-open-cookie-consent]') : null;
-        if (!target) return;
-        window.dispatchEvent(new Event('cookie-consent:open'));
-      });
-    </script>
+    <CookieConsentBanner client:load enabled={adsOnThisPage} />
   </body>
 </html>
 
