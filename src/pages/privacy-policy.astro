@@ -1,0 +1,58 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { getContactEmail } from '../lib/server/env'
+
+const contactEmail = getContactEmail()
+---
+
+<Layout title="Política de privacidad | Cuestionarios">
+  <div class="page-wrap legal-page">
+    <a href="/" class="quiz-back">← Volver</a>
+
+    <header class="home-header">
+      <h1>Política de privacidad</h1>
+      <p>Información básica sobre qué datos usamos y cómo gestionamos cookies y anuncios.</p>
+    </header>
+
+    <section class="legal-card">
+      <h2>Qué datos recoge la app</h2>
+      <p>
+        La app puede tratar los datos que introduzcas voluntariamente al crear o consultar cuestionarios,
+        como títulos, curso, unidad, contenido de preguntas y respuestas, así como metadatos técnicos
+        mínimos necesarios para prestar el servicio y protegerlo frente a abusos.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Cookies y almacenamiento local</h2>
+      <p>
+        Usamos cookies o almacenamiento local para recordar preferencias, mantener la app funcionando y
+        guardar la decisión del usuario sobre cookies no necesarias.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Uso futuro de Google AdSense</h2>
+      <p>
+        Esta web está preparada para integrar Google AdSense. Cuando se active, pueden emplearse cookies
+        publicitarias y tecnologías similares para mostrar anuncios y medir su rendimiento.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Control de cookies</h2>
+      <p>
+        El usuario puede aceptar, rechazar o cambiar sus preferencias en cualquier momento desde el panel
+        de cookies. Las cookies no necesarias no se cargarán hasta que el usuario las autorice.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Contacto</h2>
+      <p>
+        Para cualquier consulta sobre privacidad, escribe a{' '}
+        <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
+      </p>
+    </section>
+  </div>
+</Layout>

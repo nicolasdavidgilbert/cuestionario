@@ -1,8 +1,11 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Catalog from '../components/Catalog.jsx'
+import { getAdsenseConfig } from '../lib/server/env'
+
 const { grado } = Astro.params
+const { client: adsenseClient } = getAdsenseConfig()
 ---
 <Layout title={grado ? `${grado} - Cuestionarios` : 'Cuestionarios'}>
-  <Catalog grado={grado} client:load />
+  <Catalog grado={grado} adsenseClient={adsenseClient} client:load />
 </Layout>

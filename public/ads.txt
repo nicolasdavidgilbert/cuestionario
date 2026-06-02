@@ -1,0 +1,3 @@
+# Google AdSense ads.txt
+# Sustituir pub-XXXXXXXXXXXXXXXX por el ID real de AdSense cuando esté disponible.
+google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0

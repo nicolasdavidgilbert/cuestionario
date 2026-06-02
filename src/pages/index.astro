@@ -1,7 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import Landing from '../components/Landing.jsx'
+import { getAdsenseConfig } from '../lib/server/env'
+
+const { client: adsenseClient } = getAdsenseConfig()
 ---
 <Layout title="Cuestionarios">
-  <Landing client:load />
+  <Landing client:load adsenseClient={adsenseClient} />
 </Layout>

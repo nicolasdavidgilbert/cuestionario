@@ -1,5 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import AdSenseAd from '../components/AdSenseAd.tsx'
+import { getAdsenseConfig } from '../lib/server/env'
+
+const { client: adsenseClient } = getAdsenseConfig()
 ---
 
 <Layout title="Prompt para generar cuestionarios">
@@ -23,6 +27,8 @@ import Layout from '../layouts/Layout.astro'
         <a href="/crear" class="btn-primary">Ir a crear cuestionario</a>
       </div>
     </div>
+
+    <AdSenseAd slot="1234567890" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
 
     <div class="help-section">
       <h3>Cómo usar</h3>

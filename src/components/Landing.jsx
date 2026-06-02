@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getQuizzesByGrado, getAllQuizzes } from '../lib/api'
+import AdSenseAd from './AdSenseAd'
 
-export default function Landing() {
+export default function Landing({ adsenseClient }) {
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -54,6 +55,8 @@ export default function Landing() {
           <a href="/mis-cuestionarios" className="btn-secondary">Mis Cuestionarios</a>
         </div>
       </header>
+
+      <AdSenseAd slot="1234567890" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
 
       <div className="grado-grid">
         {catalog.grados.length === 0 ? (
