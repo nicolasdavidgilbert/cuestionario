@@ -1,5 +1,4 @@
 import type { APIRoute } from 'astro'
-import { generateQuizFromPdf } from '../../lib/server/generateQuizFromPdf'
 import { normalizeSlug } from '../../lib/slug'
 import { jsonResponse } from '../../lib/server/http'
 import { rateLimit } from '../../lib/server/rateLimit'
@@ -17,6 +16,10 @@ function getPublicGenerateErrorMessage(error: unknown) {
 
   if (/No se pudo extraer texto del PDF|PDF escaneado/i.test(detail)) {
     return detail
+  }
+
+  if (/pdf-parse|pdfjs|DOMMatrix|Promise.withResolvers|worker|canvas/i.test(detail)) {
+    return `El servidor no pudo inicializar el lector de PDF: ${detail}`
   }
 
   if (/Groq devolvió un error:/i.test(detail)) {
@@ -61,6 +64,7 @@ export const POST: APIRoute = async ({ request }) => {
       return jsonResponse({ message: 'Los campos grado y curso son obligatorios antes de generar' }, 400)
     }
 
+    const { generateQuizFromPdf } = await import('../../lib/server/generateQuizFromPdf')
     const quiz = await generateQuizFromPdf({
       file,
       grado,
