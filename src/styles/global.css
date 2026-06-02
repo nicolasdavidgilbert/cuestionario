@@ -32,10 +32,13 @@ html { height: 100%; -webkit-font-smoothing: antialiased; }
 body {
   min-height: 100%;
   font-family: var(--font);
-  background:
-    radial-gradient(circle at 18% 0%, rgba(108, 92, 231, 0.18), transparent 30rem),
-    radial-gradient(circle at 84% 12%, rgba(116, 185, 255, 0.08), transparent 26rem),
-    linear-gradient(180deg, var(--c-bg-soft), var(--c-bg) 38rem);
+  background-color: var(--c-bg);
+  background-image:
+    radial-gradient(900px 560px at 18% -8%, rgba(108, 92, 231, 0.18), transparent 72%),
+    radial-gradient(760px 480px at 88% 6%, rgba(116, 185, 255, 0.07), transparent 74%),
+    linear-gradient(180deg, var(--c-bg-soft) 0%, #0e0d17 42%, var(--c-bg) 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   color: var(--c-text);
   line-height: 1.6;
 }
