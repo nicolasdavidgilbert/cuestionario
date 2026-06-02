@@ -29,6 +29,7 @@ export interface CreateQuizPayload {
 
 export interface GeneratedQuizPayload extends CreateQuizPayload {
   source: string
+  notice?: string
 }
 
 async function handleResponse<T>(response: Response): Promise<T> {

@@ -23,10 +23,10 @@ function getPublicGenerateErrorMessage(error: unknown) {
   }
 
   if (/tokens per minute|TPM|Request too large|rate limit/i.test(detail)) {
-    return 'El PDF es demasiado largo para el límite actual de Groq. Hemos reducido el texto enviado; despliega esta versión y prueba de nuevo.'
+    return 'El PDF sigue superando el límite actual de Groq incluso usando trozos más pequeños. Prueba con un PDF más corto o un modelo/límite superior.'
   }
 
-  if (/Groq devolvió un error:/i.test(detail)) {
+  if (/Groq devolvi[oó] un error:/i.test(detail)) {
     return detail
   }
 

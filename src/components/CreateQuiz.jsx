@@ -391,6 +391,7 @@ export default function CreateQuiz() {
                 <div className="dropzone-icon">✓</div>
                 <p className="dropzone-filename">{preview.source}</p>
                 <p className="dropzone-info">{getPreviewMessage(preview)}</p>
+                {preview.notice && <p className="help-note">{preview.notice}</p>}
               </div>
             ) : (
               <div className="dropzone-empty">
@@ -435,6 +436,7 @@ export default function CreateQuiz() {
                 <div className="dropzone-icon">✓</div>
                 <p className="dropzone-filename">{preview.source}</p>
                 <p className="dropzone-info">{getPreviewMessage(preview)}</p>
+                {preview.notice && <p className="help-note">{preview.notice}</p>}
               </div>
             ) : (
               <div className="dropzone-empty">
