@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   COOKIE_CONSENT_CHANGE_EVENT,
   COOKIE_CONSENT_OPEN_EVENT,
@@ -10,23 +10,16 @@ import {
   writeCookieConsent,
 } from '../lib/cookieConsent'
 
-type CookieConsentBannerProps = {
-  adsEnabledByEnv: boolean
-}
-
 function cloneConsent(consent: CookieConsent) {
   return {
     necessary: true,
     analytics: consent.analytics,
-    ads: consent.ads,
   }
 }
 
-export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBannerProps) {
+export default function CookieConsentBanner() {
   const [isOpen, setIsOpen] = useState(false)
   const [draft, setDraft] = useState<CookieConsent>(defaultCookieConsent)
-
-  const adsAllowed = useMemo(() => adsEnabledByEnv, [adsEnabledByEnv])
 
   useEffect(() => {
     const syncFromStorage = () => {
@@ -60,14 +53,14 @@ export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBa
   }, [])
 
   const acceptAll = () => {
-    const next = { necessary: true, analytics: true, ads: adsAllowed }
+    const next = { necessary: true, analytics: true }
     writeCookieConsent(next)
     setDraft(next)
     setIsOpen(false)
   }
 
   const rejectAll = () => {
-    const next = { necessary: true, analytics: false, ads: false }
+    const next = { necessary: true, analytics: false }
     writeCookieConsent(next)
     setDraft(next)
     setIsOpen(false)
@@ -77,7 +70,6 @@ export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBa
     const next = {
       necessary: true,
       analytics: draft.analytics,
-      ads: adsAllowed ? draft.ads : false,
     }
 
     writeCookieConsent(next)
@@ -96,8 +88,9 @@ export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBa
           <p className="cookie-banner__eyebrow">Cookies y privacidad</p>
           <h2 id="cookie-banner-title">Gestiona el uso de cookies</h2>
           <p>
-            Usamos cookies necesarias para que la app funcione. Si activas las no necesarias,
-            podremos habilitar analítica y, cuando esté disponible, publicidad de Google AdSense.
+            Usamos cookies necesarias para que la app funcione. La publicidad de AdSense se gestiona con
+            el mensaje de consentimiento de Google para EEE, Reino Unido y Suiza; este panel solo controla
+            cookies internas y analítica.
           </p>
         </div>
 
@@ -121,26 +114,6 @@ export default function CookieConsentBanner({ adsEnabledByEnv }: CookieConsentBa
               onChange={(e) => setDraft((prev) => ({ ...prev, analytics: e.target.checked }))}
             />
           </label>
-
-          <label className="cookie-toggle">
-            <span>
-              <strong>Publicidad</strong>
-              <small>Necesaria para mostrar anuncios de AdSense.</small>
-            </span>
-            <input
-              type="checkbox"
-              checked={draft.ads}
-              disabled={!adsAllowed}
-              onChange={(e) => setDraft((prev) => ({ ...prev, ads: e.target.checked }))}
-            />
-          </label>
-
-          {!adsAllowed && (
-            <p className="cookie-banner__note">
-              La publicidad seguirá desactivada hasta que `PUBLIC_ENABLE_ADS` y `PUBLIC_ADSENSE_CLIENT`
-              estén configuradas.
-            </p>
-          )}
         </div>
 
         <div className="cookie-banner__actions">

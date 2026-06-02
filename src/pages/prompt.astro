@@ -3,7 +3,7 @@ import Layout from '../layouts/Layout.astro'
 import AdSenseAd from '../components/AdSenseAd'
 import { getAdsenseConfig } from '../lib/server/env'
 
-const { client: adsenseClient } = getAdsenseConfig()
+const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
 
 <Layout title="Prompt para generar cuestionarios">
@@ -28,7 +28,7 @@ const { client: adsenseClient } = getAdsenseConfig()
       </div>
     </div>
 
-    <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
+    <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
     <div class="help-section">
       <h3>Cómo usar</h3>

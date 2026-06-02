@@ -2,6 +2,7 @@
 import AdSenseManager from '../components/AdSenseManager'
 import CookieConsentBanner from '../components/CookieConsentBanner'
 import { getAdsenseConfig } from '../lib/server/env'
+import { canServeAdsOnPage } from '../lib/ads'
 interface Props {
   title?: string
 }
@@ -9,6 +10,7 @@ const { title = 'Cuestionarios' } = Astro.props
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://cuestionario.online').toString()
 const currentYear = new Date().getFullYear()
+const adsOnThisPage = canServeAdsOnPage(Astro.url.pathname, adsEnabledByEnv, adsenseClient)
 ---
 <!DOCTYPE html>
 <html lang="es">
@@ -41,8 +43,8 @@ const currentYear = new Date().getFullYear()
         </div>
       </footer>
     </div>
-    <AdSenseManager client:load clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
-    <CookieConsentBanner client:load adsEnabledByEnv={adsEnabledByEnv} />
+    {adsOnThisPage && <AdSenseManager client:load clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />}
+    <CookieConsentBanner client:load />
     <script is:inline>
       document.addEventListener('click', function (event) {
         const target = event.target instanceof Element ? event.target.closest('[data-open-cookie-consent]') : null;

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { getQuizzesByGrado } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
-export default function Catalog({ grado, adsenseClient }) {
+export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
   const [gradoData, setGradoData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -89,7 +89,7 @@ export default function Catalog({ grado, adsenseClient }) {
         </section>
       ))}
 
-      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} />
+      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={enabledByEnv} />
     </div>
   )
 }
