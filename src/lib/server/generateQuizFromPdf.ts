@@ -28,7 +28,7 @@ function truncateForModel(text: string, maxChars = 50000) {
 }
 
 async function extractTextFromPdf(file: File) {
-  const pdfParse = (await import('pdf-parse')).default
+  const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default
   const buffer = Buffer.from(await file.arrayBuffer())
   const result = await pdfParse(buffer)
   return normalizeExtractedText(result.text || '')
