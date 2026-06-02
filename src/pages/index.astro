@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro'
 import { FAQ_ITEMS } from '../components/Landing.jsx'
 import AdSenseAd from '../components/AdSenseAd'
 import { getAdsenseConfig } from '../lib/server/env'
+import LandingCourses from '../components/LandingCourses.jsx'
 
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
@@ -33,6 +34,11 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
   ]}
 >
   <div class="page-wrap landing">
+    <!-- Glow Blobs for premium dark mode ambient lighting -->
+    <div class="glow-blob glow-blob--1" aria-hidden="true"></div>
+    <div class="glow-blob glow-blob--2" aria-hidden="true"></div>
+    <div class="glow-blob glow-blob--3" aria-hidden="true"></div>
+
     <header class="landing-header landing-hero">
       <div class="hero-copy">
         <p class="hero-eyebrow">Cuestionarios por curso, unidad y asignatura</p>
@@ -42,7 +48,7 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
         </p>
         <div class="hero-action-bar">
           <div class="user-actions">
-            <a href="/cursos" class="btn-primary">Ver cursos</a>
+            <a href="#catalog-section" class="btn-primary">Ver cursos</a>
             <a href="/crear" class="btn-secondary">Crear desde PDF</a>
           </div>
           <div class="hero-proof" aria-label="Resumen de ventajas">
@@ -55,15 +61,29 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
 
       <div class="hero-panel" aria-label="Vista resumida del producto">
         <div class="hero-panel__top">
-          <span class="hero-panel__badge">Modo estudio</span>
+          <span class="hero-panel__badge">
+            <span class="live-dot"></span> Modo estudio
+          </span>
           <span class="hero-panel__score">12/15</span>
         </div>
         <div class="hero-question-card">
           <span class="question-number">Pregunta 8</span>
           <p>¿Cuál es la idea principal del tema?</p>
-          <div class="hero-option is-correct">Respuesta correcta explicada</div>
-          <div class="hero-option">Distractor plausible</div>
-          <div class="hero-option">Otra opción del test</div>
+          <div class="hero-option option-a is-correct">
+            <span class="option-letter">A</span>
+            <span class="option-text">Respuesta correcta explicada</span>
+            <span class="option-status-icon">✓</span>
+          </div>
+          <div class="hero-option option-b">
+            <span class="option-letter">B</span>
+            <span class="option-text">Distractor plausible</span>
+            <span class="option-status-icon">✗</span>
+          </div>
+          <div class="hero-option option-c">
+            <span class="option-letter">C</span>
+            <span class="option-text">Otra opción del test</span>
+            <span class="option-status-icon">✗</span>
+          </div>
         </div>
         <div class="hero-panel__footer">
           <span>PDF largo dividido automáticamente</span>
@@ -73,6 +93,16 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
     </header>
 
     <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+
+    <!-- NUEVO: Catálogo de cursos integrado directly in the landing page -->
+    <section class="landing-catalog" id="catalog-section" aria-labelledby="catalog-heading">
+      <div class="section-kicker">Catálogo interactivo</div>
+      <h2 id="catalog-heading">Comienza a practicar ahora</h2>
+      <p class="section-subtitle">Selecciona tu curso para acceder a todos los cuestionarios tipo test disponibles de forma gratuita.</p>
+      <div class="courses-catalog-shell">
+        <LandingCourses client:visible />
+      </div>
+    </section>
 
     <section class="landing-info" aria-labelledby="project-heading">
       <div class="info-copy">
@@ -86,32 +116,77 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
           Si tienes apuntes o temarios en PDF, puedes generar un cuestionario con IA, revisar las preguntas y guardarlo para practicarlo después.
         </p>
       </div>
-      <div class="info-card" aria-label="Resumen de funcionamiento">
-        <span class="info-card-label">Flujo rápido</span>
-        <ol>
-          <li>Elige tu curso.</li>
-          <li>Selecciona asignatura y unidad.</li>
-          <li>Practica el test y revisa tus respuestas.</li>
-        </ol>
-      </div>
+
+      <!-- Widget interactivo de PDF simulado -->
+      <a href="/crear" class="pdf-mockup-widget" aria-label="Probar generador de PDF a Cuestionario con IA">
+        <div class="pdf-widget-header">
+          <div class="pdf-icon-wrapper">
+            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <div class="pdf-widget-title">
+            <strong>temario_final.pdf</strong>
+            <span>4.2 MB · 48 páginas</span>
+          </div>
+        </div>
+        <div class="pdf-widget-body">
+          <div class="upload-dropzone-sim">
+            <div class="sparkles-icon">✨</div>
+            <p class="dropzone-text">Generando preguntas con IA...</p>
+            <div class="progress-bar-sim">
+              <div class="progress-bar-fill"></div>
+            </div>
+            <span class="processing-status">Analizando temas y distractores</span>
+          </div>
+        </div>
+        <div class="pdf-widget-footer">
+          <span class="btn-widget-cta">Probar creador IA →</span>
+        </div>
+      </a>
     </section>
 
     <section class="landing-steps" aria-labelledby="how-heading">
       <p class="section-kicker">Cómo funciona</p>
       <h2 id="how-heading">Del temario al test en pocos pasos</h2>
       <div class="steps-grid">
-        <article>
-          <span>01</span>
+        <article class="step-card">
+          <div class="step-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <span>Paso 01</span>
           <h3>Practica por curso</h3>
           <p>Los cuestionarios se organizan por grado, asignatura y unidad para que encuentres rápido lo que necesitas estudiar.</p>
         </article>
-        <article>
-          <span>02</span>
+        <article class="step-card">
+          <div class="step-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </div>
+          <span>Paso 02</span>
           <h3>Crea desde PDF</h3>
           <p>Sube un documento con texto y la app genera preguntas tipo test con opciones, respuesta correcta y explicación.</p>
         </article>
-        <article>
-          <span>03</span>
+        <article class="step-card">
+          <div class="step-icon-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <span>Paso 03</span>
           <h3>Revisa y mejora</h3>
           <p>Antes de guardar, puedes comprobar las preguntas generadas y ajustar título, curso o unidad.</p>
         </article>
