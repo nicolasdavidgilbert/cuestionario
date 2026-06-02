@@ -1,4 +1,5 @@
-import { validateQuizJson, type QuizData } from '../quizValidator'
+import { QUIZ_LIMITS } from '../quizLimits'
+import { validateQuizJson, type QuizData, type QuizQuestion } from '../quizValidator'
 import { getGroqApiKey, getGroqModel } from './env'
 
 interface GenerateQuizInput {
@@ -10,9 +11,19 @@ interface GenerateQuizInput {
 
 interface RequestGroqOptions {
   attempt: number
+  minQuestions: number
+  maxQuestions: number
+  maxChars: number
 }
 
+type GeneratedQuiz = QuizData & { notice?: string }
+
 const GROQ_TIMEOUT_MS = 45000
+const SINGLE_CALL_MAX_CHARS = 6500
+const LONG_TEXT_THRESHOLD_CHARS = 9000
+const MAX_CHUNKS = 2
+const CHUNK_MIN_QUESTIONS = 10
+const CHUNK_MAX_QUESTIONS = 13
 
 function normalizeExtractedText(text: string) {
   return text
@@ -22,9 +33,28 @@ function normalizeExtractedText(text: string) {
     .trim()
 }
 
-function truncateForModel(text: string, maxChars = 18000) {
+function truncateForModel(text: string, maxChars: number) {
   if (text.length <= maxChars) return text
   return `${text.slice(0, maxChars)}\n\n[contenido truncado por longitud]`
+}
+
+function splitTextIntoChunks(text: string) {
+  if (text.length <= LONG_TEXT_THRESHOLD_CHARS) return [text]
+
+  const paragraphs = text.split(/\n{2,}/).map((paragraph) => paragraph.trim()).filter(Boolean)
+  const chunks = Array.from({ length: MAX_CHUNKS }, () => '')
+
+  if (paragraphs.length === 0) {
+    const chunkSize = Math.ceil(text.length / MAX_CHUNKS)
+    return Array.from({ length: MAX_CHUNKS }, (_, index) => text.slice(index * chunkSize, (index + 1) * chunkSize).trim()).filter(Boolean)
+  }
+
+  for (const paragraph of paragraphs) {
+    const targetIndex = chunks[0].length <= chunks[1].length ? 0 : 1
+    chunks[targetIndex] = chunks[targetIndex] ? `${chunks[targetIndex]}\n\n${paragraph}` : paragraph
+  }
+
+  return chunks.map((chunk) => chunk.trim()).filter(Boolean)
 }
 
 async function extractTextFromPdf(file: File) {
@@ -34,19 +64,37 @@ async function extractTextFromPdf(file: File) {
   return normalizeExtractedText(result.text || '')
 }
 
-function buildPrompt({ text, grado, course_id, unidad, fileName, attempt }: { text: string; grado: string; course_id: string; unidad: string; fileName: string; attempt: number }) {
+function buildPrompt({
+  text,
+  grado,
+  course_id,
+  unidad,
+  fileName,
+  attempt,
+  minQuestions,
+  maxQuestions
+}: {
+  text: string
+  grado: string
+  course_id: string
+  unidad: string
+  fileName: string
+  attempt: number
+  minQuestions: number
+  maxQuestions: number
+}) {
   const unitInstruction = unidad
     ? `El valor exacto de "unidad" debe ser "${unidad}".`
-    : 'El valor de "unidad" debe ser una cadena vacía si no se puede inferir nada mejor.'
+    : 'El valor de "unidad" debe ser una cadena vacia si no se puede inferir nada mejor.'
   const retryInstruction = attempt > 1
-    ? '- IMPORTANTE: en el intento anterior no devolviste suficientes preguntas. Esta vez debes devolver como mínimo 15 preguntas completas y distintas.'
+    ? `- IMPORTANTE: en el intento anterior no devolviste suficientes preguntas. Esta vez debes devolver como minimo ${minQuestions} preguntas completas y distintas.`
     : ''
 
   return [
     {
       role: 'system',
       content:
-        'Eres un generador de cuestionarios. Debes responder exclusivamente con JSON válido que cumpla el esquema indicado. No escribas texto adicional.'
+        'Eres un generador de cuestionarios. Debes responder exclusivamente con JSON valido que cumpla el esquema indicado. No escribas texto adicional.'
     },
     {
       role: 'user',
@@ -54,20 +102,20 @@ function buildPrompt({ text, grado, course_id, unidad, fileName, attempt }: { te
 
 Reglas:
 - Usa el contenido del documento como fuente principal.
-- Devuelve entre 15 y 25 preguntas.
+- Devuelve entre ${minQuestions} y ${maxQuestions} preguntas.
 - Cada pregunta debe tener exactamente 4 opciones.
-- Solo una opción puede ser correcta.
-- "answer" debe ser un índice numérico entre 0 y 3.
-- Cada pregunta debe incluir una explicación breve y útil.
+- Solo una opcion puede ser correcta.
+- "answer" debe ser un indice numerico entre 0 y 3.
+- Cada pregunta debe incluir una explicacion breve y util.
 - Las opciones incorrectas deben ser plausibles.
 - No inventes datos si el PDF no da suficiente contexto; prioriza preguntas claras y literales.
 - El valor exacto de "grado" debe ser "${grado}".
 - El valor exacto de "course_id" debe ser "${course_id}".
 - ${unitInstruction}
-- ${retryInstruction}
-- El título debe ser descriptivo y estar en el idioma dominante del contenido.
-- La descripción debe resumir el tema en una sola frase.
-- Si el PDF está en español, genera las preguntas en español.
+${retryInstruction}
+- El titulo debe ser descriptivo y estar en el idioma dominante del contenido.
+- La descripcion debe resumir el tema en una sola frase.
+- Si el PDF esta en espanol, genera las preguntas en espanol.
 
 Nombre del archivo: ${fileName}
 
@@ -79,7 +127,7 @@ ${text}
   ]
 }
 
-function getQuizSchema() {
+function getQuizSchema(minQuestions: number, maxQuestions: number) {
   return {
     type: 'object',
     additionalProperties: false,
@@ -91,8 +139,8 @@ function getQuizSchema() {
       unidad: { type: 'string' },
       questions: {
         type: 'array',
-        minItems: 15,
-        maxItems: 25,
+        minItems: minQuestions,
+        maxItems: maxQuestions,
         items: {
           type: 'object',
           additionalProperties: false,
@@ -132,19 +180,21 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
       model,
       temperature: 0.2,
       messages: buildPrompt({
-        text: truncateForModel(text),
+        text: truncateForModel(text, options.maxChars),
         grado: payload.grado,
         course_id: payload.course_id,
         unidad: payload.unidad,
         fileName: payload.file.name,
-        attempt: options.attempt
+        attempt: options.attempt,
+        minQuestions: options.minQuestions,
+        maxQuestions: options.maxQuestions
       }),
       response_format: {
         type: 'json_schema',
         json_schema: {
           name: 'quiz_generation',
           strict: true,
-          schema: getQuizSchema()
+          schema: getQuizSchema(options.minQuestions, options.maxQuestions)
         }
       }
     })
@@ -154,48 +204,151 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
 
   if (!response.ok) {
     const apiMessage = json?.error?.message || json?.message || `HTTP ${response.status}`
-    throw new Error(`Groq devolvió un error: ${apiMessage}`)
+    throw new Error(`Groq devolvio un error: ${apiMessage}`)
   }
 
   const content = json?.choices?.[0]?.message?.content
 
   if (!content || typeof content !== 'string') {
-    throw new Error('La IA no devolvió contenido utilizable')
+    throw new Error('La IA no devolvio contenido utilizable')
   }
 
   return JSON.parse(content)
 }
 
-export async function generateQuizFromPdf(input: GenerateQuizInput): Promise<QuizData> {
-  const extractedText = await extractTextFromPdf(input.file)
-
-  if (!extractedText) {
-    throw new Error('No se pudo extraer texto del PDF. Si es un PDF escaneado, este MVP no lo leerá bien.')
+function normalizeGeneratedQuiz(generated: unknown, input: GenerateQuizInput): QuizData {
+  if (!generated || typeof generated !== 'object') {
+    throw new Error('La IA devolvio un JSON invalido')
   }
 
+  const obj = generated as Record<string, unknown>
+  const questions = Array.isArray(obj.questions) ? obj.questions : []
+  const normalizedQuestions: QuizQuestion[] = []
+
+  for (const question of questions) {
+    if (!question || typeof question !== 'object') continue
+
+    const qObj = question as Record<string, unknown>
+    const options = Array.isArray(qObj.options)
+      ? qObj.options.map((option) => String(option || '').trim()).filter(Boolean)
+      : []
+    const answer = qObj.answer
+
+    if (typeof qObj.question !== 'string' || !qObj.question.trim()) continue
+    if (options.length !== 4) continue
+    if (typeof answer !== 'number' || !Number.isInteger(answer) || answer < 0 || answer > 3) continue
+
+    normalizedQuestions.push({
+      question: qObj.question.trim().slice(0, QUIZ_LIMITS.questionMaxLength),
+      options: options.map((option) => option.slice(0, QUIZ_LIMITS.optionMaxLength)),
+      answer,
+      explanation: typeof qObj.explanation === 'string'
+        ? qObj.explanation.trim().slice(0, QUIZ_LIMITS.explanationMaxLength)
+        : ''
+    })
+  }
+
+  if (normalizedQuestions.length === 0) {
+    throw new Error('La IA no devolvio preguntas utilizables')
+  }
+
+  return {
+    title: typeof obj.title === 'string' && obj.title.trim() ? obj.title.trim() : `Cuestionario de ${input.file.name}`,
+    description: typeof obj.description === 'string' ? obj.description.trim() : 'Cuestionario generado desde PDF.',
+    grado: input.grado,
+    course_id: input.course_id,
+    unidad: typeof obj.unidad === 'string' ? obj.unidad.trim() : input.unidad,
+    questions: normalizedQuestions
+  }
+}
+
+async function generatePartialQuiz(input: GenerateQuizInput, text: string, options: Omit<RequestGroqOptions, 'attempt'>) {
   let lastError: Error | null = null
 
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      const generated = await requestGroqQuiz(input, extractedText, { attempt })
-      const validation = validateQuizJson(generated)
+      const generated = await requestGroqQuiz(input, text, { ...options, attempt })
+      const quiz = normalizeGeneratedQuiz(generated, input)
 
-      if (!validation.valid || !validation.data) {
-        throw new Error(validation.errors.map((error) => error.message).join('\n'))
+      if (quiz.questions.length < options.minQuestions) {
+        throw new Error(`minItems: se esperaban al menos ${options.minQuestions} preguntas`)
       }
 
-      return {
-        ...validation.data,
-        unidad: typeof generated.unidad === 'string' ? generated.unidad.trim() : input.unidad
-      }
+      return quiz
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Error desconocido')
 
-      if (!/minItems|15 preguntas|15 y 25 preguntas|schema/i.test(lastError.message) || attempt === 3) {
+      if (!/minItems|preguntas|schema/i.test(lastError.message) || attempt === 3) {
         break
       }
     }
   }
 
-  throw lastError || new Error('No se pudo generar un cuestionario válido')
+  throw lastError || new Error('No se pudo generar un cuestionario valido')
+}
+
+function mergeQuizzes(input: GenerateQuizInput, quizzes: QuizData[], notice?: string): GeneratedQuiz {
+  const seenQuestions = new Set<string>()
+  const questions = quizzes.flatMap((quiz) => quiz.questions).filter((question) => {
+    const key = question.question.trim().toLowerCase()
+    if (seenQuestions.has(key)) return false
+    seenQuestions.add(key)
+    return true
+  }).slice(0, QUIZ_LIMITS.maxQuestions)
+
+  return {
+    title: quizzes[0]?.title || `Cuestionario de ${input.file.name}`,
+    description: quizzes[0]?.description || 'Cuestionario generado desde PDF.',
+    grado: input.grado,
+    course_id: input.course_id,
+    unidad: quizzes.find((quiz) => quiz.unidad)?.unidad || input.unidad,
+    questions,
+    notice
+  }
+}
+
+function validateFinalQuiz(quiz: GeneratedQuiz) {
+  const validation = validateQuizJson(quiz)
+
+  if (!validation.valid || !validation.data) {
+    throw new Error(validation.errors.map((error) => error.message).join('\n'))
+  }
+
+  return {
+    ...validation.data,
+    notice: quiz.notice
+  }
+}
+
+export async function generateQuizFromPdf(input: GenerateQuizInput): Promise<GeneratedQuiz> {
+  const extractedText = await extractTextFromPdf(input.file)
+
+  if (!extractedText) {
+    throw new Error('No se pudo extraer texto del PDF. Si es un PDF escaneado, este MVP no lo leera bien.')
+  }
+
+  const chunks = splitTextIntoChunks(extractedText)
+
+  if (chunks.length === 1) {
+    const quiz = await generatePartialQuiz(input, chunks[0], {
+      minQuestions: QUIZ_LIMITS.minQuestions,
+      maxQuestions: Math.min(25, QUIZ_LIMITS.maxQuestions),
+      maxChars: SINGLE_CALL_MAX_CHARS
+    })
+
+    return validateFinalQuiz(mergeQuizzes(input, [quiz]))
+  }
+
+  const quizzes: QuizData[] = []
+
+  for (const chunk of chunks) {
+    quizzes.push(await generatePartialQuiz(input, chunk, {
+      minQuestions: CHUNK_MIN_QUESTIONS,
+      maxQuestions: CHUNK_MAX_QUESTIONS,
+      maxChars: SINGLE_CALL_MAX_CHARS
+    }))
+  }
+
+  const notice = `PDF largo: se dividio el contenido en ${chunks.length} partes para no superar el limite actual de Groq. Las preguntas se han unido en un unico cuestionario.`
+  return validateFinalQuiz(mergeQuizzes(input, quizzes, notice))
 }
