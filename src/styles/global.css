@@ -577,11 +577,11 @@ body {
 .landing-hero {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.04fr) minmax(280px, 0.78fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
   gap: clamp(22px, 4vw, 44px);
   align-items: center;
   width: 100%;
-  max-width: 1080px;
+  max-width: 1180px;
   margin-bottom: 34px;
   padding: clamp(28px, 5vw, 54px);
   text-align: left;
@@ -725,7 +725,7 @@ body {
 
 .landing-course-shell {
   width: 100%;
-  max-width: 760px;
+  max-width: 880px;
   margin-bottom: 20px;
   padding: 18px;
   background: rgba(255, 255, 255, 0.035);
@@ -745,6 +745,43 @@ body {
   color: var(--c-text);
   font-size: clamp(1.3rem, 3vw, 1.75rem);
   line-height: 1.1;
+}
+
+.landing-cta-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 24px;
+  align-items: center;
+}
+
+.landing-cta-panel .course-shell-heading,
+.landing-cta-copy {
+  margin: 0;
+}
+
+.landing-cta-copy {
+  color: var(--c-text-muted);
+  line-height: 1.65;
+}
+
+.courses-page {
+  max-width: 1120px;
+}
+
+.courses-header {
+  max-width: 820px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.courses-catalog-shell {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid var(--c-border);
+  border-radius: calc(var(--radius) + 8px);
 }
 
 .landing-header h1,
@@ -1255,6 +1292,7 @@ body {
   .score-display { font-size: 2.5rem; }
   .user-actions { flex-direction: column; align-items: stretch; }
   .landing-course-shell { padding: 14px; }
+  .landing-cta-panel { grid-template-columns: 1fr; }
   .course-shell-heading { align-items: flex-start; flex-direction: column; }
   .hero-proof { gap: 7px; }
   .hero-proof span { width: 100%; text-align: center; }

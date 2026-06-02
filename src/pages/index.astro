@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import { FAQ_ITEMS } from '../components/Landing.jsx'
-import LandingCourses from '../components/LandingCourses.jsx'
 import AdSenseAd from '../components/AdSenseAd'
 import { getAdsenseConfig } from '../lib/server/env'
 
@@ -42,7 +41,7 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
           Elige un curso y practica al momento. Si tienes apuntes en PDF, genera preguntas tipo test con IA y guárdalas para seguir estudiando.
         </p>
         <div class="user-actions">
-          <a href="#courses-heading" class="btn-primary">Ver cuestionarios</a>
+          <a href="/cursos" class="btn-primary">Ver cursos</a>
           <a href="/crear" class="btn-secondary">Crear desde PDF</a>
         </div>
         <div class="hero-proof" aria-label="Resumen de ventajas">
@@ -71,12 +70,15 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
       </div>
     </header>
 
-    <section class="landing-course-shell" aria-label="Acceso principal a cuestionarios">
+    <section class="landing-course-shell landing-cta-panel" aria-label="Acceso principal a cuestionarios">
       <div class="course-shell-heading">
         <p class="section-kicker">Empieza aquí</p>
-        <h2>Elige tu curso</h2>
+        <h2>La lista completa de cursos está en una página dedicada.</h2>
       </div>
-      <LandingCourses client:idle />
+      <p class="landing-cta-copy">
+        Entra al catálogo, elige tu curso y empieza por la unidad que necesites practicar.
+      </p>
+      <a href="/cursos" class="btn-primary">Abrir catálogo de cursos</a>
     </section>
 
     <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />

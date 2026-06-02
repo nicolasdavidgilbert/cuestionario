@@ -1,0 +1,28 @@
+---
+import Layout from '../layouts/Layout.astro'
+import LandingCourses from '../components/LandingCourses.jsx'
+import AdSenseAd from '../components/AdSenseAd'
+import { getAdsenseConfig } from '../lib/server/env'
+
+const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
+---
+<Layout
+  title="Cursos con cuestionarios"
+  description="Explora los cursos disponibles y accede a cuestionarios tipo test organizados por asignatura y unidad."
+>
+  <div class="page-wrap courses-page">
+    <a href="/" class="quiz-back">← Volver al inicio</a>
+
+    <header class="home-header courses-header">
+      <p class="section-kicker">Catálogo</p>
+      <h1>Cursos disponibles</h1>
+      <p>Elige un curso para ver sus asignaturas, unidades y cuestionarios tipo test.</p>
+    </header>
+
+    <section class="courses-catalog-shell" aria-label="Lista de cursos disponibles">
+      <LandingCourses client:idle />
+    </section>
+
+    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+  </div>
+</Layout>
