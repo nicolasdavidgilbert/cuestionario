@@ -3,23 +3,72 @@ import AdSenseManager from '../components/AdSenseManager'
 import CookieConsentBanner from '../components/CookieConsentBanner'
 import { getAdsenseConfig } from '../lib/server/env'
 import { canServeAdsOnPage } from '../lib/ads'
+
 interface Props {
   title?: string
+  description?: string
+  image?: string
+  robots?: 'index, follow' | 'noindex, nofollow'
+  structuredData?: Record<string, unknown> | Record<string, unknown>[]
 }
-const { title = 'Cuestionarios' } = Astro.props
+
+const SITE_NAME = 'Cuestionarios'
+const DEFAULT_DESCRIPTION = 'Crea, practica y comparte cuestionarios tipo test por curso, unidad y asignatura. Genera preguntas desde PDF con IA y estudia de forma más rápida.'
+
+const {
+  title = SITE_NAME,
+  description = DEFAULT_DESCRIPTION,
+  image = '/assets/favicon.png',
+  robots = 'index, follow',
+  structuredData
+} = Astro.props
+
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? 'https://cuestionario.online').toString()
+const absoluteImageUrl = new URL(image, Astro.site ?? 'https://cuestionario.online').toString()
 const currentYear = new Date().getFullYear()
 const adsOnThisPage = canServeAdsOnPage(Astro.url.pathname, adsEnabledByEnv, adsenseClient)
+const pageTitle = title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`
+const baseStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: SITE_NAME,
+  url: new URL('/', Astro.site ?? 'https://cuestionario.online').toString(),
+  description: DEFAULT_DESCRIPTION,
+  inLanguage: 'es'
+}
+const jsonLd = structuredData
+  ? Array.isArray(structuredData)
+    ? [baseStructuredData, ...structuredData]
+    : [baseStructuredData, structuredData]
+  : [baseStructuredData]
 ---
 <!DOCTYPE html>
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title}</title>
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <meta name="theme-color" content="#7c5cff" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/png" href="/favicon.png" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={absoluteImageUrl} />
+    <meta property="og:locale" content="es_ES" />
+
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={absoluteImageUrl} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
     <div id="root">

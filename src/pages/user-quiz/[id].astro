@@ -3,6 +3,10 @@ import Layout from '../../layouts/Layout.astro'
 import UserQuiz from '../../components/UserQuiz.jsx'
 const { id } = Astro.params
 ---
-<Layout title="Cuestionario">
+<Layout
+  title="Resolver cuestionario"
+  description="Pantalla para resolver un cuestionario concreto."
+  robots="noindex, nofollow"
+>
   <UserQuiz id={id} client:load />
 </Layout>

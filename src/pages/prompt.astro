@@ -6,7 +6,10 @@ import { getAdsenseConfig } from '../lib/server/env'
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
 
-<Layout title="Prompt para generar cuestionarios">
+<Layout
+  title="Prompt para generar cuestionarios"
+  description="Copia un prompt listo para generar cuestionarios tipo test en JSON con ChatGPT, Claude, Gemini u otra IA."
+>
   <div class="page-wrap">
     <a href="/" class="quiz-back">← Volver</a>
 
