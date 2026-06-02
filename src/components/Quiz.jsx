@@ -1,14 +1,15 @@
 import { useState, useEffect, useMemo } from 'react'
-import { getQuizzesByGrado, reportQuiz } from '../lib/api'
+import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
-  const [quizId, setQuizId] = useState(null)
-  const [allQuestions, setAllQuestions] = useState(null)
-  const [pageTitle, setPageTitle] = useState('')
+  const cachedQuiz = getCachedQuizzesByGrado(grado)?.find(q => q.course_id === curso && (q.unidad || q.course_id) === unidad) || null
+  const [quizId, setQuizId] = useState(cachedQuiz?.id || null)
+  const [allQuestions, setAllQuestions] = useState(cachedQuiz?.questions || null)
+  const [pageTitle, setPageTitle] = useState(cachedQuiz?.title || '')
   const [error, setError] = useState(false)
   const [answers, setAnswers] = useState({})
   const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!cachedQuiz)
   const [reportOpen, setReportOpen] = useState(false)
   const [reportType, setReportType] = useState('Contenido incorrecto')
   const [reportReason, setReportReason] = useState('')
@@ -105,9 +106,13 @@ export default function Quiz({ grado, curso, unidad }) {
   if (loading || !allQuestions) {
     return (
       <div className="page-wrap">
-        <div className="loading">
-          <div className="spinner" />
-          Cargando preguntas…
+        <div className="quiz-skeleton" aria-label="Cargando preguntas">
+          <div className="skeleton-title" />
+          <div className="skeleton-question" />
+          <div className="skeleton-option" />
+          <div className="skeleton-option" />
+          <div className="skeleton-option" />
+          <div className="skeleton-option" />
         </div>
       </div>
     )

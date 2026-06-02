@@ -495,6 +495,64 @@ body {
   margin: 0 auto 16px;
 }
 
+
+.skeleton-list,
+.catalog-skeleton,
+.quiz-skeleton {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.catalog-skeleton {
+  max-width: 960px;
+}
+
+.skeleton-list {
+  display: grid;
+  gap: 16px;
+}
+
+.skeleton-card,
+.skeleton-title,
+.skeleton-question,
+.skeleton-option {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(100deg, transparent 0%, rgba(255, 255, 255, 0.075) 45%, transparent 72%),
+    rgba(255, 255, 255, 0.045);
+  background-size: 220% 100%, 100% 100%;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  animation: skeletonSheen 1600ms var(--ease-premium) infinite;
+}
+
+.skeleton-card {
+  height: 92px;
+}
+
+.skeleton-title {
+  width: min(360px, 72%);
+  height: 44px;
+  margin: 18px 0 28px;
+}
+
+.quiz-skeleton {
+  padding-top: 24px;
+}
+
+.skeleton-question {
+  height: 132px;
+  margin-bottom: 18px;
+}
+
+.skeleton-option {
+  height: 52px;
+  margin-bottom: 10px;
+  border-radius: var(--radius-sm);
+}
+
 .error-msg {
   text-align: center;
   padding: 60px 20px;
@@ -898,6 +956,12 @@ body {
 @keyframes progressSheen {
   from { background-position: 100% 0; }
   to { background-position: 0 0; }
+}
+
+
+@keyframes skeletonSheen {
+  from { background-position: 120% 0; }
+  to { background-position: -120% 0; }
 }
 
 

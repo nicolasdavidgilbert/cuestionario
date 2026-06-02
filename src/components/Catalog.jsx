@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { getQuizCatalog } from '../lib/api'
+import { getCachedQuizCatalog, getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
 export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
-  const [gradoData, setGradoData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const cachedGrade = getCachedQuizCatalog(grado)?.grados?.find((g) => g.id === grado) || null
+  const [gradoData, setGradoData] = useState(cachedGrade)
+  const [loading, setLoading] = useState(!cachedGrade)
   const [error, setError] = useState(false)
 
   useEffect(() => {
@@ -43,9 +44,14 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
             <div className="error-msg">No se encontró el curso «{grado}».</div>
           </>
         ) : (
-          <div className="loading">
-            <div className="spinner" />
-            Cargando cuestionarios…
+          <div className="catalog-skeleton" aria-label="Cargando cuestionarios">
+            <a href="/" className="quiz-back">← Volver a cursos</a>
+            <div className="skeleton-title" />
+            <div className="skeleton-list">
+              <div className="skeleton-card" />
+              <div className="skeleton-card" />
+              <div className="skeleton-card" />
+            </div>
           </div>
         )}
       </div>
