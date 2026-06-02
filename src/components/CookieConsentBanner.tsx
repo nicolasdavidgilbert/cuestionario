@@ -6,15 +6,46 @@ type CookieConsentBannerProps = {
   enabled: boolean
 }
 
+const AD_BANNER_SESSION_KEY = 'cuestionario.ads-banner-accepted.v1'
+
+function hasAcceptedBanner() {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  try {
+    return window.sessionStorage.getItem(AD_BANNER_SESSION_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function markBannerAccepted() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.sessionStorage.setItem(AD_BANNER_SESSION_KEY, 'true')
+  } catch {
+    // Si el navegador bloquea sessionStorage, el banner seguirá siendo descartable en esta sesión.
+  }
+}
+
 export default function CookieConsentBanner({ enabled }: CookieConsentBannerProps) {
-  const [isOpen, setIsOpen] = useState(enabled)
+  const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    setIsOpen(enabled)
+    setIsOpen(enabled && !hasAcceptedBanner())
   }, [enabled])
 
   if (!enabled || !isOpen) {
     return null
+  }
+
+  const accept = () => {
+    markBannerAccepted()
+    setIsOpen(false)
   }
 
   return (
@@ -30,7 +61,7 @@ export default function CookieConsentBanner({ enabled }: CookieConsentBannerProp
         </div>
 
         <div className="cookie-banner__actions">
-          <button type="button" className="btn-primary" onClick={() => setIsOpen(false)}>
+          <button type="button" className="btn-primary" onClick={accept}>
             Entendido
           </button>
         </div>
