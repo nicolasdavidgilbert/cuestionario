@@ -49,6 +49,7 @@ export default function LandingCourses() {
         <div className="course-list-transition">
           {catalog.grados.map((grado, i) => {
             const totalUnits = grado.courses.reduce((s, c) => s + c.units.length, 0)
+            const totalCourses = grado.courses.length
             const hasCourses = totalUnits > 0
 
             return (
@@ -58,17 +59,29 @@ export default function LandingCourses() {
                 className={`grado-card ${!hasCourses ? 'empty' : ''}`}
                 style={{ animationDelay: `${i * 0.08}s` }}
               >
-                <div className="grado-icon">{grado.label.charAt(0)}</div>
-                <div className="grado-info">
-                  <span className="grado-label">{grado.label}</span>
-                  <span className="grado-desc">{grado.description || 'Curso'}</span>
-                  <span className="grado-meta">
-                    {hasCourses
-                      ? `${grado.courses.length} asignatura${grado.courses.length > 1 ? 's' : ''} · ${totalUnits} tema${totalUnits > 1 ? 's' : ''}`
-                      : 'Sin cuestionarios'}
+                <div className="grado-card-main">
+                  <div className="grado-icon" aria-hidden="true">{grado.label.charAt(0)}</div>
+                  <div className="grado-info">
+                    <span className="grado-label">{grado.label}</span>
+                    <span className="grado-desc">{grado.description || 'Curso'}</span>
+                  </div>
+                </div>
+                <div className="grado-card-side" aria-label={hasCourses ? totalCourses + ' asignaturas y ' + totalUnits + ' temas' : 'Sin cuestionarios'}>
+                  <div className="grado-stats">
+                    <span className="grado-stat">
+                      <strong>{totalCourses}</strong>
+                      <span>Asignatura{totalCourses === 1 ? '' : 's'}</span>
+                    </span>
+                    <span className="grado-stat">
+                      <strong>{totalUnits}</strong>
+                      <span>Tema{totalUnits === 1 ? '' : 's'}</span>
+                    </span>
+                  </div>
+                  <span className="grado-card-cta">
+                    {hasCourses ? 'Ver curso' : 'Sin cuestionarios'}
+                    <span className="grado-arrow" aria-hidden="true">→</span>
                   </span>
                 </div>
-                <span className="grado-arrow" aria-hidden="true">→</span>
               </a>
             )
           })}

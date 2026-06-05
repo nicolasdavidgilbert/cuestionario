@@ -987,29 +987,71 @@ body {
   text-align: left;
 }
 
-/* Glassmorphism overrides for course catalog cards */
+/* Course catalog cards */
 .grado-card {
-  background: rgba(255, 255, 255, 0.02) !important;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255, 255, 255, 0.05) !important;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 132px;
+  padding: 20px;
+  color: var(--c-text);
+  text-decoration: none;
+  background: rgba(23, 21, 34, 0.78) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition), background var(--transition), opacity var(--transition);
 }
 
-.grado-card:hover {
-  transform: translateY(-4px) scale(1.008) !important;
-  background: rgba(255, 255, 255, 0.045) !important;
-  border-color: rgba(108, 92, 231, 0.35) !important;
+.grado-card:hover,
+.grado-card:focus-visible {
+  transform: translateY(-2px) !important;
+  background: rgba(29, 27, 43, 0.86) !important;
+  border-color: rgba(143, 124, 255, 0.32) !important;
   box-shadow:
-    0 16px 36px rgba(108, 92, 231, 0.14),
-    0 0 0 1px rgba(108, 92, 231, 0.2) !important;
+    0 14px 32px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(108, 92, 231, 0.12) !important;
+}
+
+.grado-card-main,
+.grado-card-side {
+  position: relative;
+  z-index: 1;
+}
+
+.grado-card-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
 }
 
 .grado-icon {
-  background: rgba(108, 92, 231, 0.12) !important;
-  border: 1px solid rgba(108, 92, 231, 0.28) !important;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  display: grid;
+  place-items: center;
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  background: rgba(108, 92, 231, 0.18) !important;
+  border: 1px solid rgba(143, 124, 255, 0.34) !important;
+  border-radius: 12px;
+  box-shadow: none;
+  transition: transform var(--transition), box-shadow var(--transition);
 }
 
+.grado-card:hover .grado-icon,
+.grado-card:focus-visible .grado-icon {
+  transform: scale(1.03) !important;
+  box-shadow: none !important;
+}
 /* Typographic Title Styling */
 .landing-header h1,
 .home-header h1 {
@@ -1046,9 +1088,9 @@ body {
 .grado-grid {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
   width: 100%;
-  max-width: 100% !important; /* expand inside our container */
+  max-width: 100% !important;
   min-height: 220px;
   transition: min-height 420ms var(--ease-premium);
 }
@@ -1059,15 +1101,9 @@ body {
 
 .course-list-transition {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(430px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr));
   gap: 16px;
   animation: coursesSwap 420ms var(--ease-premium) both;
-}
-
-@media (max-width: 900px) {
-  .course-list-transition {
-    grid-template-columns: 1fr;
-  }
 }
 
 .grado-grid .grado-card:nth-of-type(1) { animation-delay: 40ms; }
@@ -1077,52 +1113,145 @@ body {
 .grado-grid .grado-card:nth-of-type(5) { animation-delay: 280ms; }
 
 .grado-card.empty {
-  opacity: 0.55;
+  opacity: 0.62;
 }
 
-.grado-card.empty:hover {
-  opacity: 0.75;
-}
-
-.grado-card:hover .grado-icon {
-  transform: scale(1.08) rotate(-3deg) !important;
-  box-shadow: 0 0 24px var(--c-accent-glow) !important;
+.grado-card.empty:hover,
+.grado-card.empty:focus-visible {
+  opacity: 0.82;
 }
 
 .grado-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
+  min-width: 0;
 }
 
 .grado-label {
-  font-size: 1.15rem;
-  font-weight: 700;
+  font-size: 1.08rem;
+  font-weight: 750;
+  line-height: 1.2;
 }
 
 .grado-desc {
-  font-size: 0.85rem;
   color: var(--c-text-muted);
+  font-size: 0.88rem;
   line-height: 1.35;
 }
 
-.grado-meta {
+.grado-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.grado-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(74px, 1fr));
+  gap: 8px;
+}
+
+.grado-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 7px 9px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm);
+}
+
+.grado-stat strong {
+  color: var(--c-text);
+  font-size: 1.18rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.grado-stat span {
+  margin-top: 4px;
+  color: var(--c-text-muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.grado-card-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 6px 10px 6px 12px;
+  color: var(--c-text-muted);
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
   font-size: 0.78rem;
-  color: var(--c-accent-strong);
-  font-weight: 600;
-  margin-top: 2px;
+  font-weight: 750;
+  white-space: nowrap;
+  transition: background var(--transition), border-color var(--transition), color var(--transition);
 }
 
 .grado-arrow {
-  font-size: 1.2rem;
-  color: var(--c-text-muted);
-  transition: transform var(--transition), color var(--transition);
+  color: currentColor;
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform var(--transition);
 }
 
-.grado-card:hover .grado-arrow {
-  transform: translateX(4px) !important;
-  color: var(--c-accent-strong) !important;
+.grado-card:hover .grado-card-cta,
+.grado-card:focus-visible .grado-card-cta {
+  color: var(--c-text);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(143, 124, 255, 0.26);
+}
+
+.grado-card:hover .grado-arrow,
+.grado-card:focus-visible .grado-arrow {
+  transform: translateX(3px) !important;
+}
+
+@media (max-width: 680px) {
+  .courses-catalog-shell {
+    padding: 14px;
+  }
+
+  .grado-card {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .grado-card-main {
+    align-items: flex-start;
+  }
+
+  .grado-icon {
+    flex-basis: 46px;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+  }
+
+  .grado-card-side {
+    align-items: stretch;
+  }
+
+  .grado-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grado-card-cta {
+    width: 100%;
+  }
 }
 
 .section-kicker {
