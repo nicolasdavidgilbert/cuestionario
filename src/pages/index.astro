@@ -8,15 +8,16 @@ import LandingCourses from '../components/LandingCourses.jsx'
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 ---
 <Layout
-  title="Cuestionarios tipo test con IA"
-  description="Crea cuestionarios tipo test desde PDF, organiza preguntas por curso y unidad, y practica exámenes online de forma rápida."
+  title="Hacer y crear cuestionarios online"
+  description="Busca, resuelve y crea cuestionarios tipo test online. Una herramienta rápida para estudiar por curso, asignatura y tema sin distracciones."
   structuredData={[
     {
       '@context': 'https://schema.org',
-      '@type': 'SoftwareApplication',
-      name: 'Cuestionarios',
+      '@type': 'WebApplication',
+      name: 'Cuestionarios online',
       applicationCategory: 'EducationalApplication',
       operatingSystem: 'Web',
+      inLanguage: 'es',
       offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' }
     },
     {
@@ -34,168 +35,66 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
   ]}
 >
   <div class="page-wrap landing">
-    <!-- Glow Blobs for premium dark mode ambient lighting -->
-    <div class="glow-blob glow-blob--1" aria-hidden="true"></div>
-    <div class="glow-blob glow-blob--2" aria-hidden="true"></div>
-    <div class="glow-blob glow-blob--3" aria-hidden="true"></div>
-
-    <header class="landing-header landing-hero">
-      <div class="hero-copy">
-        <p class="hero-eyebrow">Cuestionarios por curso, unidad y asignatura</p>
-        <h1>Estudia con tests sin perder tiempo montándolos</h1>
-        <p class="hero-subtitle">
-          Elige un curso y practica al momento. Si tienes apuntes en PDF, genera preguntas tipo test con IA y guárdalas para seguir estudiando.
-        </p>
-        <div class="hero-action-bar">
-          <div class="user-actions">
-            <a href="#catalog-section" class="btn-primary">Ver cursos</a>
-            <a href="/crear" class="btn-secondary">Crear desde PDF</a>
-          </div>
-          <div class="hero-proof" aria-label="Resumen de ventajas">
-            <span>Sin registro para practicar</span>
-            <span>PDF a preguntas</span>
-            <span>Organizado por unidades</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="hero-panel" aria-label="Vista resumida del producto">
-        <div class="hero-panel__top">
-          <span class="hero-panel__badge">
-            <span class="live-dot"></span> Modo estudio
-          </span>
-          <span class="hero-panel__score">12/15</span>
-        </div>
-        <div class="hero-question-card">
-          <span class="question-number">Pregunta 8</span>
-          <p>¿Cuál es la idea principal del tema?</p>
-          <div class="hero-option option-a is-correct">
-            <span class="option-letter">A</span>
-            <span class="option-text">Respuesta correcta explicada</span>
-            <span class="option-status-icon">✓</span>
-          </div>
-          <div class="hero-option option-b">
-            <span class="option-letter">B</span>
-            <span class="option-text">Distractor plausible</span>
-            <span class="option-status-icon">✗</span>
-          </div>
-          <div class="hero-option option-c">
-            <span class="option-letter">C</span>
-            <span class="option-text">Otra opción del test</span>
-            <span class="option-status-icon">✗</span>
-          </div>
-        </div>
-        <div class="hero-panel__footer">
-          <span>PDF largo dividido automáticamente</span>
-          <strong>Listo para practicar</strong>
-        </div>
-      </div>
-    </header>
+    <section class="landing-search" id="catalog-section" aria-labelledby="catalog-heading">
+      <header class="landing-header">
+        <p class="section-kicker">Cuestionarios online</p>
+        <h1 id="catalog-heading">Busca un cuestionario</h1>
+      </header>
+      <LandingCourses client:visible showSearch={true} showViewAll={true} compact={true} searchMode="all" emptyUntilSearch={true} syncUrl={true} />
+    </section>
 
     <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
-    <!-- NUEVO: Catálogo de cursos integrado directly in the landing page -->
-    <section class="landing-catalog" id="catalog-section" aria-labelledby="catalog-heading">
-      <div class="section-kicker">Catálogo interactivo</div>
-      <h2 id="catalog-heading">Comienza a practicar ahora</h2>
-      <p class="section-subtitle">Selecciona tu curso para acceder a todos los cuestionarios tipo test disponibles de forma gratuita.</p>
-      <div class="courses-catalog-shell">
-        <LandingCourses client:visible />
+    <section class="landing-catalog" aria-labelledby="create-heading">
+      <div class="section-heading">
+        <p class="section-kicker">Crear</p>
+        <h2 id="create-heading">Crea cuestionarios para estudiar</h2>
+        <p>Si no encuentras lo que necesitas, puedes crear un cuestionario desde tus apuntes, un PDF o un JSON revisado.</p>
       </div>
+      <nav class="user-actions" aria-label="Crear o explorar">
+        <a href="/crear" class="btn-primary">Crear cuestionario</a>
+        <a href="/cursos" class="btn-secondary">Ver todos los cursos</a>
+      </nav>
     </section>
 
     <section class="landing-info" aria-labelledby="project-heading">
-      <div class="info-copy">
-        <p class="section-kicker">Sobre el proyecto</p>
-        <h2 id="project-heading">Una app sencilla para estudiar con cuestionarios reales</h2>
-        <p>
-          Cuestionarios está pensada para practicar rápido: eliges un curso, entras en una unidad y respondes preguntas tipo test.
-          La parte importante es el catálogo de cuestionarios; todo lo demás está para ayudarte a crear y ordenar mejor el material.
-        </p>
-        <p>
-          Si tienes apuntes o temarios en PDF, puedes generar un cuestionario con IA, revisar las preguntas y guardarlo para practicarlo después.
-        </p>
+      <div class="section-heading">
+        <p class="section-kicker">Para estudiar mejor</p>
+        <h2 id="project-heading">Pensada para hacer cuestionarios, no para navegar menús</h2>
       </div>
-
-      <!-- Widget interactivo de PDF simulado -->
-      <a href="/crear" class="pdf-mockup-widget" aria-label="Probar generador de PDF a Cuestionario con IA">
-        <div class="pdf-widget-header">
-          <div class="pdf-icon-wrapper">
-            <svg class="pdf-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-          </div>
-          <div class="pdf-widget-title">
-            <strong>temario_final.pdf</strong>
-            <span>4.2 MB · 48 páginas</span>
-          </div>
-        </div>
-        <div class="pdf-widget-body">
-          <div class="upload-dropzone-sim">
-            <div class="sparkles-icon">✨</div>
-            <p class="dropzone-text">Generando preguntas con IA...</p>
-            <div class="progress-bar-sim">
-              <div class="progress-bar-fill"></div>
-            </div>
-            <span class="processing-status">Analizando temas y distractores</span>
-          </div>
-        </div>
-        <div class="pdf-widget-footer">
-          <span class="btn-widget-cta">Probar creador IA →</span>
-        </div>
-      </a>
+      <div class="content-grid">
+        <article>
+          <h3>Buscar</h3>
+          <p>Encuentra cuestionarios por curso, asignatura o tema sin revisar listas enormes.</p>
+        </article>
+        <article>
+          <h3>Resolver</h3>
+          <p>Al abrir un cuestionario ves pregunta, opciones, progreso y resultado. Nada más.</p>
+        </article>
+        <article>
+          <h3>Crear</h3>
+          <p>Sube apuntes o pega JSON para preparar tests propios y guardarlos para estudiar.</p>
+        </article>
+      </div>
     </section>
 
     <section class="landing-steps" aria-labelledby="how-heading">
-      <p class="section-kicker">Cómo funciona</p>
-      <h2 id="how-heading">Del temario al test en pocos pasos</h2>
-      <div class="steps-grid">
-        <article class="step-card">
-          <div class="step-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-            </svg>
-          </div>
-          <span>Paso 01</span>
-          <h3>Practica por curso</h3>
-          <p>Los cuestionarios se organizan por grado, asignatura y unidad para que encuentres rápido lo que necesitas estudiar.</p>
-        </article>
-        <article class="step-card">
-          <div class="step-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <polyline points="10 9 9 9 8 9"></polyline>
-            </svg>
-          </div>
-          <span>Paso 02</span>
-          <h3>Crea desde PDF</h3>
-          <p>Sube un documento con texto y la app genera preguntas tipo test con opciones, respuesta correcta y explicación.</p>
-        </article>
-        <article class="step-card">
-          <div class="step-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="step-icon">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-          </div>
-          <span>Paso 03</span>
-          <h3>Revisa y mejora</h3>
-          <p>Antes de guardar, puedes comprobar las preguntas generadas y ajustar título, curso o unidad.</p>
-        </article>
+      <div class="section-heading">
+        <p class="section-kicker">Cómo funciona</p>
+        <h2 id="how-heading">Empieza en tres pasos</h2>
       </div>
+      <ol class="steps-list">
+        <li><strong>Busca.</strong> Escribe curso, asignatura o tema.</li>
+        <li><strong>Entra.</strong> Abre el curso o unidad que necesitas practicar.</li>
+        <li><strong>Resuelve o crea.</strong> Contesta el test o genera uno nuevo desde tus apuntes.</li>
+      </ol>
     </section>
 
     <section class="landing-faq" aria-labelledby="faq-heading">
-      <p class="section-kicker">Preguntas frecuentes</p>
-      <h2 id="faq-heading">FAQ sobre los cuestionarios</h2>
+      <div class="section-heading">
+        <p class="section-kicker">Preguntas frecuentes</p>
+        <h2 id="faq-heading">FAQ sobre los cuestionarios</h2>
+      </div>
       <div class="faq-list">
         {FAQ_ITEMS.map((item) => (
           <details class="faq-item">

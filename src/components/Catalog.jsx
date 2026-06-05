@@ -15,17 +15,17 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
   const loadCatalog = async () => {
     setLoading(true)
     setError(false)
-    
+
     try {
       const data = await getQuizCatalog(grado)
-      
+
       const found = data.grados?.find((g) => g.id === grado)
       if (!found || found.courses.length === 0) {
         setError(true)
         setLoading(false)
         return
       }
-      
+
       setGradoData(found)
     } catch (e) {
       console.error(e)
@@ -45,7 +45,11 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
           </>
         ) : (
           <div className="catalog-skeleton" aria-label="Cargando cuestionarios">
-            <a href="/" className="quiz-back">← Volver a cursos</a>
+            <nav className="breadcrumbs" aria-label="Migas de pan">
+              <a href="/">Inicio</a>
+              <span aria-hidden="true">/</span>
+              <span>{gradoData?.label || grado?.toUpperCase()}</span>
+            </nav>
             <div className="skeleton-title" />
             <div className="skeleton-list">
               <div className="skeleton-card" />
@@ -60,11 +64,16 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
 
   return (
     <div className="page-wrap">
-      <a href="/" className="quiz-back">← Volver a cursos</a>
+      <nav className="breadcrumbs" aria-label="Migas de pan">
+        <a href="/">Inicio</a>
+        <span aria-hidden="true">/</span>
+        <span>{gradoData?.label || grado?.toUpperCase()}</span>
+      </nav>
 
       <header className="home-header">
+        <p className="section-kicker">Catálogo de cuestionarios</p>
         <h1>{gradoData.label}</h1>
-        <p>{gradoData.description || 'Elige un tema para empezar a practicar'}</p>
+        <p>{gradoData.description || 'Elige una asignatura y unidad para empezar a practicar.'}</p>
       </header>
 
       {gradoData.courses.length === 0 && (
@@ -79,14 +88,17 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
         <section
           key={course.id}
           className="course-section"
-          style={{ animationDelay: `${i * 0.08}s` }}
         >
           <h2>{course.label}</h2>
           <div className="unit-grid">
             {course.units.map((unit) => (
               <a key={unit.id} href={`/${grado}/${course.id}/${unit.id}`} className="unit-card">
-                <span className="unit-badge">{unit.id.toUpperCase()}</span>
-                {unit.title && <span className="unit-title">{unit.title}</span>}
+                <article>
+                  <span className="unit-badge">{course.label}</span>
+                  <strong>{unit.title || unit.id.toUpperCase()}</strong>
+                  <span className="unit-title">Cuestionario tipo test</span>
+                </article>
+                <span className="unit-action">Empezar</span>
               </a>
             ))}
           </div>
