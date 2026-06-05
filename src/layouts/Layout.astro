@@ -13,7 +13,7 @@ interface Props {
 }
 
 const SITE_NAME = 'Cuestionarios'
-const DEFAULT_DESCRIPTION = 'Crea, practica y comparte cuestionarios tipo test por curso, unidad y asignatura. Genera preguntas desde PDF con IA y estudia de forma más rápida.'
+const DEFAULT_DESCRIPTION = 'Practica cuestionarios tipo test por curso, asignatura y unidad. Estudia con una interfaz clara, rápida y centrada en responder.'
 
 const {
   title = SITE_NAME,
@@ -50,8 +50,8 @@ const jsonLd = structuredData
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
-    <meta name="robots" content={robots} />
-    <meta name="theme-color" content="#7c5cff" />
+    <meta name="robots" content={`${robots}, max-snippet:160, max-image-preview:large`} />
+    <meta name="theme-color" content="#f8fafc" />
     <link rel="canonical" href={canonicalUrl} />
     <link rel="icon" type="image/png" href="/favicon.png" />
 

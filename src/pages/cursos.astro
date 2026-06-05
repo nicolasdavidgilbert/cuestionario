@@ -16,11 +16,11 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
     <header class="home-header courses-header">
       <p class="section-kicker">Catálogo</p>
       <h1>Cursos disponibles</h1>
-      <p>Elige un curso para ver sus asignaturas, unidades y cuestionarios tipo test.</p>
+      <p>Busca entre todos los cursos. Esta página está pensada para catálogos grandes, con listado compacto y carga progresiva.</p>
     </header>
 
     <section class="courses-catalog-shell" aria-label="Lista de cursos disponibles">
-      <LandingCourses client:idle />
+      <LandingCourses client:idle showSearch={true} compact={true} />
     </section>
 
     <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />

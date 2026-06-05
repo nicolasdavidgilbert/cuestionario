@@ -2,7 +2,35 @@
 import Layout from '../../../layouts/Layout.astro'
 import Quiz from '../../../components/Quiz.jsx'
 const { grado, curso, unidad } = Astro.params
+const readableTitle = [unidad, curso, grado].filter(Boolean).join(' - ')
 ---
-<Layout title={`${unidad} - ${curso} - ${grado}`}>
+<Layout
+  title={`Cuestionario ${readableTitle}`}
+  description={`Practica el cuestionario tipo test de ${unidad} en ${curso}, curso ${grado}. Responde preguntas, revisa tu puntuación y aprende con explicaciones.`}
+  structuredData={{
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Inicio',
+        item: new URL('/', Astro.site ?? 'https://cuestionario.online').toString()
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: grado,
+        item: new URL(`/${grado}`, Astro.site ?? 'https://cuestionario.online').toString()
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: unidad,
+        item: new URL(Astro.url.pathname, Astro.site ?? 'https://cuestionario.online').toString()
+      }
+    ]
+  }}
+>
   <Quiz grado={grado} curso={curso} unidad={unidad} client:load />
 </Layout>

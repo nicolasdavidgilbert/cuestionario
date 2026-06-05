@@ -62,6 +62,9 @@ export default function Quiz({ grado, curso, unidad }) {
 
   const answeredCount = Object.keys(answers).length
   const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
+  const quizTitle = pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`
+  const gradoLabel = grado?.toUpperCase()
+  const unidadLabel = unidad?.toUpperCase()
 
   function handleSelect(qIndex, optionIndex) {
     if (submitted) return
@@ -97,7 +100,13 @@ export default function Quiz({ grado, curso, unidad }) {
   if (error) {
     return (
       <div className="page-wrap">
-        <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
+        <nav className="breadcrumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a>
+          <span aria-hidden="true">/</span>
+          <a href={`/${grado}`}>{gradoLabel}</a>
+          <span aria-hidden="true">/</span>
+          <span>{unidadLabel}</span>
+        </nav>
         <div className="error-msg">
           No se encontraron preguntas para <strong>{curso?.toUpperCase()}/{unidad?.toUpperCase()}</strong>
         </div>
@@ -108,8 +117,16 @@ export default function Quiz({ grado, curso, unidad }) {
   if (loading || !allQuestions) {
     return (
       <div className="page-wrap">
+        <nav className="breadcrumbs" aria-label="Migas de pan">
+          <a href="/">Inicio</a>
+          <span aria-hidden="true">/</span>
+          <a href={`/${grado}`}>{gradoLabel}</a>
+          <span aria-hidden="true">/</span>
+          <span>{unidadLabel}</span>
+        </nav>
         <div className="quiz-skeleton" aria-label="Cargando preguntas">
           <div className="skeleton-title" />
+          <div className="skeleton-progress" />
           <div className="skeleton-question" />
           <div className="skeleton-option" />
           <div className="skeleton-option" />
@@ -129,31 +146,33 @@ export default function Quiz({ grado, curso, unidad }) {
     return (
       <div className="page-wrap">
         <div className="quiz-container results">
-          <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
+          <nav className="breadcrumbs" aria-label="Migas de pan">
+            <a href="/">Inicio</a>
+            <span aria-hidden="true">/</span>
+            <a href={`/${grado}`}>{gradoLabel}</a>
+            <span aria-hidden="true">/</span>
+            <span>{quizTitle}</span>
+          </nav>
 
-          <div className="results-summary">
-            <h2>Resultado</h2>
-            <div className="score-display">
+          <section className="results-summary" aria-labelledby="results-heading">
+            <p className="section-kicker">Resultados</p>
+            <h1 id="results-heading">Resultado del cuestionario</h1>
+            <div className="score-display" aria-label={`Puntuación ${score} de ${questions.length}`}>
               {score}/{questions.length}
             </div>
             <p className="score-label">
-              {score === questions.length
-                ? '¡Perfecto!'
-                : score >= questions.length * 0.7
-                ? '¡Muy bien!'
-                : 'Sigue practicando'}
+              {score} correctas y {questions.length - score} incorrectas.
             </p>
-          </div>
+          </section>
 
           {questions.map((q, i) => {
             const userAnswer = answers[i] ?? null
             const isCorrect = userAnswer === q.answer
 
             return (
-              <div
+              <article
                 key={i}
                 className={`review-card ${isCorrect ? 'correct' : 'incorrect'}`}
-                style={{ animationDelay: `${i * 0.05}s` }}
               >
                 <h4>
                   <span className="question-number">{i + 1}.</span> {q.question}
@@ -170,7 +189,7 @@ export default function Quiz({ grado, curso, unidad }) {
                     <strong>Explicación:</strong> {q.explanation}
                   </div>
                 )}
-              </div>
+              </article>
             )
           })}
 
@@ -184,26 +203,33 @@ export default function Quiz({ grado, curso, unidad }) {
 
   return (
     <div className="page-wrap">
-      <div className="quiz-container">
-        <a href={`/${grado}`} className="quiz-back"><span>←</span> Volver al catálogo</a>
+      <nav className="breadcrumbs" aria-label="Migas de pan">
+        <a href="/">Inicio</a>
+        <span aria-hidden="true">/</span>
+        <a href={`/${grado}`}>{gradoLabel}</a>
+        <span aria-hidden="true">/</span>
+        <span>{quizTitle}</span>
+      </nav>
 
-        <div className="quiz-header">
-          <h1>{pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`}</h1>
-          <div className="quiz-progress">
-            <span>{answeredCount}/{questions.length} respondidas</span>
-            <div
-              className="quiz-progress-bar"
-              role="progressbar"
-              aria-valuemin="0"
-              aria-valuemax={questions.length}
-              aria-valuenow={answeredCount}
-              aria-label="Progreso de respuestas"
-            >
-              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
-            </div>
+      <header className="quiz-header">
+        <p className="section-kicker">Cuestionario</p>
+        <h1>{quizTitle}</h1>
+        <div className="quiz-progress">
+          <span>{answeredCount}/{questions.length} respondidas</span>
+          <div
+            className="quiz-progress-bar"
+            role="progressbar"
+            aria-valuemin="0"
+            aria-valuemax={questions.length}
+            aria-valuenow={answeredCount}
+            aria-label="Progreso de respuestas"
+          >
+            <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
           </div>
         </div>
+      </header>
 
+      <div className="quiz-container">
         <div className="quiz-actions">
           <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
             <span aria-hidden="true">{reportOpen ? '×' : '!'}</span>
@@ -244,10 +270,9 @@ export default function Quiz({ grado, curso, unidad }) {
         )}
 
         {questions.map((q, qi) => (
-          <div
+          <article
             key={qi}
             className="question-card"
-            style={{ animationDelay: `${qi * 0.04}s` }}
           >
             <h3>
               <span className="question-number">{qi + 1}.</span> {q.question}
@@ -269,11 +294,11 @@ export default function Quiz({ grado, curso, unidad }) {
                 </label>
               ))}
             </div>
-          </div>
+          </article>
         ))}
 
-        <button className="submit-btn" onClick={handleSubmit}>
-          <span aria-hidden="true">✓</span> Enviar respuestas
+        <button className="submit-btn" onClick={handleSubmit} disabled={answeredCount === 0}>
+          Enviar respuestas
         </button>
       </div>
     </div>
