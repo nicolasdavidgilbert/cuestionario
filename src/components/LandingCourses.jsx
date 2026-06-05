@@ -73,6 +73,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   const [loading, setLoading] = useState(true)
   const [query, setQuery] = useState('')
   const [expanded, setExpanded] = useState(false)
+  const [activeType, setActiveType] = useState('all')
 
   useEffect(() => {
     if (syncUrl && typeof window !== 'undefined') {
@@ -113,6 +114,10 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   }, [catalog, query])
 
   const searchResults = useMemo(() => buildSearchResults(catalog, query), [catalog, query])
+  const visibleSearchResults = useMemo(() => {
+    if (activeType === 'all') return searchResults
+    return searchResults.filter((result) => result.type === activeType)
+  }, [activeType, searchResults])
   const hasQuery = Boolean(query.trim())
   const visibleLimit = expanded || hasQuery ? null : limit
   const visibleGrados = visibleLimit ? filteredGrados.slice(0, visibleLimit) : filteredGrados
@@ -123,18 +128,39 @@ export default function LandingCourses({ limit = null, compact = false, showSear
       <h2 id="courses-heading" className="sr-only">Cursos disponibles</h2>
 
       {showSearch && (
-        <form className="catalog-search" role="search" onSubmit={(e) => e.preventDefault()}>
-          <label className="sr-only" htmlFor="catalog-search-input">Buscar cuestionarios</label>
-          <input
-            id="catalog-search-input"
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar curso, asignatura o tema"
-            autoComplete="off"
-          />
-          {showViewAll && <a className="btn-secondary" href="/cursos">Ver todos los cursos</a>}
-        </form>
+        <>
+          <form className="catalog-search" role="search" onSubmit={(e) => e.preventDefault()}>
+            <label className="sr-only" htmlFor="catalog-search-input">Buscar cuestionarios</label>
+            <input
+              id="catalog-search-input"
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar curso, asignatura o tema"
+              autoComplete="off"
+            />
+            {showViewAll && <a className="btn-secondary" href="/cursos">Ver todos los cursos</a>}
+          </form>
+          {searchMode === 'all' && (
+            <div className="filter-tabs" role="tablist" aria-label="Filtrar resultados">
+              {[
+                ['all', 'Todos'],
+                ['Curso', 'Cursos'],
+                ['Asignatura', 'Asignaturas'],
+                ['Tema', 'Temas']
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`filter-tab ${activeType === value ? 'active' : ''}`}
+                  onClick={() => setActiveType(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {loading || !catalog ? (
@@ -160,7 +186,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
       ) : searchMode === 'all' ? (
         !hasQuery && emptyUntilSearch ? (
           <p className="catalog-hint">Escribe para buscar cursos, asignaturas y temas.</p>
-        ) : searchResults.length === 0 ? (
+        ) : visibleSearchResults.length === 0 ? (
           <div className="empty-state">
             <p>No hay resultados para tu búsqueda.</p>
             <button type="button" className="btn-secondary" onClick={() => setQuery('')}>Limpiar búsqueda</button>
@@ -168,10 +194,10 @@ export default function LandingCourses({ limit = null, compact = false, showSear
         ) : (
           <div className="catalog-results">
             <div className="catalog-summary" aria-live="polite">
-              {searchResults.length} resultado{searchResults.length === 1 ? '' : 's'}
+              {visibleSearchResults.length} resultado{visibleSearchResults.length === 1 ? '' : 's'}
             </div>
             <div className="course-list-transition search-results-list">
-              {searchResults.map((result) => (
+              {visibleSearchResults.map((result) => (
                 <a key={result.id} href={result.href} className="grado-card search-result-card">
                   <article className="grado-card-main">
                     <div className="grado-info">
