@@ -36,9 +36,15 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
 >
   <div class="page-wrap landing">
     <section class="landing-search" id="catalog-section" aria-labelledby="catalog-heading">
-      <header class="landing-header">
-        <p class="section-kicker">Cuestionarios online</p>
+      <header class="landing-header landing-header--centered">
+        <p class="section-kicker">Cuestionarios hechos por alumnos</p>
         <h1 id="catalog-heading">Busca un cuestionario</h1>
+        <p class="hero-subtitle">Encuentra tests por curso, asignatura o tema. Entra, responde y revisa resultados sin distracciones.</p>
+        <div class="study-terminal" aria-label="Flujo de estudio">
+          <span>&gt; selecciona asignatura</span>
+          <span>&gt; responde preguntas</span>
+          <span>&gt; revisa resultados</span>
+        </div>
       </header>
       <LandingCourses client:visible showSearch={true} showViewAll={true} compact={true} searchMode="all" emptyUntilSearch={true} syncUrl={true} />
     </section>
