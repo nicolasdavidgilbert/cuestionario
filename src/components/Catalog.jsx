@@ -101,7 +101,7 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
 
       {gradoData.courses.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon" aria-hidden="true">0</div>
+          <div className="empty-icon" />
           <p>Aún no hay cuestionarios para este curso.</p>
           <a href="/crear" className="btn-primary">Crear cuestionario</a>
         </div>
@@ -157,7 +157,7 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
         </section>
       ))}
 
-      <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={enabledByEnv} />
+      <AdSenseAd slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"} className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={enabledByEnv} />
     </div>
   )
 }

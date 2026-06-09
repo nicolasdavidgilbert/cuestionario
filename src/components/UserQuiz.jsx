@@ -20,14 +20,25 @@ export default function UserQuiz({ id }) {
     loadQuiz()
   }, [id])
 
+  function shuffleQuestions(questionsList) {
+    const shuffled = [...questionsList]
+
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+
+    return shuffled
+  }
+
   const loadQuiz = async () => {
     try {
       const data = await getQuizById(Number(id), getOwnerToken())
       setQuiz(data)
       const allQuestions = data.questions || []
-      const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
+      const shuffled = shuffleQuestions(allQuestions)
       setQuestions(shuffled.slice(0, 15))
-    } catch (e) {
+    } catch {
       setError(true)
     } finally {
       setLoading(false)
@@ -192,26 +203,26 @@ export default function UserQuiz({ id }) {
           <section className="report-box" aria-label="Reportar cuestionario">
             <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
-              <label>
+              <label htmlFor="report-type">
                 Motivo
-                <select value={reportType} onChange={(e) => setReportType(e.target.value)}>
+              </label>
+              <select id="report-type" value={reportType} onChange={(e) => setReportType(e.target.value)}>
                   <option>Contenido incorrecto</option>
                   <option>Preguntas repetidas</option>
                   <option>Opciones confusas</option>
                   <option>Contenido ofensivo</option>
                   <option>Otro problema</option>
                 </select>
-              </label>
-              <label>
+              <label htmlFor="report-reason">
                 Explica qué pasa
-                <textarea
+              </label>
+              <textarea id="report-reason"
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
                   placeholder="Describe el problema para poder revisarlo"
                   rows={4}
                   maxLength={500}
                 />
-              </label>
               <button type="submit" className="btn-validate" disabled={!reportReason.trim() || reporting}>
                 {reporting ? 'Enviando...' : 'Enviar reporte'}
               </button>

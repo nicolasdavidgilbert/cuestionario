@@ -12,7 +12,7 @@ async function importTypeScript(path) {
       target: ts.ScriptTarget.ES2022
     }
   }).outputText.replace(
-    "import { QUIZ_LIMITS } from './quizLimits';",
+    /import\s*\{\s*QUIZ_LIMITS\s*\}\s*from\s*['"]\.\/quizLimits['"]\s*;?/,
     ts.transpileModule(limitsSource, {
       compilerOptions: {
         module: ts.ModuleKind.ESNext,

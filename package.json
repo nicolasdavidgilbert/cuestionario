@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "db:migrate": "node scripts/run-sql.mjs sql/public-growth-practices.sql",
+    "db:migrate": "node scripts/run-sql.mjs sql/public-growth-practices.sql && node scripts/run-sql.mjs sql/rate-limits.sql",
     "test": "node --test tests/*.test.mjs",
     "preview": "astro preview"
   },
@@ -18,8 +18,7 @@
     "astro": "^6.1.5",
     "pdf-parse": "^1.1.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "react-router-dom": "^7.14.0"
+    "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",

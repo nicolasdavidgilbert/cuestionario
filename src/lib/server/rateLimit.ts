@@ -1,4 +1,6 @@
+import { neon } from '@neondatabase/serverless'
 import { jsonResponse } from './http'
+import { getDatabaseUrl } from './env'
 
 interface RateLimitOptions {
   key: string
@@ -6,34 +8,35 @@ interface RateLimitOptions {
   windowMs: number
 }
 
-interface Bucket {
-  count: number
-  resetAt: number
+function shouldCleanupExpiredRows() {
+  return Math.random() < 0.05
 }
 
-const buckets = new Map<string, Bucket>()
+export async function rateLimit(request: Request, options: RateLimitOptions): Promise<Response | null> {
+  try {
+    const sql = neon(getDatabaseUrl())
+    const forwardedFor = request.headers.get('x-forwarded-for') || ''
+    const realIp = request.headers.get('x-real-ip') || ''
+    const clientIp = forwardedFor.split(',')[0]?.trim() || realIp.trim() || 'unknown'
+    const bucketKey = `${options.key}:${clientIp}`
+    const cutoff = new Date(Date.now() - options.windowMs).toISOString()
 
-function getClientIp(request: Request): string {
-  const forwardedFor = request.headers.get('x-forwarded-for') || ''
-  const realIp = request.headers.get('x-real-ip') || ''
-  return forwardedFor.split(',')[0]?.trim() || realIp.trim() || 'unknown'
-}
+    if (shouldCleanupExpiredRows()) {
+      await sql`DELETE FROM rate_limits WHERE created_at < ${cutoff}::timestamptz`
+    }
 
-export function rateLimit(request: Request, options: RateLimitOptions): Response | null {
-  const now = Date.now()
-  const bucketKey = `${options.key}:${getClientIp(request)}`
-  const current = buckets.get(bucketKey)
+    const rows = await sql`SELECT COUNT(*) as count FROM rate_limits WHERE bucket_key = ${bucketKey} AND created_at > ${cutoff}::timestamptz`
+    const count = Number(rows?.[0]?.count || 0)
 
-  if (!current || current.resetAt <= now) {
-    buckets.set(bucketKey, { count: 1, resetAt: now + options.windowMs })
+    if (count >= options.limit) {
+      return jsonResponse({ message: 'Demasiadas peticiones. Inténtalo de nuevo más tarde.' }, 429)
+    }
+
+    await sql`INSERT INTO rate_limits (bucket_key) VALUES (${bucketKey})`
+
+    return null
+  } catch (error) {
+    console.error('Rate limit error:', error)
     return null
   }
-
-  current.count += 1
-
-  if (current.count > options.limit) {
-    return jsonResponse({ message: 'Demasiadas peticiones. Inténtalo de nuevo más tarde.' }, 429)
-  }
-
-  return null
 }

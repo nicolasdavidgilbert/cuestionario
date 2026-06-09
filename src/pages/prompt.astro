@@ -4,6 +4,35 @@ import AdSenseAd from '../components/AdSenseAd'
 import { getAdsenseConfig } from '../lib/server/env'
 
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
+
+const PROMPT_TEXT = `Necesito que generes un cuestionario tipo test en formato JSON basado en el contenido que te proporcione.
+
+REGLAS:
+1. Genera entre 20 y 50 preguntas de tipo test.
+2. Cada pregunta debe tener exactamente 4 opciones de respuesta.
+3. Solo UNA opción debe ser correcta.
+4. Incluye una explicación para cada respuesta correcta.
+5. Las opciones incorrectas deben ser plausibles.
+6. La respuesta correcta debe estar en posiciones aleatorias (no siempre la primera).
+
+FORMATO JSON:
+{
+  "title": "Nombre del tema",
+  "description": "Descripción opcional",
+  "grado": "(Pregunta el grado antes de generar el cuestionario, ej: 1asir, 2dam, 1bach, etc.)",
+  "course_id": "(pregunta el curso antes de generar el cuestionario, ej: pni, digitalizacion, gtb, idp, etc.)",
+  "unidad": "(pregunta la unidad o tema específico, ej: ud1, ud2, tema1, etc. - opcional)",),
+  "questions":   "questions": [
+    {
+      "question": "Texto de la pregunta",
+      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
+      "answer": 0,
+      "explanation": "Explicación breve."
+    }
+  ]
+}
+
+Donde "answer" es el índice (0-3) de la opción correcta.`
 ---
 
 <Layout
@@ -24,14 +53,15 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
         <button id="copy-btn" class="btn-copy">Copiar</button>
       </div>
       
-      <pre id="prompt-text"></pre>
+      <pre id="prompt-text" aria-live="polite">{PROMPT_TEXT}</pre>
+      <p id="copy-status" class="sr-only" aria-live="assertive"></p>
 
       <div class="prompt-actions">
         <a href="/crear" class="btn-primary">Ir a crear cuestionario</a>
       </div>
     </div>
 
-    <AdSenseAd slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    <AdSenseAd slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"}  className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
     <div class="help-section">
       <h3>Cómo usar</h3>
@@ -56,47 +86,26 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
 </Layout>
 
 <script>
-  const prompt = `Necesito que generes un cuestionario tipo test en formato JSON basado en el contenido que te proporcione.
-
-REGLAS:
-1. Genera entre 20 y 50 preguntas de tipo test.
-2. Cada pregunta debe tener exactamente 4 opciones de respuesta.
-3. Solo UNA opción debe ser correcta.
-4. Incluye una explicación para cada respuesta correcta.
-5. Las opciones incorrectas deben ser plausibles.
-6. La respuesta correcta debe estar en posiciones aleatorias (no siempre la primera).
-
-FORMATO JSON:
-{
-  "title": "Nombre del tema",
-  "description": "Descripción opcional",
-  "grado": "1asir",
-  "course_id": "pni",
-  "unidad": "ud1",
-  "questions": [
-    {
-      "question": "Texto de la pregunta",
-      "options": ["Opción A", "Opción B", "Opción C", "Opción D"],
-      "answer": 0,
-      "explanation": "Explicación breve."
-    }
-  ]
-}
-
-Donde "answer" es el índice (0-3) de la opción correcta.`;
-
-  const promptText = document.getElementById('prompt-text');
   const copyBtn = document.getElementById('copy-btn');
 
-  if (promptText) promptText.textContent = prompt;
   if (copyBtn) {
+    const originalText = copyBtn.textContent;
+
     copyBtn.addEventListener('click', async () => {
-      await navigator.clipboard.writeText(prompt);
+      const promptEl = document.getElementById('prompt-text');
+      if (!promptEl) return;
+
+      await navigator.clipboard.writeText(promptEl.textContent);
       copyBtn.textContent = '¡Copiado!';
       copyBtn.classList.add('copied');
+
+      const status = document.getElementById('copy-status');
+      if (status) status.textContent = 'Copiado al portapapeles';
+
       setTimeout(() => {
-        copyBtn.textContent = 'Copiar';
+        copyBtn.textContent = originalText;
         copyBtn.classList.remove('copied');
+        if (status) status.textContent = '';
       }, 2000);
     });
   }

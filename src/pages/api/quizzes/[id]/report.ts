@@ -13,7 +13,7 @@ function getSql() {
 
 export const POST: APIRoute = async ({ params, request }) => {
   try {
-    const limitError = rateLimit(request, { key: 'report-quiz', limit: 10, windowMs: 60 * 60 * 1000 })
+    const limitError = await rateLimit(request, { key: 'report-quiz', limit: 10, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
     const id = Number(params.id)

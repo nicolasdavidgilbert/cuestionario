@@ -31,7 +31,7 @@ export default function CreateQuiz() {
     try {
       const quizzes = await getAllQuizzes()
       setExistingQuizzes(quizzes)
-    } catch (e) {
+    } catch {
       setError('Error cargando datos')
     }
   }
@@ -268,8 +268,10 @@ export default function CreateQuiz() {
         <div className="input-mode-tabs" role="tablist" aria-label="Modo de carga">
           <button
             type="button"
+            id="tab-pdf"
             className={`tab-btn ${inputMode === 'pdf' ? 'active' : ''}`}
             role="tab"
+            aria-controls="panel-pdf"
             aria-selected={inputMode === 'pdf'}
             onClick={() => setInputMode('pdf')}
           >
@@ -277,8 +279,10 @@ export default function CreateQuiz() {
           </button>
           <button
             type="button"
+            id="tab-paste"
             className={`tab-btn ${inputMode === 'paste' ? 'active' : ''}`}
             role="tab"
+            aria-controls="panel-paste"
             aria-selected={inputMode === 'paste'}
             onClick={() => setInputMode('paste')}
           >
@@ -286,8 +290,10 @@ export default function CreateQuiz() {
           </button>
           <button
             type="button"
+            id="tab-file"
             className={`tab-btn ${inputMode === 'file' ? 'active' : ''}`}
             role="tab"
+            aria-controls="panel-file"
             aria-selected={inputMode === 'file'}
             onClick={() => setInputMode('file')}
           >
@@ -347,110 +353,118 @@ export default function CreateQuiz() {
           </datalist>
         </div>
 
-        {inputMode === 'paste' ? (
-          <div className="json-paste-area">
-            <textarea
-              id="quiz-json"
-              aria-label="JSON del cuestionario"
-              value={jsonText}
-              onChange={(e) => setJsonText(e.target.value)}
-              placeholder={`Pega aquí el JSON generado por la IA...\n\nEjemplo:\n{\n  "title": "Mi Cuestionario",\n  "grado": "1asir",\n  "course_id": "pni",\n  "questions": [...]\n}`}
-              rows={12}
-              className="json-textarea"
-            />
-            <button
-              type="button"
-              onClick={() => parseJson(jsonText)}
-              className="btn-validate"
+        <div id="panel-paste" role="tabpanel" aria-labelledby="tab-paste" hidden={inputMode !== 'paste'}>
+          {inputMode === 'paste' && (
+            <div className="json-paste-area">
+              <textarea
+                id="quiz-json"
+                aria-label="JSON del cuestionario"
+                value={jsonText}
+                onChange={(e) => setJsonText(e.target.value)}
+                placeholder={`Pega aquí el JSON generado por la IA...\n\nEjemplo:\n{\n  "title": "Mi Cuestionario",\n  "grado": "1asir",\n  "course_id": "pni",\n  "questions": [...]\n}`}
+                rows={12}
+                className="json-textarea"
+              />
+              <button
+                type="button"
+                onClick={() => parseJson(jsonText)}
+                className="btn-validate"
+              >
+                Validar JSON
+              </button>
+            </div>
+          )}
+        </div>
+        <div id="panel-file" role="tabpanel" aria-labelledby="tab-file" hidden={inputMode !== 'file'}>
+          {inputMode === 'file' && (
+            <div
+              className={`dropzone ${preview ? 'has-file' : ''}`}
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInputRef.current?.click()}
+              role="button"
+              tabIndex={0}
+              aria-label="Seleccionar archivo JSON. También puedes arrastrar y soltar un archivo aquí"
             >
-              Validar JSON
-            </button>
-          </div>
-        ) : inputMode === 'file' ? (
-          <div
-            className={`dropzone ${preview ? 'has-file' : ''}`}
-            onDragEnter={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => fileInputRef.current?.click()}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInputRef.current?.click()}
-            role="button"
-            tabIndex={0}
-            aria-label="Seleccionar archivo JSON"
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
-              style={{ display: 'none' }}
-            />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".json"
+                onChange={(e) => e.target.files[0] && handleFile(e.target.files[0])}
+                style={{ display: 'none' }}
+              />
 
-            {preview ? (
-              <div className="dropzone-preview">
-                <div className="dropzone-icon">✓</div>
-                <p className="dropzone-filename">{preview.source}</p>
-                <p className="dropzone-info">{getPreviewMessage(preview)}</p>
-                {preview.notice && <p className="help-note">{preview.notice}</p>}
-              </div>
-            ) : (
-              <div className="dropzone-empty">
-                <div className="dropzone-icon" aria-hidden="true">JSON</div>
-                <p className="dropzone-text">
-                  Arrastra tu archivo JSON aquí o <span className="dropzone-link">haz clic para seleccionar</span>
-                </p>
-                <p className="dropzone-hint">
-                  Formato: {`{ grado, course_id, questions: [...] }`}
-                </p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div
-            className={`dropzone ${preview ? 'has-file' : ''}`}
-            onDragEnter={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
-            onClick={() => !generating && fileInputRef.current?.click()}
-            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !generating && fileInputRef.current?.click()}
-            role="button"
-            tabIndex={generating ? -1 : 0}
-            aria-label="Seleccionar archivo PDF"
-          >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,application/pdf"
-              onChange={(e) => e.target.files[0] && handlePdfFile(e.target.files[0])}
-              style={{ display: 'none' }}
-            />
+              {preview ? (
+                <div className="dropzone-preview">
+                  <div className="dropzone-icon">✓</div>
+                  <p className="dropzone-filename">{preview.source}</p>
+                  <p className="dropzone-info">{getPreviewMessage(preview)}</p>
+                  {preview.notice && <p className="help-note">{preview.notice}</p>}
+                </div>
+              ) : (
+                <div className="dropzone-empty">
+                  <div className="dropzone-icon" aria-hidden="true">JSON</div>
+                  <p className="dropzone-text">
+                    Arrastra tu archivo JSON aquí o <span className="dropzone-link">haz clic para seleccionar</span>
+                  </p>
+                  <p className="dropzone-hint">
+                    Formato: {`{ grado, course_id, questions: [...] }`}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        <div id="panel-pdf" role="tabpanel" aria-labelledby="tab-pdf" hidden={inputMode !== 'pdf'}>
+          {inputMode === 'pdf' && (
+            <div
+              className={`dropzone ${preview ? 'has-file' : ''}`}
+              onDragEnter={handleDrag}
+              onDragOver={handleDrag}
+              onDrop={handleDrop}
+              onClick={() => !generating && fileInputRef.current?.click()}
+              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && !generating && fileInputRef.current?.click()}
+              role="button"
+              tabIndex={generating ? -1 : 0}
+              aria-label="Seleccionar archivo PDF. También puedes arrastrar y soltar un PDF aquí"
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".pdf,application/pdf"
+                onChange={(e) => e.target.files[0] && handlePdfFile(e.target.files[0])}
+                style={{ display: 'none' }}
+              />
 
-            {generating ? (
-              <div className="dropzone-preview">
-                <div className="spinner"></div>
-                <p className="dropzone-filename">Procesando {selectedPdfName || 'PDF'}...</p>
-                <p className="dropzone-info">Extrayendo texto y generando preguntas con IA</p>
-              </div>
-            ) : preview ? (
-              <div className="dropzone-preview">
-                <div className="dropzone-icon">✓</div>
-                <p className="dropzone-filename">{preview.source}</p>
-                <p className="dropzone-info">{getPreviewMessage(preview)}</p>
-                {preview.notice && <p className="help-note">{preview.notice}</p>}
-              </div>
-            ) : (
-              <div className="dropzone-empty">
-                <div className="dropzone-icon" aria-hidden="true">PDF</div>
-                <p className="dropzone-text">
-                  Arrastra tu PDF aquí o <span className="dropzone-link">haz clic para seleccionar</span>
-                </p>
-                <p className="dropzone-hint">
-                  El servidor extrae el texto, llama a la IA y te devuelve el JSON listo para guardar
-                </p>
-              </div>
-            )}
-          </div>
-        )}
+              {generating ? (
+                <div className="dropzone-preview">
+                  <div className="spinner"></div>
+                  <p className="dropzone-filename">Procesando {selectedPdfName || 'PDF'}...</p>
+                  <p className="dropzone-info">Extrayendo texto y generando preguntas con IA</p>
+                </div>
+              ) : preview ? (
+                <div className="dropzone-preview">
+                  <div className="dropzone-icon">✓</div>
+                  <p className="dropzone-filename">{preview.source}</p>
+                  <p className="dropzone-info">{getPreviewMessage(preview)}</p>
+                  {preview.notice && <p className="help-note">{preview.notice}</p>}
+                </div>
+              ) : (
+                <div className="dropzone-empty">
+                  <div className="dropzone-icon" aria-hidden="true">PDF</div>
+                  <p className="dropzone-text">
+                    Arrastra tu PDF aquí o <span className="dropzone-link">haz clic para seleccionar</span>
+                  </p>
+                  <p className="dropzone-hint">
+                    El servidor extrae el texto, llama a la IA y te devuelve el JSON listo para guardar
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {preview && (
           <>
