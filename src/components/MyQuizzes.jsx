@@ -59,13 +59,47 @@ export default function MyQuizzes() {
 
   const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
 
-  if (loading) {
-    return (
-      <div className="page-wrap">
-        <div className="loading">Cargando...</div>
-      </div>
-    )
-  }
+  const listContent = loading ? (
+    <div className="skeleton-list" aria-label="Cargando cuestionarios">
+      <div className="skeleton-card" />
+      <div className="skeleton-card" />
+      <div className="skeleton-card" />
+      <div className="skeleton-card" />
+    </div>
+  ) : error ? (
+    <div className="error-msg">{error}</div>
+  ) : quizzes.length === 0 ? (
+    <div className="empty-state">
+      <div className="empty-icon" />
+      <p>No tienes cuestionarios creados en este navegador.</p>
+      <a href="/crear" className="btn-primary"><span aria-hidden="true">+</span> Crear el primero</a>
+    </div>
+  ) : (
+    <div className="unit-grid">
+      {quizzes.map((quiz) => (
+        <div key={quiz.id} className="unit-card quiz-list-card">
+          <a href={`/user-quiz/${quiz.id}`}>
+            <span className="unit-badge">{(quiz.unidad || quiz.course_id).toUpperCase()}</span>
+            {quiz.title && <span className="unit-title">{quiz.title}</span>}
+          </a>
+          <div className="quiz-card-actions">
+            <a href={`/user-quiz/${quiz.id}`} className="btn-secondary">
+              <span aria-hidden="true">↗</span> Abrir
+            </a>
+            <button
+              type="button"
+              className="btn-clear btn-danger"
+              onClick={() => handleDelete(quiz.id)}
+              disabled={deletingId === quiz.id}
+            >
+              <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
+              {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
 
   return (
     <div className="page-wrap">
@@ -88,42 +122,9 @@ export default function MyQuizzes() {
         <button type="submit" className="btn-validate"><span aria-hidden="true">⌕</span> Buscar</button>
       </form>
 
-      {error && <div className="error-msg">{error}</div>}
+      {listContent}
 
-      {quizzes.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-icon" />
-          <p>No tienes cuestionarios creados en este navegador.</p>
-          <a href="/crear" className="btn-primary"><span aria-hidden="true">+</span> Crear el primero</a>
-        </div>
-      ) : (
-        <div className="unit-grid">
-          {quizzes.map((quiz) => (
-            <div key={quiz.id} className="unit-card quiz-list-card">
-              <a href={`/user-quiz/${quiz.id}`}>
-                <span className="unit-badge">{(quiz.unidad || quiz.course_id).toUpperCase()}</span>
-                {quiz.title && <span className="unit-title">{quiz.title}</span>}
-              </a>
-              <div className="quiz-card-actions">
-                <a href={`/user-quiz/${quiz.id}`} className="btn-secondary">
-                  <span aria-hidden="true">↗</span> Abrir
-                </a>
-                <button
-                  type="button"
-                  className="btn-clear btn-danger"
-                  onClick={() => handleDelete(quiz.id)}
-                  disabled={deletingId === quiz.id}
-                >
-                  <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
-                  {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {total > 0 && totalPages > 1 && (
+      {!loading && !error && total > 0 && totalPages > 1 && (
         <div className="pagination-controls">
           <button type="button" className="btn-validate" disabled={page === 0} onClick={() => setPage(page - 1)}>
             ← Anterior
