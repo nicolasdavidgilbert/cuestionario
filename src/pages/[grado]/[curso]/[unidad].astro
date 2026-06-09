@@ -20,12 +20,23 @@ const readableTitle = [unidad, curso, grado].filter(Boolean).join(' - ')
       {
         '@type': 'ListItem',
         position: 2,
-        name: grado,
-        item: new URL(`/${grado}`, Astro.site ?? 'https://cuestionario.online').toString()
+        name: 'Cursos',
+        item: new URL('/cursos', Astro.site ?? 'https://cuestionario.online').toString()
       },
       {
         '@type': 'ListItem',
         position: 3,
+        name: grado,
+        item: new URL('/' + grado, Astro.site ?? 'https://cuestionario.online').toString()
+      },
+      {
+        '@type': 'ListItem',
+        position: 4,
+        name: curso
+      },
+      {
+        '@type': 'ListItem',
+        position: 5,
         name: unidad,
         item: new URL(Astro.url.pathname, Astro.site ?? 'https://cuestionario.online').toString()
       }

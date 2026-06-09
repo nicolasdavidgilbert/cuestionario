@@ -29,6 +29,16 @@ const absoluteImageUrl = new URL(image, Astro.site ?? 'https://cuestionario.onli
 const currentYear = new Date().getFullYear()
 const adsOnThisPage = canServeAdsOnPage(Astro.url.pathname, adsEnabledByEnv, adsenseClient)
 const pageTitle = title === SITE_NAME ? SITE_NAME : `${title} | ${SITE_NAME}`
+const currentPath = Astro.url.pathname
+const navLinks = [
+  { href: "/cursos", label: "Cursos" },
+  { href: "/mis-cuestionarios", label: "Mis cuestionarios" },
+  { href: "/prompt", label: "Prompt IA" }
+]
+const isActivePath = (href: string) => {
+  if (href === "/cursos" && Astro.params.grado) return true
+  return currentPath === href || currentPath.startsWith(`${href}/`)
+}
 const baseStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
@@ -79,10 +89,22 @@ const jsonLd = structuredData
             <span>{SITE_NAME}</span>
           </a>
           <nav class="site-nav" aria-label="Navegación principal">
-            <a href="/cursos">Cursos</a>
-            <a href="/crear">Crear</a>
-            <a href="/prompt">Prompt IA</a>
-            <a href="/mis-cuestionarios">Mis cuestionarios</a>
+            {navLinks.map((link) => (
+              <a
+                href={link.href}
+                class:list={{ "is-active": isActivePath(link.href) }}
+                aria-current={isActivePath(link.href) ? "page" : undefined}
+              >
+                {link.label}
+              </a>
+            ))}
+            <a
+              href="/crear"
+              class:list={{ "site-nav__cta": true, "is-active": isActivePath("/crear") }}
+              aria-current={isActivePath("/crear") ? "page" : undefined}
+            >
+              Crear
+            </a>
           </nav>
         </div>
       </header>
