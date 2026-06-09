@@ -71,6 +71,8 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
             <nav className="breadcrumbs" aria-label="Migas de pan">
               <a href="/">Inicio</a>
               <span aria-hidden="true">/</span>
+              <a href="/cursos">Cursos</a>
+              <span aria-hidden="true">/</span>
               <span>{gradoData?.label || grado?.toUpperCase()}</span>
             </nav>
             <div className="skeleton-title" />
@@ -89,6 +91,8 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
     <div className="page-wrap">
       <nav className="breadcrumbs" aria-label="Migas de pan">
         <a href="/">Inicio</a>
+        <span aria-hidden="true">/</span>
+        <a href="/cursos">Cursos</a>
         <span aria-hidden="true">/</span>
         <span>{gradoData?.label || grado?.toUpperCase()}</span>
       </nav>

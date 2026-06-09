@@ -68,6 +68,7 @@ export default function Quiz({ grado, curso, unidad }) {
   const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
   const quizTitle = pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`
   const gradoLabel = grado?.toUpperCase()
+  const cursoLabel = curso?.toUpperCase()
   const unidadLabel = unidad?.toUpperCase()
 
   function handleSelect(qIndex, optionIndex) {
@@ -107,7 +108,11 @@ export default function Quiz({ grado, curso, unidad }) {
         <nav className="breadcrumbs" aria-label="Migas de pan">
           <a href="/">Inicio</a>
           <span aria-hidden="true">/</span>
+          <a href="/cursos">Cursos</a>
+          <span aria-hidden="true">/</span>
           <a href={`/${grado}`}>{gradoLabel}</a>
+          <span aria-hidden="true">/</span>
+          <span>{cursoLabel}</span>
           <span aria-hidden="true">/</span>
           <span>{unidadLabel}</span>
         </nav>
@@ -124,7 +129,11 @@ export default function Quiz({ grado, curso, unidad }) {
         <nav className="breadcrumbs" aria-label="Migas de pan">
           <a href="/">Inicio</a>
           <span aria-hidden="true">/</span>
+          <a href="/cursos">Cursos</a>
+          <span aria-hidden="true">/</span>
           <a href={`/${grado}`}>{gradoLabel}</a>
+          <span aria-hidden="true">/</span>
+          <span>{cursoLabel}</span>
           <span aria-hidden="true">/</span>
           <span>{unidadLabel}</span>
         </nav>
@@ -153,9 +162,13 @@ export default function Quiz({ grado, curso, unidad }) {
           <nav className="breadcrumbs" aria-label="Migas de pan">
             <a href="/">Inicio</a>
             <span aria-hidden="true">/</span>
+            <a href="/cursos">Cursos</a>
+            <span aria-hidden="true">/</span>
             <a href={`/${grado}`}>{gradoLabel}</a>
             <span aria-hidden="true">/</span>
-            <span>{quizTitle}</span>
+            <span>{cursoLabel}</span>
+            <span aria-hidden="true">/</span>
+            <span>{unidadLabel}</span>
           </nav>
 
           <section className="results-summary" aria-labelledby="results-heading">
@@ -210,9 +223,13 @@ export default function Quiz({ grado, curso, unidad }) {
       <nav className="breadcrumbs" aria-label="Migas de pan">
         <a href="/">Inicio</a>
         <span aria-hidden="true">/</span>
+        <a href="/cursos">Cursos</a>
+        <span aria-hidden="true">/</span>
         <a href={`/${grado}`}>{gradoLabel}</a>
         <span aria-hidden="true">/</span>
-        <span>{quizTitle}</span>
+        <span>{cursoLabel}</span>
+        <span aria-hidden="true">/</span>
+        <span>{unidadLabel}</span>
       </nav>
 
       <header className="quiz-header">
