@@ -24,6 +24,7 @@ const LONG_TEXT_THRESHOLD_CHARS = 9000
 const MAX_CHUNKS = 2
 const CHUNK_MIN_QUESTIONS = 10
 const CHUNK_MAX_QUESTIONS = 13
+const SCHEMA_MIN_QUESTIONS = 1
 
 function normalizeExtractedText(text: string) {
   return text
@@ -139,7 +140,7 @@ function getQuizSchema(minQuestions: number, maxQuestions: number) {
       unidad: { type: 'string' },
       questions: {
         type: 'array',
-        minItems: minQuestions,
+        minItems: SCHEMA_MIN_QUESTIONS,
         maxItems: maxQuestions,
         items: {
           type: 'object',
@@ -163,11 +164,40 @@ function getQuizSchema(minQuestions: number, maxQuestions: number) {
   }
 }
 
-async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options: RequestGroqOptions) {
+function parseGroqContent(content: string) {
+  try {
+    return JSON.parse(content)
+  } catch {
+    const start = content.indexOf('{')
+    const end = content.lastIndexOf('}')
+
+    if (start === -1 || end === -1 || end <= start) {
+      throw new Error('La IA no devolvio JSON utilizable')
+    }
+
+    return JSON.parse(content.slice(start, end + 1))
+  }
+}
+
+function isGroqSchemaFailure(message: string) {
+  return /failed_generation|failed to validate json|does not match the expected schema|jsonschema/i.test(message)
+}
+
+async function fetchGroqCompletion(payload: GenerateQuizInput, text: string, options: RequestGroqOptions, mode: 'schema' | 'json') {
   const apiKey = getGroqApiKey()
   const model = getGroqModel()
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), GROQ_TIMEOUT_MS)
+  const responseFormat = mode === 'schema'
+    ? {
+      type: 'json_schema',
+      json_schema: {
+        name: 'quiz_generation',
+        strict: true,
+        schema: getQuizSchema(options.minQuestions, options.maxQuestions)
+      }
+    }
+    : { type: 'json_object' }
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -178,7 +208,7 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
     },
     body: JSON.stringify({
       model,
-      temperature: 0.2,
+      temperature: mode === 'schema' ? 0.2 : 0.1,
       messages: buildPrompt({
         text: truncateForModel(text, options.maxChars),
         grado: payload.grado,
@@ -189,14 +219,7 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
         minQuestions: options.minQuestions,
         maxQuestions: options.maxQuestions
       }),
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'quiz_generation',
-          strict: true,
-          schema: getQuizSchema(options.minQuestions, options.maxQuestions)
-        }
-      }
+      response_format: responseFormat
     })
   }).finally(() => clearTimeout(timeoutId))
 
@@ -204,6 +227,12 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
 
   if (!response.ok) {
     const apiMessage = json?.error?.message || json?.message || `HTTP ${response.status}`
+    const retryAfter = response.headers.get('retry-after')
+
+    if (response.status === 429 || /rate limit|too many requests|tokens per minute|TPM/i.test(apiMessage)) {
+      throw new Error(`Groq rate limit: ${apiMessage}${retryAfter ? `. Retry-After: ${retryAfter}s` : ''}`)
+    }
+
     throw new Error(`Groq devolvio un error: ${apiMessage}`)
   }
 
@@ -213,7 +242,18 @@ async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options
     throw new Error('La IA no devolvio contenido utilizable')
   }
 
-  return JSON.parse(content)
+  return parseGroqContent(content)
+}
+
+async function requestGroqQuiz(payload: GenerateQuizInput, text: string, options: RequestGroqOptions) {
+  try {
+    return await fetchGroqCompletion(payload, text, options, 'schema')
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    if (!isGroqSchemaFailure(message)) throw error
+
+    return fetchGroqCompletion(payload, text, options, 'json')
+  }
 }
 
 function normalizeGeneratedQuiz(generated: unknown, input: GenerateQuizInput): QuizData {
@@ -270,10 +310,6 @@ async function generatePartialQuiz(input: GenerateQuizInput, text: string, optio
       const generated = await requestGroqQuiz(input, text, { ...options, attempt })
       const quiz = normalizeGeneratedQuiz(generated, input)
 
-      if (quiz.questions.length < options.minQuestions) {
-        throw new Error(`minItems: se esperaban al menos ${options.minQuestions} preguntas`)
-      }
-
       return quiz
     } catch (error) {
       lastError = error instanceof Error ? error : new Error('Error desconocido')
@@ -311,6 +347,20 @@ function validateFinalQuiz(quiz: GeneratedQuiz) {
   const validation = validateQuizJson(quiz)
 
   if (!validation.valid || !validation.data) {
+    const onlyQuestionCountError = validation.errors.every((error) => error.field === 'questions')
+
+    if (onlyQuestionCountError && quiz.questions.length > 0 && quiz.questions.length < QUIZ_LIMITS.minQuestions) {
+      return {
+        title: quiz.title,
+        description: quiz.description,
+        grado: quiz.grado,
+        course_id: quiz.course_id,
+        unidad: quiz.unidad,
+        questions: quiz.questions,
+        notice: quiz.notice || `La IA solo pudo generar ${quiz.questions.length} pregunta${quiz.questions.length === 1 ? '' : 's'} con este PDF. Puedes editar el cuestionario y añadir preguntas antes de guardarlo.`
+      }
+    }
+
     throw new Error(validation.errors.map((error) => error.message).join('\n'))
   }
 

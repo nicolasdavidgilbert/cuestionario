@@ -68,14 +68,18 @@ function buildSearchResults(catalog, query) {
 }
 
 export default function LandingCourses({ limit = null, compact = false, showSearch = true, showViewAll = false, searchMode = 'grades', emptyUntilSearch = false, syncUrl = false }) {
+  const initialQuery = syncUrl && typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('q') || ''
+    : ''
   const [catalog, setCatalog] = useState(null)
   const [error, setError] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [query, setQuery] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [query, setQuery] = useState(initialQuery)
   const [expanded, setExpanded] = useState(false)
   const [activeType, setActiveType] = useState('all')
 
   const loadCatalog = useCallback(async () => {
+    setLoading(true)
     setError(false)
     try {
       const data = await getQuizCatalog()
@@ -89,11 +93,11 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   }, [])
 
   useEffect(() => {
-    if (syncUrl && typeof window !== 'undefined') {
-      setQuery(new URLSearchParams(window.location.search).get('q') || '')
-    }
+    const shouldLoad = !emptyUntilSearch || Boolean(query.trim())
+    if (!shouldLoad || catalog || loading) return
+
     loadCatalog()
-  }, [syncUrl, loadCatalog])
+  }, [emptyUntilSearch, query, catalog, loading, loadCatalog])
 
   useEffect(() => {
     if (!syncUrl || typeof window === 'undefined') return
@@ -163,7 +167,13 @@ export default function LandingCourses({ limit = null, compact = false, showSear
         </>
       )}
 
-      {loading || !catalog ? (
+      {error ? (
+        <div className="empty-state">
+          <div className="empty-icon" />
+          <p>No se pudo cargar la lista de cursos.</p>
+          <button type="button" className="btn-secondary" onClick={loadCatalog}>Reintentar</button>
+        </div>
+      ) : loading || !catalog ? (
         emptyUntilSearch && !hasQuery ? null : (
           <div className="skeleton-list course-list-transition" aria-label="Cargando cursos">
             <div className="skeleton-card" />
@@ -171,12 +181,6 @@ export default function LandingCourses({ limit = null, compact = false, showSear
             <div className="skeleton-card" />
           </div>
         )
-      ) : error ? (
-        <div className="empty-state">
-          <div className="empty-icon" />
-          <p>No se pudo cargar la lista de cursos.</p>
-          <button type="button" className="btn-secondary" onClick={loadCatalog}>Reintentar</button>
-        </div>
       ) : catalog.grados.length === 0 ? (
         <div className="empty-state">
           <div className="empty-icon" />
@@ -184,9 +188,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
           <a href="/crear" className="btn-primary">Crear el primero</a>
         </div>
       ) : searchMode === 'all' ? (
-        !hasQuery && emptyUntilSearch ? (
-          <p className="catalog-hint">Escribe para buscar cursos, asignaturas y temas.</p>
-        ) : visibleSearchResults.length === 0 ? (
+        !hasQuery && emptyUntilSearch ? null : visibleSearchResults.length === 0 ? (
           <div className="empty-state">
             <p>No hay resultados para tu búsqueda.</p>
             <button type="button" className="btn-secondary" onClick={() => setQuery('')}>Limpiar búsqueda</button>
