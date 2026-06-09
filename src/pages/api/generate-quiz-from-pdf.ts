@@ -22,8 +22,12 @@ function getPublicGenerateErrorMessage(error: unknown) {
     return `El servidor no pudo inicializar el lector de PDF: ${detail}`
   }
 
-  if (/tokens per minute|TPM|Request too large|rate limit/i.test(detail)) {
-    return 'El PDF sigue superando el límite actual de Groq incluso usando trozos más pequeños. Prueba con un PDF más corto o un modelo/límite superior.'
+  if (/Groq rate limit|tokens per minute|TPM|rate limit|too many requests|Retry-After/i.test(detail)) {
+    return 'Groq ha limitado temporalmente las peticiones. Espera un poco y vuelve a intentarlo; si ocurre mucho, baja la frecuencia de generación o usa un modelo/límite superior.'
+  }
+
+  if (/Request too large|context length|too many tokens/i.test(detail)) {
+    return 'El PDF supera el límite de contexto actual de Groq incluso usando trozos más pequeños. Prueba con un PDF más corto.'
   }
 
   if (/Groq devolvi[oó] un error:/i.test(detail)) {

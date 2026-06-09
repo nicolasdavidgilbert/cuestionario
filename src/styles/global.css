@@ -41,6 +41,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 body, h1, h2, h3, h4, p, ol, ul, figure { margin-block-start: 0; }
+body.modal-open { overflow: hidden; }
 a { color: inherit; }
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
@@ -566,6 +567,95 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
 .dropzone-hint, .dropzone-info, .help-note { color: var(--c-text-muted); font-size: 0.92rem; }
 .dropzone-link { color: var(--c-accent-strong); text-decoration: underline; }
 .questions-preview { padding: 14px; border: 1px solid var(--c-border); border-radius: var(--radius); }
+.preview-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.quiz-editor-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(24, 24, 27, 0.42);
+}
+.quiz-editor-panel {
+  width: min(100%, 1080px);
+  height: min(92dvh, 920px);
+  max-height: min(92dvh, 920px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-bg);
+  box-shadow: 0 24px 70px rgba(24, 24, 27, 0.22);
+}
+.quiz-editor-header,
+.quiz-editor-footer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: color-mix(in srgb, var(--c-surface) 92%, transparent);
+  backdrop-filter: blur(14px);
+}
+.quiz-editor-header { border-bottom: 1px solid var(--c-border); }
+.quiz-editor-footer { border-top: 1px solid var(--c-border); }
+.quiz-editor-header h2 { margin: 0; font-size: 1.35rem; }
+.quiz-editor-header p { margin: 0; color: var(--c-text-muted); }
+.quiz-editor-header-actions,
+.quiz-editor-card-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: flex-end; }
+.quiz-editor-error { margin: 12px 16px 0; }
+.quiz-editor-body {
+  display: grid;
+  gap: 14px;
+  min-height: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.quiz-editor-card {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  background: var(--c-surface);
+}
+.quiz-editor-card-header {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.quiz-editor-card-header h3 { margin: 2px 0 0; font-size: 1rem; line-height: 1.35; }
+.quiz-editor-options { display: grid; gap: 10px; }
+.quiz-editor-options-heading {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  color: var(--c-text-muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.quiz-editor-option-row {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+.quiz-editor-radio {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  background: var(--c-bg);
+}
+.quiz-editor-radio input { accent-color: var(--c-accent-strong); }
+.quiz-editor-add-option,
+.quiz-editor-add-question { justify-self: start; }
 .questions-list { display: grid; gap: 12px; margin-top: 12px; }
 .question-preview-item { padding: 12px; background: var(--c-bg); border-radius: var(--radius-sm); }
 .correct-option { color: var(--c-success); font-weight: 700; }
@@ -689,6 +779,17 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
   .landing-search .landing-header { max-height: 360px; }
   .course-search-section,
   .courses-catalog-shell .catalog-search { top: 8px; padding: 8px; }
+  .quiz-editor-modal { padding: 0; align-items: stretch; }
+  .quiz-editor-panel { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }
+  .quiz-editor-header,
+  .quiz-editor-footer,
+  .quiz-editor-card-header { display: grid; align-items: stretch; }
+  .quiz-editor-header-actions,
+  .quiz-editor-card-actions { justify-content: stretch; }
+  .quiz-editor-header-actions > *,
+  .quiz-editor-card-actions > *,
+  .quiz-editor-footer > * { width: 100%; }
+  .quiz-editor-option-row { grid-template-columns: 36px minmax(0, 1fr); }
   .content-grid,
   .steps-grid,
   .catalog-search,

@@ -3,6 +3,38 @@ import { createQuiz, generateQuizFromPdf, getAllQuizzes } from '../lib/api'
 import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 import { getOwnerToken } from '../lib/ownerToken'
 
+const EDITOR_OPTION_COUNT = 4
+
+function createEmptyQuestion() {
+  return {
+    question: '',
+    options: Array(EDITOR_OPTION_COUNT).fill(''),
+    answer: 0,
+    explanation: ''
+  }
+}
+
+function cloneQuestionsForEdit(questions = []) {
+  return questions.map((question) => {
+    const rawOptions = Array.isArray(question.options) && question.options.length > 0
+      ? question.options.map((option) => String(option ?? ''))
+      : []
+    const options = rawOptions.slice(0, EDITOR_OPTION_COUNT)
+    while (options.length < EDITOR_OPTION_COUNT) options.push('')
+
+    const answer = Number.isInteger(question.answer) && question.answer >= 0 && question.answer < EDITOR_OPTION_COUNT
+      ? question.answer
+      : 0
+
+    return {
+      question: String(question.question ?? ''),
+      options,
+      answer,
+      explanation: String(question.explanation ?? '')
+    }
+  })
+}
+
 export default function CreateQuiz() {
   const [existingQuizzes, setExistingQuizzes] = useState([])
   const [loading, setLoading] = useState(false)
@@ -13,6 +45,9 @@ export default function CreateQuiz() {
   const [jsonText, setJsonText] = useState('')
   const [preview, setPreview] = useState(null)
   const [selectedPdfName, setSelectedPdfName] = useState('')
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [draftQuestions, setDraftQuestions] = useState([])
+  const [editorError, setEditorError] = useState('')
   const fileInputRef = useRef(null)
 
   const [quiz, setQuiz] = useState({
@@ -26,6 +61,15 @@ export default function CreateQuiz() {
   useEffect(() => {
     loadData()
   }, [])
+
+  useEffect(() => {
+    if (!editorOpen) return undefined
+
+    document.body.classList.add('modal-open')
+    return () => {
+      document.body.classList.remove('modal-open')
+    }
+  }, [editorOpen])
 
   const loadData = async () => {
     try {
@@ -120,6 +164,9 @@ export default function CreateQuiz() {
       setError('')
       setValidationErrors([])
       setPreview(null)
+      setEditorOpen(false)
+      setDraftQuestions([])
+      setEditorError('')
 
       const formData = new FormData()
       formData.set('file', file)
@@ -203,7 +250,11 @@ export default function CreateQuiz() {
     })
 
     if (!validation.valid) {
-      setError(validation.errors.map(e => e.message).join('\n'))
+      const questionCountError = validation.errors.find((validationError) => validationError.field === 'questions')
+      setError(questionCountError
+        ? `${questionCountError.message}. Usa “Editar cuestionario” para añadir preguntas antes de guardar.`
+        : validation.errors.map(e => e.message).join('\n')
+      )
       setValidationErrors(validation.errors)
       return
     }
@@ -230,6 +281,102 @@ export default function CreateQuiz() {
     }
   }
 
+  const openQuestionEditor = () => {
+    if (!preview?.questions) return
+    setDraftQuestions(cloneQuestionsForEdit(preview.questions))
+    setEditorError('')
+    setEditorOpen(true)
+  }
+
+  const cancelQuestionEditor = () => {
+    setEditorOpen(false)
+    setDraftQuestions([])
+    setEditorError('')
+  }
+
+  const updateDraftQuestion = (questionIndex, patch) => {
+    setDraftQuestions((questions) => questions.map((question, index) => (
+      index === questionIndex ? { ...question, ...patch } : question
+    )))
+  }
+
+  const updateDraftOption = (questionIndex, optionIndex, value) => {
+    setDraftQuestions((questions) => questions.map((question, index) => {
+      if (index !== questionIndex) return question
+
+      return {
+        ...question,
+        options: question.options.map((option, currentIndex) => currentIndex === optionIndex ? value : option)
+      }
+    }))
+  }
+
+  const addDraftQuestion = () => {
+    setDraftQuestions((questions) => [...questions, createEmptyQuestion()])
+  }
+
+  const removeDraftQuestion = (questionIndex) => {
+    setDraftQuestions((questions) => questions.filter((_, index) => index !== questionIndex))
+  }
+
+  const moveDraftQuestion = (questionIndex, direction) => {
+    setDraftQuestions((questions) => {
+      const targetIndex = questionIndex + direction
+      if (targetIndex < 0 || targetIndex >= questions.length) return questions
+
+      const nextQuestions = [...questions]
+      const [movedQuestion] = nextQuestions.splice(questionIndex, 1)
+      nextQuestions.splice(targetIndex, 0, movedQuestion)
+      return nextQuestions
+    })
+  }
+
+  const validateDraftQuestions = (questions) => {
+    if (questions.length === 0) {
+      return 'Añade al menos una pregunta antes de guardar.'
+    }
+
+    for (let questionIndex = 0; questionIndex < questions.length; questionIndex += 1) {
+      const question = questions[questionIndex]
+      const questionNumber = questionIndex + 1
+      const options = question.options.map((option) => option.trim())
+
+      if (!question.question.trim()) return `La pregunta ${questionNumber} necesita un enunciado.`
+      if (options.length !== EDITOR_OPTION_COUNT) return `La pregunta ${questionNumber} debe tener exactamente ${EDITOR_OPTION_COUNT} respuestas.`
+      if (options.some((option) => !option)) return `La pregunta ${questionNumber} tiene respuestas vacías.`
+      if (!Number.isInteger(question.answer) || question.answer < 0 || question.answer >= options.length) {
+        return `Marca una respuesta correcta válida en la pregunta ${questionNumber}.`
+      }
+    }
+
+    return ''
+  }
+
+  const saveQuestionEditor = () => {
+    const validationMessage = validateDraftQuestions(draftQuestions)
+    if (validationMessage) {
+      setEditorError(validationMessage)
+      return
+    }
+
+    const questions = draftQuestions.map((question) => ({
+      question: question.question.trim(),
+      options: question.options.map((option) => option.trim()),
+      answer: question.answer,
+      explanation: question.explanation.trim()
+    }))
+
+    setPreview((currentPreview) => ({
+      ...currentPreview,
+      questions
+    }))
+    setEditorOpen(false)
+    setDraftQuestions([])
+    setEditorError('')
+    setError('')
+    setValidationErrors([])
+  }
+
   const clearAll = () => {
     setPreview(null)
     setJsonText('')
@@ -237,6 +384,9 @@ export default function CreateQuiz() {
     setQuiz({ title: '', description: '', grado: '', course_id: '', unidad: '' })
     setError('')
     setValidationErrors([])
+    setEditorOpen(false)
+    setDraftQuestions([])
+    setEditorError('')
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
     }
@@ -502,9 +652,14 @@ export default function CreateQuiz() {
               </div>
             </details>
 
-            <button type="button" onClick={clearAll} className="btn-clear">
-              Limpiar y empezar de nuevo
-            </button>
+            <div className="preview-actions">
+              <button type="button" onClick={openQuestionEditor} className="btn-secondary">
+                Editar cuestionario
+              </button>
+              <button type="button" onClick={clearAll} className="btn-clear">
+                Limpiar y empezar de nuevo
+              </button>
+            </div>
           </>
         )}
 
@@ -528,30 +683,104 @@ export default function CreateQuiz() {
         </button>
       </form>
 
-      <div className="json-format-help">
-        <h3>Formato del JSON</h3>
-        <pre>{`{
-  "title": "Mi Cuestionario",
-  "description": "Descripción opcional",
-  "grado": "1asir",
-  "course_id": "pni",
-  "unidad": "ud1",
-  "questions": [
-    {
-      "question": "¿Cuál es la pregunta?",
-      "options": ["A", "B", "C", "D"],
-      "answer": 0,
-      "explanation": "Explicación"
-    }
-  ]
-}`}</pre>
-        <p className="help-note">
-          <strong>Nota:</strong> <code>answer</code> es el índice de la respuesta correcta (0-3). El campo <code>unidad</code> es opcional.
-        </p>
-        <p className="help-note">
-          <strong>Modo PDF:</strong> necesitas configurar <code>GROQ_API_KEY</code> en el servidor. Este MVP funciona mejor con PDFs que ya contienen texto, no con escaneos.
-        </p>
-      </div>
+      {editorOpen && (
+        <div className="quiz-editor-modal" role="dialog" aria-modal="true" aria-labelledby="quiz-editor-title" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+          <div className="quiz-editor-panel">
+            <div className="quiz-editor-header">
+              <div>
+                <p className="section-kicker">Editor visual</p>
+                <h2 id="quiz-editor-title">Editar cuestionario</h2>
+                <p>{draftQuestions.length} pregunta{draftQuestions.length === 1 ? '' : 's'} en edición</p>
+              </div>
+              <div className="quiz-editor-header-actions">
+                <button type="button" className="btn-secondary" onClick={cancelQuestionEditor}>Cancelar</button>
+                <button type="button" className="btn-primary" onClick={saveQuestionEditor}>Guardar cambios</button>
+              </div>
+            </div>
+
+            {editorError && <div className="error-msg error-box quiz-editor-error">{editorError}</div>}
+
+            <div className="quiz-editor-body">
+              {draftQuestions.map((question, questionIndex) => (
+                <article key={questionIndex} className="quiz-editor-card">
+                  <div className="quiz-editor-card-header">
+                    <div>
+                      <span className="question-number">Pregunta {questionIndex + 1}</span>
+                      <h3>{question.question.trim() || 'Pregunta sin enunciado'}</h3>
+                    </div>
+                    <div className="quiz-editor-card-actions">
+                      <button type="button" className="btn-secondary" onClick={() => moveDraftQuestion(questionIndex, -1)} disabled={questionIndex === 0}>Subir</button>
+                      <button type="button" className="btn-secondary" onClick={() => moveDraftQuestion(questionIndex, 1)} disabled={questionIndex === draftQuestions.length - 1}>Bajar</button>
+                      <button type="button" className="btn-clear btn-danger" onClick={() => removeDraftQuestion(questionIndex)}>Eliminar</button>
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor={`editor-question-${questionIndex}`}>Enunciado</label>
+                    <textarea id={`editor-question-${questionIndex}`} value={question.question} onChange={(e) => updateDraftQuestion(questionIndex, { question: e.target.value })} rows={3} />
+                  </div>
+
+                  <div className="quiz-editor-options" role="group" aria-label={`Respuestas de la pregunta ${questionIndex + 1}`}>
+                    <div className="quiz-editor-options-heading">
+                      <span>Respuestas</span>
+                      <span>Correcta</span>
+                    </div>
+                    {question.options.map((option, optionIndex) => (
+                      <div key={optionIndex} className="quiz-editor-option-row">
+                        <label className="quiz-editor-radio">
+                          <input type="radio" name={`correct-answer-${questionIndex}`} checked={question.answer === optionIndex} onChange={() => updateDraftQuestion(questionIndex, { answer: optionIndex })} />
+                          <span className="sr-only">Marcar respuesta {optionIndex + 1} como correcta</span>
+                        </label>
+                        <input type="text" value={option} onChange={(e) => updateDraftOption(questionIndex, optionIndex, e.target.value)} placeholder={`Respuesta ${optionIndex + 1}`} />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="form-group">
+                    <label htmlFor={`editor-explanation-${questionIndex}`}>Explicación</label>
+                    <textarea id={`editor-explanation-${questionIndex}`} value={question.explanation} onChange={(e) => updateDraftQuestion(questionIndex, { explanation: e.target.value })} rows={3} />
+                  </div>
+                </article>
+              ))}
+
+              <button type="button" className="btn-secondary quiz-editor-add-question" onClick={addDraftQuestion}>Añadir pregunta</button>
+            </div>
+
+            <div className="quiz-editor-footer">
+              <button type="button" className="btn-secondary" onClick={cancelQuestionEditor}>Cancelar</button>
+              <button type="button" className="btn-primary" onClick={saveQuestionEditor}>Guardar cambios</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {inputMode !== 'pdf' && (
+        <div className="json-format-help">
+          <h3>Formato del JSON</h3>
+          <pre>{`{
+          "title": "Mi Cuestionario",
+          "description": "Descripción opcional",
+          "grado": "1asir",
+          "course_id": "pni",
+          "unidad": "ud1",
+          "questions": [
+            {
+              "question": "¿Cuál es la pregunta?",
+              "options": ["A", "B", "C", "D"],
+              "answer": 0,
+              "explanation": "Explicación"
+            }
+          ]
+        }`}</pre>
+          <p className="help-note">
+            <strong>Nota:</strong> cada pregunta debe tener exactamente 4 opciones y <code>answer</code> es el índice de la respuesta correcta (0-3). El campo <code>unidad</code> es opcional.
+          </p>
+          <p className="help-note">
+            <strong>Modo PDF:</strong> necesitas configurar <code>GROQ_API_KEY</code> en el servidor. Este MVP funciona mejor con PDFs que ya contienen texto, no con escaneos.
+          </p>
+        </div>
+      )}
     </div>
+
   )
 }
