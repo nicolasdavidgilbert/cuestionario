@@ -153,16 +153,20 @@ export interface GeneratedQuizPayload extends CreateQuizPayload {
 
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
-    const contentType = response.headers.get('content-type') || ''
+    const body = await response.text().catch(() => '')
 
-    if (contentType.includes('application/json')) {
-      const error = await response.json().catch(() => null)
-      throw new Error(error?.message || `HTTP ${response.status}`)
+    try {
+      const json = JSON.parse(body)
+      if (json?.message) throw new Error(json.message)
+    } catch (parseError) {
+      if (parseError instanceof SyntaxError) {
+        const detail = body.trim().replace(/\s+/g, ' ').slice(0, 180)
+        throw new Error(detail ? `HTTP ${response.status}: ${detail}` : `HTTP ${response.status}`)
+      }
+      throw parseError
     }
 
-    const text = await response.text().catch(() => '')
-    const detail = text.trim().replace(/\s+/g, ' ').slice(0, 180)
-    throw new Error(detail ? `HTTP ${response.status}: ${detail}` : `HTTP ${response.status}`)
+    throw new Error(`HTTP ${response.status}`)
   }
 
   return response.json()
@@ -200,9 +204,10 @@ export async function getPaginatedQuizzes(params: { limit?: number; offset?: num
     headers: getOwnerTokenHeader(params.ownerToken)
   })
   const quizzes = await handleResponse<ApiQuiz[]>(response)
+  const totalHeader = response.headers.get('X-Total-Count')
   return {
     quizzes,
-    total: Number(response.headers.get('X-Total-Count') || quizzes.length)
+    total: totalHeader !== null ? Number(totalHeader) : quizzes.length
   }
 }
 

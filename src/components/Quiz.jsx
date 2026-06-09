@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { clearQuizCache, getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
@@ -16,13 +16,8 @@ export default function Quiz({ grado, curso, unidad }) {
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
 
-  useEffect(() => {
-    if (cachedQuiz) return
-    loadQuiz()
-  }, [grado, curso, unidad])
-
-  const loadQuiz = async () => {
-    setLoading(!allQuestions)
+  const loadQuiz = useCallback(async () => {
+    setLoading(true)
     setError(false)
     setAnswers({})
     setSubmitted(false)
@@ -43,17 +38,26 @@ export default function Quiz({ grado, curso, unidad }) {
       setPageTitle(quiz.title || '')
       const questions = quiz.questions || []
       setAllQuestions(questions)
-    } catch (e) {
+    } catch {
       setError(true)
     } finally {
       setLoading(false)
     }
-  }
+  }, [grado, curso, unidad])
+
+  useEffect(() => {
+    if (cachedQuiz) return
+    loadQuiz()
+  }, [cachedQuiz, loadQuiz, grado, curso, unidad])
 
   const questions = useMemo(() => {
     if (!allQuestions) return []
-    const shuffled = [...allQuestions].sort(() => 0.5 - Math.random())
-    return shuffled.slice(0, 15)
+    const shuffled = [...allQuestions]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled.slice(0, Math.min(15, shuffled.length))
   }, [allQuestions])
 
   useEffect(() => {
@@ -222,6 +226,7 @@ export default function Quiz({ grado, curso, unidad }) {
             aria-valuemin="0"
             aria-valuemax={questions.length}
             aria-valuenow={answeredCount}
+            aria-valuetext={`${answeredCount} de ${questions.length} respondidas`}
             aria-label="Progreso de respuestas"
           >
             <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
@@ -241,26 +246,26 @@ export default function Quiz({ grado, curso, unidad }) {
           <section className="report-box" aria-label="Reportar cuestionario">
             <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
-              <label>
+              <label htmlFor="report-type">
                 Motivo
-                <select value={reportType} onChange={(e) => setReportType(e.target.value)}>
+              </label>
+              <select id="report-type" value={reportType} onChange={(e) => setReportType(e.target.value)}>
                   <option>Contenido incorrecto</option>
                   <option>Preguntas repetidas</option>
                   <option>Opciones confusas</option>
                   <option>Contenido ofensivo</option>
                   <option>Otro problema</option>
                 </select>
-              </label>
-              <label>
+              <label htmlFor="report-reason">
                 Explica qué pasa
-                <textarea
+              </label>
+              <textarea id="report-reason"
                   value={reportReason}
                   onChange={(e) => setReportReason(e.target.value)}
                   placeholder="Describe el problema para poder revisarlo"
                   rows={4}
                   maxLength={500}
                 />
-              </label>
               <button type="submit" className="btn-validate" disabled={!reportReason.trim() || reporting}>
                 {reporting ? 'Enviando...' : 'Enviar reporte'}
               </button>

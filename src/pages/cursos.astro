@@ -23,6 +23,6 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
       <LandingCourses client:idle showSearch={true} compact={true} />
     </section>
 
-    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    <AdSenseAd client:visible slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"}  className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
   </div>
 </Layout>

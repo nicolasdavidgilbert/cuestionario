@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useCallback } from 'react'
 import { getQuizCatalog } from '../lib/api'
 
 function normalize(value = '') {
@@ -75,12 +75,25 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   const [expanded, setExpanded] = useState(false)
   const [activeType, setActiveType] = useState('all')
 
+  const loadCatalog = useCallback(async () => {
+    setError(false)
+    try {
+      const data = await getQuizCatalog()
+      setCatalog(data)
+    } catch (e) {
+      console.error(e)
+      setError(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
   useEffect(() => {
     if (syncUrl && typeof window !== 'undefined') {
       setQuery(new URLSearchParams(window.location.search).get('q') || '')
     }
     loadCatalog()
-  }, [])
+  }, [syncUrl, loadCatalog])
 
   useEffect(() => {
     if (!syncUrl || typeof window === 'undefined') return
@@ -92,19 +105,6 @@ export default function LandingCourses({ limit = null, compact = false, showSear
     }
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`)
   }, [query, syncUrl])
-
-  const loadCatalog = async () => {
-    setError(false)
-    try {
-      const data = await getQuizCatalog()
-      setCatalog(data)
-    } catch (e) {
-      console.error(e)
-      setError(true)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const filteredGrados = useMemo(() => {
     const grados = catalog?.grados || []
@@ -142,7 +142,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
             {showViewAll && <a className="btn-secondary" href="/cursos">Ver todos los cursos</a>}
           </form>
           {searchMode === 'all' && (
-            <div className="filter-tabs" role="tablist" aria-label="Filtrar resultados">
+            <div className="filter-tabs" role="group" aria-label="Filtrar resultados">
               {[
                 ['all', 'Todos'],
                 ['Curso', 'Cursos'],
@@ -173,13 +173,13 @@ export default function LandingCourses({ limit = null, compact = false, showSear
         )
       ) : error ? (
         <div className="empty-state">
-          <div className="empty-icon" aria-hidden="true">!</div>
+          <div className="empty-icon" />
           <p>No se pudo cargar la lista de cursos.</p>
           <button type="button" className="btn-secondary" onClick={loadCatalog}>Reintentar</button>
         </div>
       ) : catalog.grados.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon" aria-hidden="true">0</div>
+          <div className="empty-icon" />
           <p>No hay cuestionarios todavía.</p>
           <a href="/crear" className="btn-primary">Crear el primero</a>
         </div>

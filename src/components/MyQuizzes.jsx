@@ -30,7 +30,7 @@ export default function MyQuizzes() {
       setQuizzes(data.quizzes)
       setTotal(data.total)
       setError('')
-    } catch (e) {
+    } catch {
       setError('Error al cargar cuestionarios')
     } finally {
       setLoading(false)
@@ -92,7 +92,7 @@ export default function MyQuizzes() {
 
       {quizzes.length === 0 ? (
         <div className="empty-state">
-          <div className="empty-icon" aria-hidden="true">0</div>
+          <div className="empty-icon" />
           <p>No tienes cuestionarios creados en este navegador.</p>
           <a href="/crear" className="btn-primary"><span aria-hidden="true">+</span> Crear el primero</a>
         </div>
@@ -123,7 +123,7 @@ export default function MyQuizzes() {
         </div>
       )}
 
-      {totalPages > 1 && (
+      {total > 0 && totalPages > 1 && (
         <div className="pagination-controls">
           <button type="button" className="btn-validate" disabled={page === 0} onClick={() => setPage(page - 1)}>
             ← Anterior

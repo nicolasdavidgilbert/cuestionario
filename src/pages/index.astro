@@ -49,7 +49,7 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
       <LandingCourses client:visible showSearch={true} showViewAll={true} compact={true} searchMode="all" emptyUntilSearch={true} syncUrl={true} />
     </section>
 
-    <AdSenseAd client:visible slot="4731901740" className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    <AdSenseAd client:visible slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"}  className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
 
     <section class="landing-catalog" aria-labelledby="create-heading">
       <div class="section-heading">

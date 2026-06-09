@@ -43,7 +43,7 @@ function getPublicGenerateErrorMessage(error: unknown) {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const limitError = rateLimit(request, { key: 'generate-quiz-pdf', limit: 5, windowMs: 60 * 60 * 1000 })
+    const limitError = await rateLimit(request, { key: 'generate-quiz-pdf', limit: 5, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
     const formData = await request.formData()

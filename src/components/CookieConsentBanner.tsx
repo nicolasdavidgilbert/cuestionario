@@ -6,7 +6,7 @@ type CookieConsentBannerProps = {
   enabled: boolean
 }
 
-const AD_BANNER_SESSION_KEY = 'cuestionario.ads-banner-accepted.v1'
+const AD_BANNER_STORAGE_KEY = 'cuestionario.ads-banner-accepted.v1'
 
 function hasAcceptedBanner() {
   if (typeof window === 'undefined') {
@@ -14,7 +14,7 @@ function hasAcceptedBanner() {
   }
 
   try {
-    return window.sessionStorage.getItem(AD_BANNER_SESSION_KEY) === 'true'
+    return window.localStorage.getItem(AD_BANNER_STORAGE_KEY) === 'true'
   } catch {
     return false
   }
@@ -26,9 +26,9 @@ function markBannerAccepted() {
   }
 
   try {
-    window.sessionStorage.setItem(AD_BANNER_SESSION_KEY, 'true')
+    window.localStorage.setItem(AD_BANNER_STORAGE_KEY, 'true')
   } catch {
-    // Si el navegador bloquea sessionStorage, el banner seguirá siendo descartable en esta sesión.
+    // Si el navegador bloquea localStorage, el banner seguirá siendo descartable en esta sesión.
   }
 }
 
@@ -49,7 +49,7 @@ export default function CookieConsentBanner({ enabled }: CookieConsentBannerProp
   }
 
   return (
-    <section className="cookie-banner" role="status" aria-labelledby="cookie-banner-title" aria-live="polite">
+    <section className="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cookie-banner-title">
       <div className="cookie-banner__panel">
         <div className="cookie-banner__copy">
           <p className="cookie-banner__eyebrow">Publicidad y cookies</p>

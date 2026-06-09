@@ -49,7 +49,7 @@ export const GET: APIRoute = async ({ params, request }) => {
 
 export const DELETE: APIRoute = async ({ params, request }) => {
   try {
-    const limitError = rateLimit(request, { key: 'delete-quiz', limit: 30, windowMs: 60 * 60 * 1000 })
+    const limitError = await rateLimit(request, { key: 'delete-quiz', limit: 30, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
     const sql = getSql()

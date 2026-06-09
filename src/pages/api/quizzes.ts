@@ -118,7 +118,9 @@ export const GET: APIRoute = async ({ request, url }) => {
     }
     
     const response = applyReadCacheHeaders(jsonResponse(rows), Boolean(ownerToken) || owner === 'me')
-    response.headers.set('X-Total-Count', String(totalRows?.[0]?.count ?? rows.length))
+    if (totalRows?.[0]?.count !== undefined) {
+      response.headers.set('X-Total-Count', String(totalRows[0].count))
+    }
     return response
   } catch (error) {
     console.error('GET quizzes error:', error)
@@ -181,7 +183,7 @@ function buildCatalog(quizzes: any[]) {
 
 export const POST: APIRoute = async ({ request }) => {
   try {
-    const limitError = rateLimit(request, { key: 'create-quiz', limit: 20, windowMs: 60 * 60 * 1000 })
+    const limitError = await rateLimit(request, { key: 'create-quiz', limit: 20, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
     const sql = getSql()
