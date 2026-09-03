@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getQuizById, reportQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 
@@ -38,7 +39,8 @@ export default function UserQuiz({ id }) {
       const allQuestions = data.questions || []
       const shuffled = shuffleQuestions(allQuestions)
       setQuestions(shuffled.slice(0, 15))
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'user-quiz-load' } })
       setError(true)
     } finally {
       setLoading(false)
@@ -68,6 +70,7 @@ export default function UserQuiz({ id }) {
       setReportReason('')
       setReportMessage('Reporte enviado. Gracias por avisar.')
     } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'user-quiz-report' } })
       setReportMessage(error.message)
     } finally {
       setReporting(false)
@@ -82,6 +85,7 @@ export default function UserQuiz({ id }) {
       await deleteQuiz(Number(id), getOwnerToken())
       window.location.href = '/mis-cuestionarios'
     } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'user-quiz-delete' } })
       setReportOpen(true)
       setReportMessage('No se pudo eliminar: ' + error.message)
       setDeleting(false)

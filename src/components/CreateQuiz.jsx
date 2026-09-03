@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import * as Sentry from '@sentry/astro'
 import { createQuiz, generateQuizFromPdf, getAllQuizzes } from '../lib/api'
 import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 import { getOwnerToken } from '../lib/ownerToken'
@@ -75,7 +76,8 @@ export default function CreateQuiz() {
     try {
       const quizzes = await getAllQuizzes()
       setExistingQuizzes(quizzes)
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'create-quiz-load' } })
       setError('Error cargando datos')
     }
   }
@@ -184,6 +186,7 @@ export default function CreateQuiz() {
         unidad: generated.unidad || quiz.unidad
       })
     } catch (e) {
+      Sentry.captureException(e, { tags: { feature: 'create-quiz-pdf' } })
       setError('No se pudo generar el cuestionario: ' + e.message)
       setValidationErrors([])
       setPreview(null)
@@ -275,6 +278,7 @@ export default function CreateQuiz() {
 
       window.location.href = `/${quiz.grado.trim().toLowerCase()}`
     } catch (err) {
+      Sentry.captureException(err, { tags: { feature: 'create-quiz-submit' } })
       setError('Error al guardar: ' + err.message)
       setValidationErrors([])
       setLoading(false)

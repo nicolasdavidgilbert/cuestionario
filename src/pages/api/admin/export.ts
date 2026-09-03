@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import * as Sentry from '@sentry/astro'
 import { neon } from '@neondatabase/serverless'
 import { getDatabaseUrl } from '../../../lib/server/env'
 import { jsonResponse, requireAdminApiKey, serverErrorResponse } from '../../../lib/server/http'
@@ -27,6 +28,7 @@ export const GET: APIRoute = async ({ request }) => {
     })
   } catch (error) {
     console.error('GET admin export error:', error)
+    Sentry.captureException(error)
     return serverErrorResponse('Error al exportar datos', error)
   }
 }

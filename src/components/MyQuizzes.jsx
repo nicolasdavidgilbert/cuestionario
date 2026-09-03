@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getPaginatedQuizzes } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 
@@ -30,7 +31,8 @@ export default function MyQuizzes() {
       setQuizzes(data.quizzes)
       setTotal(data.total)
       setError('')
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'my-quizzes-load' } })
       setError('Error al cargar cuestionarios')
     } finally {
       setLoading(false)
@@ -51,6 +53,7 @@ export default function MyQuizzes() {
       await deleteQuiz(quizId, getOwnerToken())
       await loadQuizzes()
     } catch (e) {
+      Sentry.captureException(e, { tags: { feature: 'my-quizzes-delete' } })
       setError('No se pudo eliminar: ' + e.message)
     } finally {
       setDeletingId(null)

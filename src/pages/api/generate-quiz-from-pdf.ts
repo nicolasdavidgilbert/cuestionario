@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import * as Sentry from '@sentry/astro'
 import { normalizeSlug } from '../../lib/slug'
 import { jsonResponse } from '../../lib/server/http'
 import { rateLimit } from '../../lib/server/rateLimit'
@@ -83,6 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse({ ...quiz, source: `${file.name} (generado desde PDF)` })
   } catch (error) {
     console.error('POST generate quiz from pdf error:', error)
+    Sentry.captureException(error)
     return jsonResponse({ message: getPublicGenerateErrorMessage(error) }, 500)
   }
 }

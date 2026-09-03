@@ -20,7 +20,9 @@ export default function AdSenseManager({ clientId, enabledByEnv }: AdSenseManage
 
     // Google CMP / Privacy & messaging gestiona el consentimiento de anuncios en EEE, UK y Suiza.
     // Esta app solo decide si el script puede cargarse en una página apta para anuncios.
-    void loadAdSenseScript(clientId)
+    void loadAdSenseScript(clientId).catch(() => {
+      // Fallo de carga del script de AdSense es esperado (bloqueadores, red). No es un error de app.
+    })
   }, [clientId, enabledByEnv])
 
   return null

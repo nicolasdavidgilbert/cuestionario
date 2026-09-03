@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'react'
+import * as Sentry from '@sentry/astro'
 import { getQuizCatalog } from '../lib/api'
 
 function normalize(value = '') {
@@ -86,6 +87,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
       setCatalog(data)
     } catch (e) {
       console.error(e)
+      Sentry.captureException(e, { tags: { feature: 'landing-courses-load' } })
       setError(true)
     } finally {
       setLoading(false)
