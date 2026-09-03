@@ -531,6 +531,25 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .option-label:hover { border-color: var(--c-border-strong); background: var(--c-surface); }
 .option-label.selected { border-color: var(--c-accent-strong); background: var(--c-accent-soft); }
 .option-label input { margin-top: 4px; accent-color: var(--c-accent-strong); }
+.quiz-browse .question-card { padding: 20px; }
+.browse-options {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.browse-option {
+  padding: 10px 12px;
+  background: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-sm);
+  color: var(--c-text);
+  line-height: 1.5;
+}
+.btn-start-test { margin: 6px 0 4px; min-height: 46px; padding: 12px 20px; }
+.btn-start-test--bottom { margin-top: 22px; }
+.quiz-actions--centered { justify-content: center; }
 .submit-btn,
 .retry-btn { width: 100%; margin-top: 18px; }
 .results-summary {

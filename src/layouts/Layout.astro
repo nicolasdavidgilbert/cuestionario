@@ -78,7 +78,7 @@ const jsonLd = structuredData
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={absoluteImageUrl} />
 
-    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
     <div id="root">
@@ -120,7 +120,7 @@ const jsonLd = structuredData
             <a href="/contact">Contacto</a>
           </nav>
           <p class="site-footer__meta">
-            © {currentYear} cuestionario.online. Preparado para uso con Google AdSense y consentimiento de anuncios en UE.
+            © {currentYear} cuestionario.online. Los anuncios y las opciones de privacidad se gestionan con Google AdSense.
           </p>
         </div>
       </footer>

@@ -130,13 +130,40 @@ export const GET: APIRoute = async ({ request, url }) => {
   }
 }
 
-function buildCatalog(quizzes: any[]) {
-  const gradoMap = new Map()
+interface CatalogUnit {
+  id: string
+  title: string
+}
+
+interface CatalogCourse {
+  id: string
+  label: string
+  units: Map<string, CatalogUnit>
+}
+
+interface CatalogGrade {
+  id: string
+  label: string
+  description: string
+  courses: Map<string, CatalogCourse>
+}
+
+interface CatalogQuizRow {
+  grado?: unknown
+  course_id?: unknown
+  unidad?: unknown
+  title?: unknown
+}
+
+function buildCatalog(quizzes: CatalogQuizRow[]) {
+  const gradoMap = new Map<string, CatalogGrade>()
   
   for (const quiz of quizzes) {
-    const g = quiz.grado
-    const c = quiz.course_id
-    const u = quiz.unidad || c
+    const g = typeof quiz.grado === 'string' ? quiz.grado : ''
+    const c = typeof quiz.course_id === 'string' ? quiz.course_id : ''
+    const u = typeof quiz.unidad === 'string' && quiz.unidad ? quiz.unidad : c
+
+    if (!g || !c) continue
     
     if (!gradoMap.has(g)) {
       gradoMap.set(g, {
@@ -147,7 +174,7 @@ function buildCatalog(quizzes: any[]) {
       })
     }
     
-    const grado = gradoMap.get(g)
+    const grado = gradoMap.get(g)!
     const courses = grado.courses
     
     if (!courses.has(c)) {
@@ -158,13 +185,13 @@ function buildCatalog(quizzes: any[]) {
       })
     }
     
-    const course = courses.get(c)
+    const course = courses.get(c)!
     const units = course.units
     
     if (!units.has(u)) {
       units.set(u, {
         id: u,
-        title: quiz.title || ''
+        title: typeof quiz.title === 'string' ? quiz.title : ''
       })
     }
   }
@@ -203,6 +230,26 @@ export const POST: APIRoute = async ({ request }) => {
     const unidad = normalizeSlug(validation.data.unidad)
     const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
     const quizHash = getQuizHash({ title, grado, course_id, unidad, questions })
+    const publicUnit = unidad || course_id
+
+    const routeCollisionRows = await sql`
+      SELECT id FROM user_quizzes
+      WHERE deleted_at IS NULL
+        AND grado = ${grado}
+        AND course_id = ${course_id}
+        AND (
+          unidad = ${publicUnit}
+          OR ((unidad IS NULL OR unidad = '') AND ${publicUnit} = ${course_id})
+        )
+      LIMIT 1
+    `
+
+    if (routeCollisionRows.length > 0) {
+      return jsonResponse({
+        message: 'Ya existe un cuestionario publicado para ese grado, asignatura y unidad',
+        id: routeCollisionRows[0].id
+      }, 409)
+    }
 
     const duplicateRows = await sql`
       SELECT id FROM user_quizzes

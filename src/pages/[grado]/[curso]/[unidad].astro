@@ -1,12 +1,83 @@
 ---
 import Layout from '../../../layouts/Layout.astro'
-import Quiz from '../../../components/Quiz.jsx'
+import Quiz from '../../../components/Quiz.tsx'
+import { neon } from '@neondatabase/serverless'
+import { getDatabaseUrl } from '../../../lib/server/env'
+
+export const prerender = false
+
 const { grado, curso, unidad } = Astro.params
-const readableTitle = [unidad, curso, grado].filter(Boolean).join(' - ')
+
+interface QuizRow {
+  id: number
+  title: string | null
+  description: string | null
+  questions: unknown[]
+}
+
+function hasRenderableQuestions(row: QuizRow | null): row is QuizRow {
+  if (!row || !Array.isArray(row.questions) || row.questions.length === 0) return false
+
+  return row.questions.every((item) => {
+    if (!item || typeof item !== 'object') return false
+    const question = item as Record<string, unknown>
+    return typeof question.question === 'string'
+      && question.question.trim().length > 0
+      && Array.isArray(question.options)
+      && question.options.length === 4
+      && question.options.every((option) => typeof option === 'string' && option.trim().length > 0)
+      && Number.isInteger(question.answer)
+      && Number(question.answer) >= 0
+      && Number(question.answer) <= 3
+  })
+}
+
+let quiz: QuizRow | null = null
+let quizLoadFailed = false
+try {
+  const sql = neon(getDatabaseUrl())
+  const rows = await sql`
+    SELECT id, title, description, grado, course_id, unidad, questions
+    FROM user_quizzes
+    WHERE grado = ${grado}
+      AND course_id = ${curso}
+      AND (
+        unidad = ${unidad || ''}
+        OR ((unidad IS NULL OR unidad = '') AND ${unidad || ''} = ${curso})
+      )
+      AND deleted_at IS NULL
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `
+  if (rows.length > 0) {
+    quiz = rows[0] as QuizRow
+  }
+} catch (error) {
+  quizLoadFailed = true
+  console.error('SSR quiz lookup error:', error)
+}
+
+const renderableQuiz = hasRenderableQuestions(quiz) ? quiz : null
+const hasContent = Boolean(renderableQuiz)
+const quizContentInvalid = Boolean(quiz) && !hasContent
+
+if (quizLoadFailed || quizContentInvalid) {
+  Astro.response.status = 503
+} else if (!quiz) {
+  Astro.response.status = 404
+}
+
+const readableTitle = quiz?.title || [unidad, curso, grado].filter(Boolean).join(' - ')
+const title = `Cuestionario ${readableTitle}`
+const description = quiz?.description
+  ? quiz.description.slice(0, 160)
+  : `Practica el cuestionario tipo test de ${unidad} en ${curso}, curso ${grado}. Responde preguntas, revisa tu puntuación y aprende con explicaciones.`
 ---
+
 <Layout
-  title={`Cuestionario ${readableTitle}`}
-  description={`Practica el cuestionario tipo test de ${unidad} en ${curso}, curso ${grado}. Responde preguntas, revisa tu puntuación y aprende con explicaciones.`}
+  title={title}
+  description={description}
+  robots={hasContent && !quizLoadFailed ? 'index, follow' : 'noindex, nofollow'}
   structuredData={{
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -43,5 +114,27 @@ const readableTitle = [unidad, curso, grado].filter(Boolean).join(' - ')
     ]
   }}
 >
-  <Quiz grado={grado} curso={curso} unidad={unidad} client:load />
+  {quizLoadFailed || quizContentInvalid ? (
+    <div class="page-wrap">
+      <div class="error-msg" role="status">
+        El cuestionario no está disponible temporalmente. Inténtalo de nuevo más tarde.
+      </div>
+    </div>
+  ) : renderableQuiz ? (
+    <Quiz
+      grado={grado}
+      curso={curso}
+      unidad={unidad}
+      quizId={renderableQuiz.id}
+      pageTitle={renderableQuiz.title || ''}
+      questions={renderableQuiz.questions}
+      client:load
+    />
+  ) : (
+    <div class="page-wrap">
+      <div class="error-msg" role="status">
+        No se encontró el cuestionario solicitado. <a href="/cursos">Ver cursos disponibles</a>.
+      </div>
+    </div>
+  )}
 </Layout>
