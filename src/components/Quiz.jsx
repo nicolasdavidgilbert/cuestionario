@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import * as Sentry from '@sentry/astro'
 import { clearQuizCache, getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
 
 export default function Quiz({ grado, curso, unidad }) {
@@ -38,7 +39,8 @@ export default function Quiz({ grado, curso, unidad }) {
       setPageTitle(quiz.title || '')
       const questions = quiz.questions || []
       setAllQuestions(questions)
-    } catch {
+    } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'quiz-load' } })
       setError(true)
     } finally {
       setLoading(false)
@@ -96,6 +98,7 @@ export default function Quiz({ grado, curso, unidad }) {
       setReportReason('')
       setReportMessage('Reporte enviado. Gracias por avisar.')
     } catch (error) {
+      Sentry.captureException(error, { tags: { feature: 'quiz-report' } })
       setReportMessage(error.message)
     } finally {
       setReporting(false)

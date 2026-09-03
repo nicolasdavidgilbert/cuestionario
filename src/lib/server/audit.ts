@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/astro'
 import type { NeonQueryFunction } from '@neondatabase/serverless'
 
 export async function logAudit(sql: NeonQueryFunction<false, false>, action: string, details: Record<string, unknown> = {}) {
@@ -8,5 +9,9 @@ export async function logAudit(sql: NeonQueryFunction<false, false>, action: str
     `
   } catch (error) {
     console.error('audit log failed:', error)
+    Sentry.captureException(error, {
+      tags: { feature: 'audit-log', action },
+      fingerprint: ['audit-log', 'write-failed'],
+    })
   }
 }

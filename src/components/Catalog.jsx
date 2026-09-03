@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import * as Sentry from '@sentry/astro'
 import { getCachedQuizCatalog, getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
 
@@ -102,6 +103,7 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
       } catch (e) {
         if (ignore) return
         console.error(e)
+        Sentry.captureException(e, { tags: { feature: 'catalog-load' } })
 
         if (hasCachedData) {
           setSoftError(true)

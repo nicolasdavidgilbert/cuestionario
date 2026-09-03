@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import * as Sentry from '@sentry/astro'
 import { neon } from '@neondatabase/serverless'
 import { validateQuizJson } from '../../lib/quizValidator'
 import { normalizeSlug } from '../../lib/slug'
@@ -124,6 +125,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     return response
   } catch (error) {
     console.error('GET quizzes error:', error)
+    Sentry.captureException(error)
     return serverErrorResponse('Error al obtener cuestionarios', error)
   }
 }
@@ -223,6 +225,7 @@ export const POST: APIRoute = async ({ request }) => {
     return jsonResponse(rows[0], 201)
   } catch (error) {
     console.error('POST quiz error:', error)
+    Sentry.captureException(error)
     return serverErrorResponse('Error al crear cuestionario', error)
   }
 }

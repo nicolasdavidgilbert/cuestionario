@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/astro'
 import { neon } from '@neondatabase/serverless'
 import { jsonResponse } from './http'
 import { getDatabaseUrl } from './env'
@@ -37,6 +38,10 @@ export async function rateLimit(request: Request, options: RateLimitOptions): Pr
     return null
   } catch (error) {
     console.error('Rate limit error:', error)
+    Sentry.captureException(error, {
+      tags: { feature: 'rate-limit', fail_open: 'true' },
+      fingerprint: ['rate-limit', 'fail-open'],
+    })
     return null
   }
 }

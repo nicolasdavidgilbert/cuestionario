@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro'
+import * as Sentry from '@sentry/astro'
 import { neon } from '@neondatabase/serverless'
 import { getAdminApiKey, getDatabaseUrl } from '../../../lib/server/env'
 import { jsonResponse, serverErrorResponse } from '../../../lib/server/http'
@@ -43,6 +44,7 @@ export const GET: APIRoute = async ({ params, request }) => {
     return applyReadCacheHeaders(jsonResponse(rows[0]), Boolean(ownerToken))
   } catch (error) {
     console.error('GET quiz error:', error)
+    Sentry.captureException(error)
     return serverErrorResponse('Error al obtener cuestionario', error)
   }
 }
@@ -78,6 +80,7 @@ export const DELETE: APIRoute = async ({ params, request }) => {
     return new Response(null, { status: 204 })
   } catch (error) {
     console.error('DELETE quiz error:', error)
+    Sentry.captureException(error)
     return serverErrorResponse('Error al eliminar cuestionario', error)
   }
 }
