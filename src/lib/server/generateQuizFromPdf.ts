@@ -128,7 +128,7 @@ ${text}
   ]
 }
 
-function getQuizSchema(minQuestions: number, maxQuestions: number) {
+function getQuizSchema(maxQuestions: number) {
   return {
     type: 'object',
     additionalProperties: false,
@@ -194,7 +194,7 @@ async function fetchGroqCompletion(payload: GenerateQuizInput, text: string, opt
       json_schema: {
         name: 'quiz_generation',
         strict: true,
-        schema: getQuizSchema(options.minQuestions, options.maxQuestions)
+        schema: getQuizSchema(options.maxQuestions)
       }
     }
     : { type: 'json_object' }

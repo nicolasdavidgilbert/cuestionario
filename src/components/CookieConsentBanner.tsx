@@ -6,27 +6,27 @@ type CookieConsentBannerProps = {
   enabled: boolean
 }
 
-const AD_BANNER_STORAGE_KEY = 'cuestionario.ads-banner-accepted.v1'
+const AD_NOTICE_STORAGE_KEY = 'cuestionario.ads-notice-dismissed.v1'
 
-function hasAcceptedBanner() {
+function hasDismissedNotice() {
   if (typeof window === 'undefined') {
     return false
   }
 
   try {
-    return window.localStorage.getItem(AD_BANNER_STORAGE_KEY) === 'true'
+    return window.localStorage.getItem(AD_NOTICE_STORAGE_KEY) === 'true'
   } catch {
     return false
   }
 }
 
-function markBannerAccepted() {
+function markNoticeDismissed() {
   if (typeof window === 'undefined') {
     return
   }
 
   try {
-    window.localStorage.setItem(AD_BANNER_STORAGE_KEY, 'true')
+    window.localStorage.setItem(AD_NOTICE_STORAGE_KEY, 'true')
   } catch {
     // Si el navegador bloquea localStorage, el banner seguirá siendo descartable en esta sesión.
   }
@@ -36,15 +36,15 @@ export default function CookieConsentBanner({ enabled }: CookieConsentBannerProp
   const [isOpen, setIsOpen] = useState(false)
 
   useEffect(() => {
-    setIsOpen(enabled && !hasAcceptedBanner())
+    setIsOpen(enabled && !hasDismissedNotice())
   }, [enabled])
 
   if (!enabled || !isOpen) {
     return null
   }
 
-  const accept = () => {
-    markBannerAccepted()
+  const dismiss = () => {
+    markNoticeDismissed()
     setIsOpen(false)
   }
 
@@ -53,16 +53,20 @@ export default function CookieConsentBanner({ enabled }: CookieConsentBannerProp
       <div className="cookie-banner__panel">
         <div className="cookie-banner__copy">
           <p className="cookie-banner__eyebrow">Publicidad y cookies</p>
-          <h2 id="cookie-banner-title">Aviso sobre anuncios</h2>
+          <h2 id="cookie-banner-title">Privacidad y anuncios</h2>
           <p>
-            Este sitio usa Google AdSense. El consentimiento publicitario lo gestiona Google/CMP cuando
-            corresponde. No usamos este aviso para analítica ni para recoger información personal adicional.
+            Este sitio usa Google AdSense. Cuando la normativa lo exige, Google muestra sus opciones de
+            consentimiento mediante una plataforma certificada. Este aviso es informativo y no sustituye esas
+            opciones.
           </p>
         </div>
 
         <div className="cookie-banner__actions">
-          <button type="button" className="btn-primary" onClick={accept}>
-            Entendido
+          <a className="btn-secondary" href="/privacy-policy">
+            Política de privacidad
+          </a>
+          <button type="button" className="btn-primary" onClick={dismiss}>
+            Cerrar aviso
           </button>
         </div>
       </div>

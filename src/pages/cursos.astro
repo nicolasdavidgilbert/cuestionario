@@ -1,14 +1,68 @@
 ---
 import Layout from '../layouts/Layout.astro'
-import LandingCourses from '../components/LandingCourses.jsx'
-import AdSenseAd from '../components/AdSenseAd'
-import { getAdsenseConfig } from '../lib/server/env'
+import { neon } from '@neondatabase/serverless'
+import { getDatabaseUrl } from '../lib/server/env'
 
-const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
+export const prerender = false
+
+interface QuizRow {
+  grado: string
+  course_id: string
+  unidad: string | null
+  title: string | null
+}
+
+interface ServedUnit { id: string; title: string }
+interface ServedCourse { id: string; units: ServedUnit[] }
+interface ServedGrade { id: string; courses: ServedCourse[] }
+
+let catalog: ServedGrade[] = []
+let totalUnits = 0
+let catalogLoadFailed = false
+try {
+  const sql = neon(getDatabaseUrl())
+  const rows = await sql`
+    SELECT grado, course_id, unidad, title
+    FROM user_quizzes
+    WHERE deleted_at IS NULL
+      AND grado IS NOT NULL
+      AND course_id IS NOT NULL
+    ORDER BY grado, course_id, unidad
+  `
+  const gradeMap = new Map<string, ServedGrade>()
+  for (const raw of rows as QuizRow[]) {
+    if (!raw.grado || !raw.course_id) continue
+    const unit = (raw.unidad || raw.course_id)
+    let grade = gradeMap.get(raw.grado)
+    if (!grade) {
+      grade = { id: raw.grado, courses: [] }
+      gradeMap.set(raw.grado, grade)
+    }
+    let course = grade.courses.find((c) => c.id === raw.course_id)
+    if (!course) {
+      course = { id: raw.course_id, units: [] }
+      grade.courses.push(course)
+    }
+    if (!course.units.some((u) => u.id === unit)) {
+      course.units.push({ id: unit, title: raw.title || '' })
+      totalUnits += 1
+    }
+  }
+  catalog = Array.from(gradeMap.values())
+} catch (error) {
+  catalogLoadFailed = true
+  console.error('SSR cursos lookup error:', error)
+}
+
+if (catalogLoadFailed) {
+  Astro.response.status = 503
+}
 ---
+
 <Layout
   title="Cursos con cuestionarios"
   description="Explora los cursos disponibles y accede a cuestionarios tipo test organizados por asignatura y unidad."
+  robots={catalogLoadFailed ? 'noindex, nofollow' : 'index, follow'}
 >
   <div class="page-wrap courses-page">
     <nav class="breadcrumbs" aria-label="Migas de pan">
@@ -20,13 +74,43 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
     <header class="home-header courses-header">
       <p class="section-kicker">Catálogo</p>
       <h1>Cursos disponibles</h1>
-      <p>Busca entre todos los cursos. Esta página está pensada para catálogos grandes, con listado compacto y carga progresiva.</p>
+      {catalog.length > 0 ? (
+        <p>{totalUnits} tema{totalUnits === 1 ? '' : 's'} en {catalog.length} curso{catalog.length === 1 ? '' : 's'}.</p>
+      ) : (
+        <p>Explora los cuestionarios tipo test organizados por asignatura y unidad.</p>
+      )}
     </header>
 
-    <section class="courses-catalog-shell" aria-label="Lista de cursos disponibles">
-      <LandingCourses client:idle showSearch={true} compact={true} />
-    </section>
-
-    <AdSenseAd client:visible slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"}  className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+    {catalogLoadFailed ? (
+      <div class="error-msg" role="status">
+        El catálogo no está disponible temporalmente. Inténtalo de nuevo más tarde.
+      </div>
+    ) : catalog.length > 0 ? (
+      <section class="grade-grid" aria-label="Lista de grados con cuestionarios">
+        {catalog.map((grade) => {
+          const unitsInGrade = grade.courses.reduce((sum, c) => sum + c.units.length, 0)
+          const coursesInGrade = grade.courses.length
+          return (
+            <a href={`/${grade.id}`} class="grado-card">
+              <article class="grado-card-main">
+                <div class="grado-info">
+                  <span class="grado-label">{grade.id.toUpperCase()}</span>
+                  <span class="grado-meta">
+                    {coursesInGrade} asignatura{coursesInGrade === 1 ? '' : 's'} · {unitsInGrade} tema{unitsInGrade === 1 ? '' : 's'}
+                  </span>
+                </div>
+                <span class="grado-card-cta">Entrar <span class="grado-arrow" aria-hidden="true">→</span></span>
+              </article>
+            </a>
+          )
+        })}
+      </section>
+    ) : (
+      <div class="empty-state">
+        <div class="empty-icon" />
+        <p>No hay cuestionarios publicados todavía.</p>
+        <a href="/crear" class="btn-primary">Crear el primero</a>
+      </div>
+    )}
   </div>
 </Layout>
