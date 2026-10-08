@@ -7,7 +7,11 @@ import sentry from '@sentry/astro';
 export default defineConfig({
   site: 'https://cuestionario.online',
   output: 'server',
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true
+    }
+  }),
   integrations: [
     react(),
     sentry({
