@@ -27,3 +27,5 @@ dist-ssr
 migrate-questions.sql
 .env
 .agents
+.vercel
+.env*
