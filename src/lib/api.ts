@@ -258,6 +258,21 @@ export async function createQuiz(quiz: CreateQuizPayload, ownerToken?: string): 
   return created
 }
 
+export async function updateQuiz(
+  id: number,
+  changes: Pick<CreateQuizPayload, 'title' | 'description' | 'questions'>,
+  ownerToken?: string
+): Promise<ApiQuiz> {
+  const response = await fetch(`${API_BASE}/quizzes/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getOwnerTokenHeader(ownerToken) },
+    body: JSON.stringify(changes)
+  })
+  const updated = await handleResponse<ApiQuiz>(response)
+  clearQuizCache()
+  return updated
+}
+
 export async function generateQuizFromPdf(formData: FormData): Promise<GeneratedQuizPayload> {
   const response = await fetch(`${API_BASE}/generate-quiz-from-pdf`, {
     method: 'POST',

@@ -1,0 +1,12 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import EditQuiz from '../../components/EditQuiz.jsx'
+const { id } = Astro.params
+---
+<Layout
+  title="Editar cuestionario"
+  description="Pantalla privada para editar un cuestionario creado."
+  robots="noindex, nofollow"
+>
+  <EditQuiz id={id} client:load />
+</Layout>

@@ -88,6 +88,9 @@ export default function MyQuizzes() {
           title={quiz.title || (quiz.unidad || quiz.course_id || 'Cuestionario').toUpperCase()}
           subtitle={`${quiz.questions?.length || 0} preguntas`}
         >
+          <a href={`/editar/${quiz.id}`} className="btn-secondary">
+            <span aria-hidden="true">✎</span> Editar
+          </a>
           <button
             type="button"
             className="btn-clear btn-danger"

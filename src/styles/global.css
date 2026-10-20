@@ -488,7 +488,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   color: inherit;
   text-decoration: none;
 }
-.unit-card-extra { flex: 0 0 auto; }
+.unit-card-extra { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
 .unit-card article { display: grid; gap: 4px; min-width: 0; }
 .unit-card strong { line-height: 1.3; }
 .unit-badge {
@@ -852,6 +852,8 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
   .grado-card,
   .unit-card,
   .unit-card-link { align-items: flex-start; }
+  .unit-card--with-actions { flex-wrap: wrap; }
+  .unit-card--with-actions .unit-card-extra { width: 100%; }
   .grado-card-cta,
   .unit-action { padding-top: 2px; }
   .site-footer__inner { display: grid; }

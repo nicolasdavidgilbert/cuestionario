@@ -196,6 +196,11 @@ export default function UserQuiz({ id }) {
             {reportOpen ? 'Cerrar reporte' : 'Reportar'}
           </button>
           {quiz.can_delete && (
+            <a href={`/editar/${id}`} className="btn-secondary">
+              <span aria-hidden="true">✎</span> Editar
+            </a>
+          )}
+          {quiz.can_delete && (
             <button type="button" className="btn-clear btn-danger" onClick={handleDelete} disabled={deleting}>
               <span aria-hidden="true">{deleting ? '…' : '×'}</span>
               {deleting ? 'Eliminando...' : 'Eliminar mi cuestionario'}

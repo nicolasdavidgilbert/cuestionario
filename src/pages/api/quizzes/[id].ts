@@ -5,6 +5,8 @@ import { getAdminApiKey, getDatabaseUrl } from '../../../lib/server/env'
 import { jsonResponse, serverErrorResponse } from '../../../lib/server/http'
 import { rateLimit } from '../../../lib/server/rateLimit'
 import { logAudit } from '../../../lib/server/audit'
+import { getQuizHash } from '../../../lib/server/hash'
+import { validateQuizJson } from '../../../lib/quizValidator'
 
 export const prerender = false
 
@@ -46,6 +48,76 @@ export const GET: APIRoute = async ({ params, request }) => {
     console.error('GET quiz error:', error)
     Sentry.captureException(error)
     return serverErrorResponse('Error al obtener cuestionario', error)
+  }
+}
+
+export const PATCH: APIRoute = async ({ params, request }) => {
+  try {
+    const limitError = await rateLimit(request, { key: 'update-quiz', limit: 60, windowMs: 60 * 60 * 1000 })
+    if (limitError) return limitError
+
+    const sql = getSql()
+    const id = Number(params.id)
+
+    if (isNaN(id)) {
+      return jsonResponse({ message: 'ID inválido' }, 400)
+    }
+
+    const existing = await sql`
+      SELECT id, title, description, grado, course_id, unidad, questions, owner_token
+      FROM user_quizzes WHERE id = ${id} AND deleted_at IS NULL
+    `
+
+    if (existing.length === 0) {
+      return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
+    }
+
+    const ownerToken = request.headers.get('x-owner-token') || ''
+    const isOwner = existing[0].owner_token && existing[0].owner_token === ownerToken
+    if (!isOwner) return jsonResponse({ message: 'No autorizado' }, 401)
+
+    const body = await request.json()
+    const current = existing[0]
+    // Solo se editan título, descripción y preguntas; grado, curso y unidad definen la URL pública.
+    const validation = validateQuizJson({
+      title: body.title ?? current.title,
+      description: body.description ?? current.description,
+      grado: current.grado,
+      course_id: current.course_id,
+      unidad: current.unidad,
+      questions: body.questions ?? current.questions
+    })
+
+    if (!validation.valid || !validation.data) {
+      return jsonResponse({ message: validation.errors.map((error) => error.message).join('\n') }, 400)
+    }
+
+    const { title, description, questions } = validation.data
+    const quizHash = getQuizHash({ title, grado: current.grado, course_id: current.course_id, unidad: current.unidad, questions })
+
+    const duplicateRows = await sql`
+      SELECT id FROM user_quizzes
+      WHERE deleted_at IS NULL AND quiz_hash = ${quizHash} AND id <> ${id}
+      LIMIT 1
+    `
+
+    if (duplicateRows.length > 0) {
+      return jsonResponse({ message: 'Ya existe otro cuestionario idéntico', id: duplicateRows[0].id }, 409)
+    }
+
+    const rows = await sql`
+      UPDATE user_quizzes
+      SET title = ${title || ''}, description = ${description || ''}, questions = ${JSON.stringify(questions)}, quiz_hash = ${quizHash}
+      WHERE id = ${id}
+      RETURNING id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, true AS can_delete
+    `
+    await logAudit(sql, 'quiz_updated', { quiz_id: id })
+
+    return jsonResponse(rows[0])
+  } catch (error) {
+    console.error('PATCH quiz error:', error)
+    Sentry.captureException(error)
+    return serverErrorResponse('Error al actualizar cuestionario', error)
   }
 }
 
