@@ -4,6 +4,7 @@ import { createQuiz, generateQuizFromPdf, getAllQuizzes } from '../lib/api'
 import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
+import FloatingActions from './FloatingActions'
 
 export default function CreateQuiz() {
   const [existingQuizzes, setExistingQuizzes] = useState([])
@@ -291,7 +292,7 @@ export default function CreateQuiz() {
         <p>También puedes seguir pegando un JSON ya hecho o subirlo directamente si quieres.</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="create-quiz-form">
+      <form id="create-quiz-form" onSubmit={handleSubmit} className="create-quiz-form">
         <div className="input-mode-tabs" role="tablist" aria-label="Modo de carga">
           <button
             type="button"
@@ -559,6 +560,13 @@ export default function CreateQuiz() {
           {loading ? 'Guardando...' : generating ? 'Generando...' : 'Guardar Cuestionario'}
         </button>
       </form>
+
+      {preview && (
+        <FloatingActions actions={[
+          { label: loading ? 'Guardando...' : 'Guardar cuestionario', icon: 'save', form: 'create-quiz-form', disabled: loading || generating },
+          { label: 'Editar preguntas', icon: 'pencil', variant: 'secondary', onClick: openQuestionEditor }
+        ]} />
+      )}
 
       {editorOpen && (
         <QuizQuestionEditor

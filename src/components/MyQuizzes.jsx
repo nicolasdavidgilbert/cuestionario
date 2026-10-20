@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getPaginatedQuizzes } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizCard from './QuizCard'
+import FloatingActions from './FloatingActions'
 
 const PAGE_SIZE = 24
 
@@ -127,6 +128,8 @@ export default function MyQuizzes() {
       </form>
 
       {listContent}
+
+      <FloatingActions actions={[{ label: 'Crear cuestionario', icon: 'plus', href: '/crear' }]} />
 
       {!loading && !error && total > 0 && totalPages > 1 && (
         <div className="pagination-controls">

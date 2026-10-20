@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
+import FloatingActions from './FloatingActions'
 
 const TEST_SIZE = 15
 
@@ -265,6 +266,11 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
               </button>
             </div>
           </div>
+
+          <FloatingActions actions={[
+            { label: 'Hacer otro test', icon: 'retry', onClick: handleRetry },
+            { label: 'Ver preguntas', icon: 'list', variant: 'secondary', onClick: backToBrowse }
+          ]} />
         </div>
       )
     }
@@ -379,6 +385,16 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             Enviar respuestas
           </button>
         </div>
+
+        <FloatingActions actions={[
+          {
+            label: 'Enviar respuestas',
+            icon: 'check',
+            onClick: handleSubmit,
+            disabled: answeredCount === 0,
+            badge: `${answeredCount}/${activeQuestions.length}`
+          }
+        ]} />
       </div>
     )
   }
@@ -470,6 +486,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
           Empezar test aleatorio
         </button>
       </div>
+
+      <FloatingActions actions={[{ label: 'Empezar test', icon: 'play', onClick: startTest }]} />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/astro'
 import { getQuizById, updateQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
+import FloatingActions from './FloatingActions'
 
 export default function EditQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -84,7 +85,7 @@ export default function EditQuiz({ id }) {
         <p>Cambia el título, la descripción o las preguntas. El grado, la asignatura y la unidad no se pueden modificar.</p>
       </header>
 
-      <form onSubmit={handleSubmit} className="create-quiz-form">
+      <form id="edit-quiz-form" onSubmit={handleSubmit} className="create-quiz-form">
         <div className="form-group">
           <label htmlFor="quiz-title">Título</label>
           <input
@@ -141,6 +142,11 @@ export default function EditQuiz({ id }) {
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
       </form>
+
+      <FloatingActions actions={[
+        { label: saving ? 'Guardando...' : 'Guardar cambios', icon: 'save', form: 'edit-quiz-form', disabled: saving },
+        { label: 'Editar preguntas', icon: 'pencil', variant: 'secondary', onClick: () => setEditorOpen(true) }
+      ]} />
 
       {editorOpen && (
         <QuizQuestionEditor

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getQuizById, reportQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
+import FloatingActions from './FloatingActions'
 
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -170,6 +171,11 @@ export default function UserQuiz({ id }) {
             <span aria-hidden="true">↻</span> Reintentar
           </button>
         </div>
+
+        <FloatingActions actions={[
+          { label: 'Reintentar', icon: 'retry', onClick: handleRetry },
+          quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
+        ]} />
       </div>
     )
   }
@@ -273,6 +279,17 @@ export default function UserQuiz({ id }) {
           <span aria-hidden="true">✓</span> Enviar respuestas
         </button>
       </div>
+
+      <FloatingActions actions={[
+        {
+          label: 'Enviar respuestas',
+          icon: 'check',
+          onClick: handleSubmit,
+          disabled: answeredCount === 0,
+          badge: `${answeredCount}/${questions.length}`
+        },
+        quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
+      ]} />
     </div>
   )
 }
