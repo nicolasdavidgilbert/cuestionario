@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getCachedQuizCatalog, getQuizCatalog } from '../lib/api'
 import AdSenseAd from './AdSenseAd'
+import QuizCard from './QuizCard'
 
 function normalize(value = '') {
   return value.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -220,14 +221,12 @@ export default function Catalog({ grado, adsenseClient, enabledByEnv }) {
             <h2>{course.label}</h2>
             <div className="unit-grid">
               {(course.units || []).map((unit) => (
-                <a key={unit.id} href={`/${grado}/${course.id}/${unit.id}`} className="unit-card">
-                  <article>
-                    <span className="unit-badge">{course.label}</span>
-                    <strong>{unit.title || unit.id.toUpperCase()}</strong>
-                    <span className="unit-title">Cuestionario tipo test</span>
-                  </article>
-                  <span className="unit-action">Empezar</span>
-                </a>
+                <QuizCard
+                  key={unit.id}
+                  href={`/${grado}/${course.id}/${unit.id}`}
+                  badge={course.label}
+                  title={unit.title || unit.id.toUpperCase()}
+                />
               ))}
             </div>
           </section>

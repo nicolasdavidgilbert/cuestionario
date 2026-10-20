@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getPaginatedQuizzes } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
+import QuizCard from './QuizCard'
 
 const PAGE_SIZE = 24
 
@@ -80,26 +81,23 @@ export default function MyQuizzes() {
   ) : (
     <div className="unit-grid">
       {quizzes.map((quiz) => (
-        <div key={quiz.id} className="unit-card quiz-list-card">
-          <a href={`/user-quiz/${quiz.id}`}>
-            <span className="unit-badge">{(quiz.unidad || quiz.course_id).toUpperCase()}</span>
-            {quiz.title && <span className="unit-title">{quiz.title}</span>}
-          </a>
-          <div className="quiz-card-actions">
-            <a href={`/user-quiz/${quiz.id}`} className="btn-secondary">
-              <span aria-hidden="true">↗</span> Abrir
-            </a>
-            <button
-              type="button"
-              className="btn-clear btn-danger"
-              onClick={() => handleDelete(quiz.id)}
-              disabled={deletingId === quiz.id}
-            >
-              <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
-              {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
-            </button>
-          </div>
-        </div>
+        <QuizCard
+          key={quiz.id}
+          href={`/user-quiz/${quiz.id}`}
+          badge={[quiz.grado?.toUpperCase(), quiz.course_id].filter(Boolean).join(' · ')}
+          title={quiz.title || (quiz.unidad || quiz.course_id || 'Cuestionario').toUpperCase()}
+          subtitle={`${quiz.questions?.length || 0} preguntas`}
+        >
+          <button
+            type="button"
+            className="btn-clear btn-danger"
+            onClick={() => handleDelete(quiz.id)}
+            disabled={deletingId === quiz.id}
+          >
+            <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
+            {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
+          </button>
+        </QuizCard>
       ))}
     </div>
   )
