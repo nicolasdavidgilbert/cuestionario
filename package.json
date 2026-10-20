@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
-    "env:pull": "pnpm dlx vercel@64.7.0 env pull .env --environment=production --yes",
+    "env:pull": "pnpm dlx vercel@64.7.0 env pull .env.production.local --environment=production --yes",
+    "env:dev": "node scripts/env-dev.mjs",
     "build": "astro build",
     "db:migrate": "node scripts/run-sql.mjs sql/public-growth-practices.sql && node scripts/run-sql.mjs sql/rate-limits.sql",
     "test": "node --test tests/*.test.mjs",

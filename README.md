@@ -210,15 +210,37 @@ Ejecuta `migrate-questions.sql` para importar las preguntas existentes a la DB.
 3. Añade **Neon** desde **Storage** → **Create Database**
 4. Deploy automático en cada push
 
+### Entornos
+
+| Entorno | Rama git | Base de datos (Neon) | URL |
+|---------|----------|----------------------|-----|
+| Producción | `main` | rama `main` | https://cuestionario.online |
+| Pruebas | `dev` | rama `dev` | preview de Vercel de la rama `dev` |
+| Local | cualquiera | rama `dev` | http://localhost:4321 |
+
+La rama `dev` de Neon es una copia de producción: se puede crear, borrar y probar sin afectar a los datos reales.
+En Vercel, `DATABASE_URL` y `DATABASE_URL_UNPOOLED` tienen un valor específico para la rama git `dev` (Preview → dev).
+
+Flujo de trabajo: trabajar en `dev` → push → revisar el preview → merge a `main`.
+
 ### Development local
 
 ```bash
-# Descargar variables de Vercel
-vercel env pull .env.local
+# Una sola vez: iniciar sesión en Vercel y Neon
+pnpm dlx vercel@64.7.0 login && pnpm dlx vercel@64.7.0 link
+pnpm dlx neon@8.0.10 auth
+
+# Variables de producción -> .env.production.local (no se usa en `pnpm dev`)
+pnpm env:pull
+
+# Genera .env apuntando a la rama Neon "dev"
+pnpm env:dev
 
 # Ejecutar
 pnpm dev
 ```
+
+Para refrescar los datos de `dev` con los de producción: consola de Neon → Branches → `dev` → **Reset from parent**.
 
 ---
 
