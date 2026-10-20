@@ -27,7 +27,9 @@ export default function AdSenseAd({
   layoutKey,
 }: AdSenseAdProps) {
   const [canRender, setCanRender] = useState(false)
+  const [isFilled, setIsFilled] = useState(false)
   const hasPushedRef = useRef(false)
+  const insRef = useRef<HTMLModElement>(null)
 
   useEffect(() => {
     if (!enabledByEnv || !clientId || typeof window === 'undefined') {
@@ -70,6 +72,28 @@ export default function AdSenseAd({
     }
   }, [clientId, canRender, slot])
 
+  // El hueco solo se muestra si AdSense ha servido un anuncio y este ocupa espacio real.
+  // data-ad-status="filled" no basta: AdSense a veces lo marca y luego oculta el <ins>.
+  useEffect(() => {
+    const ins = insRef.current
+    if (!canRender || !ins) return
+
+    const update = () => {
+      setIsFilled(ins.dataset.adStatus === 'filled' && ins.getBoundingClientRect().height > 0)
+    }
+
+    const mutationObserver = new MutationObserver(update)
+    mutationObserver.observe(ins, { attributes: true, attributeFilter: ['data-ad-status', 'style'], childList: true, subtree: true })
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update)
+    resizeObserver?.observe(ins)
+    update()
+
+    return () => {
+      mutationObserver.disconnect()
+      resizeObserver?.disconnect()
+    }
+  }, [canRender, variant])
+
   if (!canRender || !clientId) {
     return null
   }
@@ -81,9 +105,10 @@ export default function AdSenseAd({
       : { 'data-ad-format': 'horizontal', 'data-full-width-responsive': 'true' }
 
     return (
-      <aside className={`feed-ad ${className ?? ''}`.trim()} aria-label="Publicidad">
+      <aside className={`feed-ad ${className ?? ''}${isFilled ? ' is-filled' : ''}`.trim()} aria-label="Publicidad" aria-hidden={!isFilled}>
         <span className="feed-ad__label" aria-hidden="true">Publicidad</span>
         <ins
+          ref={insRef}
           className="adsbygoogle feed-ad__unit"
           style={{ display: 'block' }}
           data-ad-client={clientId}
@@ -96,9 +121,10 @@ export default function AdSenseAd({
 
   // El contenedor reserva el hueco (evita saltos de diseño) y se oculta si AdSense no sirve anuncio.
   return (
-    <aside className={`ad-slot-wrap ${className ?? ''}`.trim()} aria-label="Publicidad">
+    <aside className={`ad-slot-wrap ${className ?? ''}${isFilled ? ' is-filled' : ''}`.trim()} aria-label="Publicidad" aria-hidden={!isFilled}>
       <span className="ad-slot-label" aria-hidden="true">Publicidad</span>
       <ins
+        ref={insRef}
         className="adsbygoogle ad-slot-unit"
         style={{ display: 'block' }}
         data-ad-client={clientId}

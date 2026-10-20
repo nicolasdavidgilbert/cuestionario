@@ -428,12 +428,12 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .unit-card:hover { background: var(--c-row-hover); }
 /* Anuncio in-feed: misma fila que las tarjetas, pero sin aspecto de enlace y siempre etiquetado */
 .feed-ad.unit-card,
-.feed-ad.grado-card { display: grid; gap: 6px; align-items: stretch; background: var(--c-surface-muted); }
+.feed-ad.grado-card { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 6px; align-items: stretch; background: var(--c-surface-muted); }
 .feed-ad.unit-card:hover,
 .feed-ad.grado-card:hover { background: var(--c-surface-muted); }
 .feed-ad__label { color: var(--c-text-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
-.feed-ad__unit { width: 100%; min-height: 64px; }
-.feed-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
+.feed-ad__unit { width: 100%; }
+.feed-ad.is-filled { animation: ad-reveal 260ms ease; }
 .grado-card-main { display: contents; }
 .grado-info { display: grid; gap: 2px; min-width: 0; }
 .grado-label { font-size: 1rem; font-weight: 750; line-height: 1.25; }
@@ -930,9 +930,24 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
 /* Anuncios en el contenido: separados y etiquetados; si no hay anuncio, el hueco desaparece */
 .ad-slot-wrap { display: block; width: 100%; margin: 32px 0; padding-top: 10px; border-top: 1px solid var(--c-border); }
 .ad-slot-label { display: block; margin-bottom: 6px; color: var(--c-text-muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; }
-.ad-slot-unit { width: 100%; min-height: 90px; }
-.ad-slot-wrap:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
+.ad-slot-unit { width: 100%; }
 ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
+/*
+ * Un hueco de anuncio solo se ve cuando hay un anuncio servido y visible (.is-filled, ver AdSenseAd).
+ * Mientras carga, sin anuncio, con bloqueador o sin consentimiento queda plegado a 0 px.
+ * No se usa display:none porque AdSense necesita medir el ancho del <ins> para pedir el anuncio.
+ */
+.feed-ad:not(.is-filled),
+.ad-slot-wrap:not(.is-filled) {
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding-block: 0;
+  border: 0;
+  overflow: hidden;
+}
+.ad-slot-wrap.is-filled { animation: ad-reveal 260ms ease; }
+@keyframes ad-reveal { from { opacity: 0; } }
 
 .cookie-banner { position: fixed; right: 16px; bottom: calc(16px + var(--ad-anchor-bottom, 0px)); left: 16px; z-index: 40; pointer-events: none; }
 .cookie-banner__panel { max-width: 760px; margin-inline: auto; pointer-events: auto; }
@@ -1023,4 +1038,4 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 }
 /* El anuncio va dentro de su <astro-island> (display: contents): ajustar el borde de la última fila */
 .unit-grid > astro-island:last-child > .feed-ad { border-bottom: 0; }
-.unit-grid > :nth-last-child(2):has(+ astro-island:last-child ins.adsbygoogle[data-ad-status="unfilled"]) { border-bottom: 0; }
+.unit-grid > a.unit-card:not(:has(~ a.unit-card)):not(:has(~ astro-island .feed-ad.is-filled)) { border-bottom: 0; }
