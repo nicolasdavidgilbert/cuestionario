@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getQuizById, updateQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
@@ -15,6 +15,7 @@ export default function EditQuiz({ id }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
+  const saveButtonRef = useRef(null)
 
   useEffect(() => {
     loadQuiz()
@@ -138,12 +139,12 @@ export default function EditQuiz({ id }) {
 
         {error && <div className="error-msg error-box">{error}</div>}
 
-        <button type="submit" disabled={saving} className="btn-submit">
+        <button ref={saveButtonRef} type="submit" disabled={saving} className="btn-submit">
           {saving ? 'Guardando...' : 'Guardar cambios'}
         </button>
       </form>
 
-      <FloatingActions actions={[
+      <FloatingActions anchorRefs={[saveButtonRef]} actions={[
         { label: saving ? 'Guardando...' : 'Guardar cambios', icon: 'save', form: 'edit-quiz-form', disabled: saving },
         { label: 'Editar preguntas', icon: 'pencil', variant: 'secondary', onClick: () => setEditorOpen(true) }
       ]} />

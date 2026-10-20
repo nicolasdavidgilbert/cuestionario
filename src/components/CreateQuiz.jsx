@@ -15,6 +15,7 @@ export default function CreateQuiz() {
   const [inputMode, setInputMode] = useState('pdf')
   const [jsonText, setJsonText] = useState('')
   const [preview, setPreview] = useState(null)
+  const submitButtonRef = useRef(null)
   const [selectedPdfName, setSelectedPdfName] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const fileInputRef = useRef(null)
@@ -556,13 +557,13 @@ export default function CreateQuiz() {
 
         {error && validationErrors.length === 0 && <div className="error-msg error-box">{error}</div>}
 
-        <button type="submit" disabled={loading || generating || !preview} className="btn-submit">
+        <button ref={submitButtonRef} type="submit" disabled={loading || generating || !preview} className="btn-submit">
           {loading ? 'Guardando...' : generating ? 'Generando...' : 'Guardar Cuestionario'}
         </button>
       </form>
 
       {preview && (
-        <FloatingActions actions={[
+        <FloatingActions anchorRefs={[submitButtonRef]} actions={[
           { label: loading ? 'Guardando...' : 'Guardar cuestionario', icon: 'save', form: 'create-quiz-form', disabled: loading || generating },
           { label: 'Editar preguntas', icon: 'pencil', variant: 'secondary', onClick: openQuestionEditor }
         ]} />

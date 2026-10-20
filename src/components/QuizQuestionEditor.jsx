@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const EDITOR_OPTION_COUNT = 4
 
@@ -56,6 +56,7 @@ function validateDraftQuestions(questions) {
 export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel }) {
   const [draftQuestions, setDraftQuestions] = useState(() => cloneQuestionsForEdit(initialQuestions))
   const [editorError, setEditorError] = useState('')
+  const focusQuestionIndex = useRef(null)
 
   useEffect(() => {
     document.body.classList.add('modal-open')
@@ -81,7 +82,18 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
     }))
   }
 
+  // Tras añadir una pregunta, llevar al usuario a ella sin tener que bajar a mano.
+  useEffect(() => {
+    if (focusQuestionIndex.current === null) return
+    const field = document.getElementById(`editor-question-${focusQuestionIndex.current}`)
+    focusQuestionIndex.current = null
+    if (!field) return
+    field.closest('.quiz-editor-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    field.focus({ preventScroll: true })
+  }, [draftQuestions.length])
+
   const addDraftQuestion = () => {
+    focusQuestionIndex.current = draftQuestions.length
     setDraftQuestions((questions) => [...questions, createEmptyQuestion()])
   }
 
@@ -180,6 +192,9 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
         </div>
 
         <div className="quiz-editor-footer">
+          <button type="button" className="btn-secondary quiz-editor-add-footer" onClick={addDraftQuestion} aria-label="Añadir pregunta">
+            <span aria-hidden="true">+</span><span className="quiz-editor-add-text" aria-hidden="true">Añadir pregunta</span>
+          </button>
           <button type="button" className="btn-secondary" onClick={onCancel}>Cancelar</button>
           <button type="button" className="btn-primary" onClick={saveQuestionEditor}>Guardar cambios</button>
         </div>

@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
-import FloatingActions from './FloatingActions'
+import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
 
 const TEST_SIZE = 15
 
@@ -51,6 +51,11 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   const [reportReason, setReportReason] = useState('')
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
+  const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const startButtonRef = useRef<HTMLButtonElement>(null)
+  const startBottomButtonRef = useRef<HTMLButtonElement>(null)
+  const submitButtonRef = useRef<HTMLButtonElement>(null)
+  const retryButtonRef = useRef<HTMLButtonElement>(null)
 
   const loadQuiz = useCallback(async () => {
     setLoading(true)
@@ -99,6 +104,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     setAnswers({})
     setSubmitted(false)
     setMode('test')
+    setConfirmSubmit(false)
     setReportOpen(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -122,9 +128,26 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   function handleSelect(qIndex: number, optionIndex: number) {
     if (submitted) return
     setAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }))
+    setConfirmSubmit(false)
+  }
+
+  const nextUnanswered = activeQuestions.findIndex((_, i) => answers[i] === undefined)
+
+  function goToNextUnanswered() {
+    setConfirmSubmit(false)
+    if (nextUnanswered >= 0) scrollToQuestion(nextUnanswered)
+  }
+
+  function requestSubmit() {
+    if (nextUnanswered >= 0) {
+      setConfirmSubmit(true)
+      return
+    }
+    handleSubmit()
   }
 
   function handleSubmit() {
+    setConfirmSubmit(false)
     setSubmitted(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -258,7 +281,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             })}
 
             <div className="quiz-actions quiz-actions--centered">
-              <button className="retry-btn" onClick={handleRetry}>
+              <button ref={retryButtonRef} className="retry-btn" onClick={handleRetry}>
                 <span aria-hidden="true">↻</span> Hacer otro test
               </button>
               <button className="btn-secondary" onClick={backToBrowse}>
@@ -267,7 +290,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             </div>
           </div>
 
-          <FloatingActions actions={[
+          <FloatingActions anchorRefs={[retryButtonRef]} actions={[
             { label: 'Hacer otro test', icon: 'retry', onClick: handleRetry },
             { label: 'Ver preguntas', icon: 'list', variant: 'secondary', onClick: backToBrowse }
           ]} />
@@ -356,6 +379,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
           {activeQuestions.map((q, qi) => (
             <article
               key={qi}
+              id={`question-${qi}`}
               className="question-card"
             >
               <h3>
@@ -381,20 +405,32 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             </article>
           ))}
 
-          <button className="submit-btn" onClick={handleSubmit} disabled={answeredCount === 0}>
+          <button ref={submitButtonRef} className="submit-btn" onClick={requestSubmit} disabled={answeredCount === 0}>
             Enviar respuestas
           </button>
         </div>
 
-        <FloatingActions actions={[
-          {
-            label: 'Enviar respuestas',
-            icon: 'check',
-            onClick: handleSubmit,
-            disabled: answeredCount === 0,
-            badge: `${answeredCount}/${activeQuestions.length}`
-          }
-        ]} />
+        <FloatingActions
+          anchorRefs={[submitButtonRef]}
+          actions={[
+            {
+              label: 'Enviar respuestas',
+              icon: 'check',
+              onClick: requestSubmit,
+              disabled: answeredCount === 0,
+              badge: `${answeredCount}/${activeQuestions.length}`
+            },
+            nextUnanswered >= 0 && { label: 'Siguiente pregunta', icon: 'next', variant: 'secondary', onClick: goToNextUnanswered }
+          ]}
+          notice={confirmSubmit && nextUnanswered >= 0 && (
+            <SubmitNotice
+              missing={activeQuestions.length - answeredCount}
+              onGoToNext={goToNextUnanswered}
+              onSubmit={handleSubmit}
+              onClose={() => setConfirmSubmit(false)}
+            />
+          )}
+        />
       </div>
     )
   }
@@ -419,7 +455,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
         <p className="help-note">
           {totalQuestions} preguntas disponibles. Haz un test aleatorio de {Math.min(TEST_SIZE, totalQuestions)} o repásalas todas aquí.
         </p>
-        <button type="button" className="btn-primary btn-start-test" onClick={startTest}>
+        <button ref={startButtonRef} type="button" className="btn-primary btn-start-test" onClick={startTest}>
           Empezar test aleatorio
         </button>
       </header>
@@ -482,12 +518,15 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
           </article>
         ))}
 
-        <button type="button" className="btn-primary btn-start-test btn-start-test--bottom" onClick={startTest}>
+        <button ref={startBottomButtonRef} type="button" className="btn-primary btn-start-test btn-start-test--bottom" onClick={startTest}>
           Empezar test aleatorio
         </button>
       </div>
 
-      <FloatingActions actions={[{ label: 'Empezar test', icon: 'play', onClick: startTest }]} />
+      <FloatingActions
+        anchorRefs={[startButtonRef, startBottomButtonRef]}
+        actions={[{ label: 'Empezar test', icon: 'play', onClick: startTest }]}
+      />
     </div>
   )
 }

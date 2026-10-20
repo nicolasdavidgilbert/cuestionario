@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { deleteQuiz, getQuizById, reportQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
-import FloatingActions from './FloatingActions'
+import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
 
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -17,6 +17,9 @@ export default function UserQuiz({ id }) {
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const submitButtonRef = useRef(null)
+  const retryButtonRef = useRef(null)
 
   useEffect(() => {
     loadQuiz()
@@ -51,9 +54,26 @@ export default function UserQuiz({ id }) {
   const handleSelect = (qIndex, optionIndex) => {
     if (submitted) return
     setAnswers((prev) => ({ ...prev, [qIndex]: optionIndex }))
+    setConfirmSubmit(false)
+  }
+
+  const nextUnanswered = questions.findIndex((_, i) => answers[i] === undefined)
+
+  const goToNextUnanswered = () => {
+    setConfirmSubmit(false)
+    if (nextUnanswered >= 0) scrollToQuestion(nextUnanswered)
+  }
+
+  const requestSubmit = () => {
+    if (nextUnanswered >= 0) {
+      setConfirmSubmit(true)
+      return
+    }
+    handleSubmit()
   }
 
   const handleSubmit = () => {
+    setConfirmSubmit(false)
     setSubmitted(true)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -167,12 +187,12 @@ export default function UserQuiz({ id }) {
             )
           })}
 
-          <button className="retry-btn" onClick={handleRetry}>
+          <button ref={retryButtonRef} className="retry-btn" onClick={handleRetry}>
             <span aria-hidden="true">↻</span> Reintentar
           </button>
         </div>
 
-        <FloatingActions actions={[
+        <FloatingActions anchorRefs={[retryButtonRef]} actions={[
           { label: 'Reintentar', icon: 'retry', onClick: handleRetry },
           quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
         ]} />
@@ -249,6 +269,7 @@ export default function UserQuiz({ id }) {
         {questions.map((q, qi) => (
           <div
             key={qi}
+            id={`question-${qi}`}
             className="question-card"
             style={{ animationDelay: `${qi * 0.04}s` }}
           >
@@ -275,21 +296,33 @@ export default function UserQuiz({ id }) {
           </div>
         ))}
 
-        <button className="submit-btn" onClick={handleSubmit}>
+        <button ref={submitButtonRef} className="submit-btn" onClick={requestSubmit} disabled={answeredCount === 0}>
           <span aria-hidden="true">✓</span> Enviar respuestas
         </button>
       </div>
 
-      <FloatingActions actions={[
-        {
-          label: 'Enviar respuestas',
-          icon: 'check',
-          onClick: handleSubmit,
-          disabled: answeredCount === 0,
-          badge: `${answeredCount}/${questions.length}`
-        },
-        quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
-      ]} />
+      <FloatingActions
+        anchorRefs={[submitButtonRef]}
+        actions={[
+          {
+            label: 'Enviar respuestas',
+            icon: 'check',
+            onClick: requestSubmit,
+            disabled: answeredCount === 0,
+            badge: `${answeredCount}/${questions.length}`
+          },
+          nextUnanswered >= 0 && { label: 'Siguiente pregunta', icon: 'next', variant: 'secondary', onClick: goToNextUnanswered },
+          quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
+        ]}
+        notice={confirmSubmit && nextUnanswered >= 0 && (
+          <SubmitNotice
+            missing={questions.length - answeredCount}
+            onGoToNext={goToNextUnanswered}
+            onSubmit={handleSubmit}
+            onClose={() => setConfirmSubmit(false)}
+          />
+        )}
+      />
     </div>
   )
 }
