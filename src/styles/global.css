@@ -447,7 +447,8 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .course-search-section {
   position: sticky;
   z-index: 4;
-  top: 10px;
+  top: calc(10px + var(--ad-anchor-top, 0px));
+  transition: top 200ms ease;
   min-height: 108px;
   margin-top: 8px;
   margin-bottom: 28px;
@@ -461,7 +462,8 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .courses-catalog-shell .catalog-search {
   position: sticky;
   z-index: 4;
-  top: 10px;
+  top: calc(10px + var(--ad-anchor-top, 0px));
+  transition: top 200ms ease;
   padding: 10px;
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
@@ -780,7 +782,7 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
   position: fixed;
   /* En escritorio se alinea con el borde derecho de la columna de contenido */
   right: max(16px, env(safe-area-inset-right), calc((100vw - var(--container)) / 2 + 16px));
-  bottom: max(18px, env(safe-area-inset-bottom));
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + var(--ad-anchor-bottom, 0px));
   z-index: 30;
   display: flex;
   flex-direction: column-reverse;
@@ -917,11 +919,14 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
 .fab-confirm__close:hover { background: var(--c-surface-muted); }
 @keyframes fab-confirm-in { from { opacity: 0; transform: translateY(10px) scale(0.97); } }
 
-.ad-slot { display: block; width: 100%; min-height: 90px; margin: 28px 0; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }
-.ad-slot--wide { min-height: 90px; }
-.adsbygoogle { min-height: inherit; }
+/* Anuncios en el contenido: separados y etiquetados; si no hay anuncio, el hueco desaparece */
+.ad-slot-wrap { display: block; width: 100%; margin: 32px 0; padding-top: 10px; border-top: 1px solid var(--c-border); }
+.ad-slot-label { display: block; margin-bottom: 6px; color: var(--c-text-muted); font-size: 0.72rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; }
+.ad-slot-unit { width: 100%; min-height: 90px; }
+.ad-slot-wrap:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
+ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 
-.cookie-banner { position: fixed; right: 16px; bottom: 16px; left: 16px; z-index: 40; pointer-events: none; }
+.cookie-banner { position: fixed; right: 16px; bottom: calc(16px + var(--ad-anchor-bottom, 0px)); left: 16px; z-index: 40; pointer-events: none; }
 .cookie-banner__panel { max-width: 760px; margin-inline: auto; pointer-events: auto; }
 .cookie-banner__eyebrow { margin: 0 0 4px; color: var(--c-accent-strong); font-size: 0.8rem; font-weight: 750; }
 
@@ -975,7 +980,7 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   .landing-search:has(.grado-grid.has-query) { min-height: auto; padding: 34px 0 12px; }
   .landing-search .landing-header { max-height: 360px; }
   .course-search-section,
-  .courses-catalog-shell .catalog-search { top: 8px; padding: 8px; }
+  .courses-catalog-shell .catalog-search { top: calc(8px + var(--ad-anchor-top, 0px)); padding: 8px; }
   .course-search-section { min-height: 154px; }
   .quiz-editor-modal { padding: 0; align-items: stretch; }
   .quiz-editor-panel { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; }

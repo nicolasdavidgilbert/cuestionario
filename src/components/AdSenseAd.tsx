@@ -68,14 +68,18 @@ export default function AdSenseAd({
     return null
   }
 
+  // El contenedor reserva el hueco (evita saltos de diseño) y se oculta si AdSense no sirve anuncio.
   return (
-    <ins
-      className={`adsbygoogle ${className ?? ''}`.trim()}
-      style={{ display: 'block' }}
-      data-ad-client={clientId}
-      data-ad-slot={slot}
-      data-ad-format={format}
-      data-full-width-responsive={responsive ? 'true' : 'false'}
-    />
+    <aside className={`ad-slot-wrap ${className ?? ''}`.trim()} aria-label="Publicidad">
+      <span className="ad-slot-label" aria-hidden="true">Publicidad</span>
+      <ins
+        className="adsbygoogle ad-slot-unit"
+        style={{ display: 'block' }}
+        data-ad-client={clientId}
+        data-ad-slot={slot}
+        data-ad-format={format}
+        data-full-width-responsive={responsive ? 'true' : 'false'}
+      />
+    </aside>
   )
 }

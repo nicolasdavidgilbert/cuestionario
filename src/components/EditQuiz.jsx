@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getQuizById, updateQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
 import FloatingActions from './FloatingActions'
+import useUnsavedChangesWarning from './useUnsavedChangesWarning'
 
 export default function EditQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -16,6 +17,14 @@ export default function EditQuiz({ id }) {
   const [error, setError] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const saveButtonRef = useRef(null)
+  const [savedSnapshot, setSavedSnapshot] = useState('')
+  const hasUnsavedChanges = useMemo(
+    () => Boolean(savedSnapshot) && JSON.stringify({ title, description, questions }) !== savedSnapshot,
+    [savedSnapshot, title, description, questions]
+  )
+
+  // Mientras se guarda (y durante la redirección posterior) no se avisa.
+  useUnsavedChangesWarning(hasUnsavedChanges && !saving)
 
   useEffect(() => {
     loadQuiz()
@@ -32,6 +41,7 @@ export default function EditQuiz({ id }) {
       setTitle(data.title || '')
       setDescription(data.description || '')
       setQuestions(data.questions || [])
+      setSavedSnapshot(JSON.stringify({ title: data.title || '', description: data.description || '', questions: data.questions || [] }))
     } catch (e) {
       Sentry.captureException(e, { tags: { feature: 'edit-quiz-load' } })
       setLoadError('Cuestionario no encontrado.')

@@ -74,3 +74,20 @@ test('sitemap includes database-backed public quiz routes and fails closed', asy
   assert.match(sitemap, /status: 503/)
   assert.doesNotMatch(sitemap, /<lastmod>/)
 })
+
+test('keeps ads off quiz-running and owner editing pages', async () => {
+  const ads = await readProjectFile('src/lib/ads.ts')
+
+  assert.match(ads, /'\/crear'/)
+  assert.match(ads, /'\/mis-cuestionarios'/)
+  assert.match(ads, /startsWith\('\/user-quiz\/'\)/)
+  assert.match(ads, /startsWith\('\/editar\/'\)/)
+})
+
+test('hydrates every in-content ad unit on Astro pages', async () => {
+  for (const page of ['src/pages/index.astro', 'src/pages/prompt.astro']) {
+    const source = await readProjectFile(page)
+    const usages = source.match(/<AdSenseAd\b[^>]*>/g) ?? []
+    for (const usage of usages) assert.match(usage, /client:(visible|idle|load)/, page)
+  }
+})

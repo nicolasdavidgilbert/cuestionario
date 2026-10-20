@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from 'react'
-import { canServeAdsOnPage, loadAdSenseScript } from '../lib/ads'
+import { canServeAdsOnPage, loadAdSenseScript, watchAnchorAds } from '../lib/ads'
 
 type AdSenseManagerProps = {
   clientId: string
@@ -23,6 +23,8 @@ export default function AdSenseManager({ clientId, enabledByEnv }: AdSenseManage
     void loadAdSenseScript(clientId).catch(() => {
       // Fallo de carga del script de AdSense es esperado (bloqueadores, red). No es un error de app.
     })
+
+    return watchAnchorAds()
   }, [clientId, enabledByEnv])
 
   return null

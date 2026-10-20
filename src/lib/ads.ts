@@ -25,7 +25,8 @@ export function isSensitiveAdPage(pathname: string) {
     return true
   }
 
-  if (normalized.startsWith('/user-quiz/')) {
+  // Pantallas de uso (resolver o editar un cuestionario propio): sin anuncios.
+  if (normalized.startsWith('/user-quiz/') || normalized.startsWith('/editar/')) {
     return true
   }
 
@@ -40,6 +41,65 @@ declare global {
   interface Window {
     adsbygoogle?: unknown[]
     __adsenseScriptPromise?: Promise<void>
+  }
+}
+
+const ANCHOR_SELECTOR = 'ins.adsbygoogle[data-anchor-status]'
+
+/**
+ * Los anuncios ancla de AdSense (auto ads) se fijan arriba o abajo de la pantalla.
+ * Publica su altura en --ad-anchor-top / --ad-anchor-bottom para que la barra de búsqueda
+ * fija, el banner de cookies y los botones flotantes se aparten en vez de quedar tapados.
+ */
+export function watchAnchorAds() {
+  if (typeof document === 'undefined' || typeof MutationObserver === 'undefined') {
+    return () => {}
+  }
+
+  const root = document.documentElement
+  let frame = 0
+
+  const measure = () => {
+    frame = 0
+    let top = 0
+    let bottom = 0
+
+    document.querySelectorAll<HTMLElement>(ANCHOR_SELECTOR).forEach((anchor) => {
+      if (anchor.dataset.anchorStatus !== 'displayed') return
+      const rect = anchor.getBoundingClientRect()
+      if (rect.height === 0 || getComputedStyle(anchor).display === 'none') return
+
+      if (rect.top < window.innerHeight / 2) {
+        top = Math.max(top, Math.max(0, rect.bottom))
+      } else {
+        bottom = Math.max(bottom, Math.max(0, window.innerHeight - rect.top))
+      }
+    })
+
+    root.style.setProperty('--ad-anchor-top', `${Math.round(top)}px`)
+    root.style.setProperty('--ad-anchor-bottom', `${Math.round(bottom)}px`)
+  }
+
+  const schedule = () => {
+    if (!frame) frame = window.requestAnimationFrame(measure)
+  }
+
+  const observer = new MutationObserver(schedule)
+  observer.observe(document.body, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['data-anchor-status', 'style', 'class'],
+  })
+  window.addEventListener('resize', schedule)
+  schedule()
+
+  return () => {
+    observer.disconnect()
+    window.removeEventListener('resize', schedule)
+    if (frame) window.cancelAnimationFrame(frame)
+    root.style.removeProperty('--ad-anchor-top')
+    root.style.removeProperty('--ad-anchor-bottom')
   }
 }
 

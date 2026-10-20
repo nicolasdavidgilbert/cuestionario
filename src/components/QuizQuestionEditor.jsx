@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import useUnsavedChangesWarning from './useUnsavedChangesWarning'
 
 const EDITOR_OPTION_COUNT = 4
 
@@ -55,6 +56,9 @@ function validateDraftQuestions(questions) {
 
 export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel }) {
   const [draftQuestions, setDraftQuestions] = useState(() => cloneQuestionsForEdit(initialQuestions))
+  const [initialSnapshot] = useState(() => JSON.stringify(cloneQuestionsForEdit(initialQuestions)))
+  const hasChanges = JSON.stringify(draftQuestions) !== initialSnapshot
+  useUnsavedChangesWarning(hasChanges)
   const [editorError, setEditorError] = useState('')
   const focusQuestionIndex = useRef(null)
 
@@ -113,6 +117,11 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
     })
   }
 
+  const cancelQuestionEditor = () => {
+    if (hasChanges && !window.confirm('Tienes cambios sin guardar en las preguntas. ¿Descartarlos?')) return
+    onCancel()
+  }
+
   const saveQuestionEditor = () => {
     const validationMessage = validateDraftQuestions(draftQuestions)
     if (validationMessage) {
@@ -138,7 +147,7 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
             <p>{draftQuestions.length} pregunta{draftQuestions.length === 1 ? '' : 's'} en edición</p>
           </div>
           <div className="quiz-editor-header-actions">
-            <button type="button" className="btn-secondary" onClick={onCancel}>Cancelar</button>
+            <button type="button" className="btn-secondary" onClick={cancelQuestionEditor}>Cancelar</button>
             <button type="button" className="btn-primary" onClick={saveQuestionEditor}>Guardar cambios</button>
           </div>
         </div>
@@ -195,7 +204,7 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
           <button type="button" className="btn-secondary quiz-editor-add-footer" onClick={addDraftQuestion} aria-label="Añadir pregunta">
             <span aria-hidden="true">+</span><span className="quiz-editor-add-text" aria-hidden="true">Añadir pregunta</span>
           </button>
-          <button type="button" className="btn-secondary" onClick={onCancel}>Cancelar</button>
+          <button type="button" className="btn-secondary" onClick={cancelQuestionEditor}>Cancelar</button>
           <button type="button" className="btn-primary" onClick={saveQuestionEditor}>Guardar cambios</button>
         </div>
       </div>

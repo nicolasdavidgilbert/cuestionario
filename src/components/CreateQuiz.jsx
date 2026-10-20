@@ -5,6 +5,7 @@ import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
 import FloatingActions from './FloatingActions'
+import useUnsavedChangesWarning from './useUnsavedChangesWarning'
 
 export default function CreateQuiz() {
   const [existingQuizzes, setExistingQuizzes] = useState([])
@@ -27,6 +28,9 @@ export default function CreateQuiz() {
     course_id: '',
     unidad: ''
   })
+
+  // Un cuestionario cargado o generado (PDF) aún no guardado se perdería al salir.
+  useUnsavedChangesWarning(Boolean(preview) && !loading)
 
   useEffect(() => {
     loadData()
