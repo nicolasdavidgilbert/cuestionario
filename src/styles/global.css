@@ -426,6 +426,14 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .unit-grid > :last-child { border-bottom: 0; }
 .grado-card:hover,
 .unit-card:hover { background: var(--c-row-hover); }
+/* Anuncio in-feed: misma fila que las tarjetas, pero sin aspecto de enlace y siempre etiquetado */
+.feed-ad.unit-card,
+.feed-ad.grado-card { display: grid; gap: 6px; align-items: stretch; background: var(--c-surface-muted); }
+.feed-ad.unit-card:hover,
+.feed-ad.grado-card:hover { background: var(--c-surface-muted); }
+.feed-ad__label { color: var(--c-text-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.feed-ad__unit { width: 100%; min-height: 64px; }
+.feed-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) { display: none; }
 .grado-card-main { display: contents; }
 .grado-info { display: grid; gap: 2px; min-width: 0; }
 .grado-label { font-size: 1rem; font-weight: 750; line-height: 1.25; }
@@ -1013,3 +1021,6 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+/* El anuncio va dentro de su <astro-island> (display: contents): ajustar el borde de la última fila */
+.unit-grid > astro-island:last-child > .feed-ad { border-bottom: 0; }
+.unit-grid > :nth-last-child(2):has(+ astro-island:last-child ins.adsbygoogle[data-ad-status="unfilled"]) { border-bottom: 0; }

@@ -1,7 +1,9 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import { neon } from '@neondatabase/serverless'
-import { getDatabaseUrl } from '../lib/server/env'
+import { getAdsenseConfig, getDatabaseUrl } from '../lib/server/env'
+import AdSenseAd from '../components/AdSenseAd'
+import { getFeedAdPositions } from '../lib/feedAds'
 
 export const prerender = false
 
@@ -52,6 +54,12 @@ try {
 }
 
 const hasContent = courses.length > 0
+const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
+const feedAdSlot = import.meta.env.PUBLIC_ADSENSE_INFEED_SLOT || import.meta.env.PUBLIC_ADSENSE_SLOT || '4731901740'
+const feedAdLayoutKey = import.meta.env.PUBLIC_ADSENSE_INFEED_LAYOUT_KEY || undefined
+// Los anuncios se reparten por el listado completo (todas las asignaturas), no por cada una.
+const feedAdPositions = getFeedAdPositions(unitCount)
+const courseOffsets = courses.map((_, index) => courses.slice(0, index).reduce((sum, c) => sum + c.units.length, 0))
 const gradoLabel = grado?.toUpperCase()
 
 if (catalogLoadFailed) {
@@ -95,19 +103,32 @@ if (catalogLoadFailed) {
       </div>
     ) : hasContent ? (
       <section class="catalog-served" aria-label="Cuestionarios de este curso">
-        {courses.map((course) => (
+        {courses.map((course, courseIndex) => (
           <section class="course-section">
             <h2>{course.id.toUpperCase()}</h2>
             <div class="unit-grid">
-              {course.units.map((unit) => (
-                <a href={`/${grado}/${course.id}/${unit.id}`} class="unit-card">
-                  <article>
-                    <span class="unit-badge">{course.id.toUpperCase()}</span>
-                    <strong>{unit.title || unit.id.toUpperCase()}</strong>
-                    <span class="unit-title">Cuestionario tipo test</span>
-                  </article>
-                  <span class="unit-action">Empezar</span>
-                </a>
+              {course.units.map((unit, unitIndex) => (
+                <>
+                  <a href={`/${grado}/${course.id}/${unit.id}`} class="unit-card">
+                    <article>
+                      <span class="unit-badge">{course.id.toUpperCase()}</span>
+                      <strong>{unit.title || unit.id.toUpperCase()}</strong>
+                      <span class="unit-title">Cuestionario tipo test</span>
+                    </article>
+                    <span class="unit-action">Empezar</span>
+                  </a>
+                  {feedAdPositions.has(courseOffsets[courseIndex] + unitIndex) && (
+                    <AdSenseAd
+                      client:idle
+                      variant="feed"
+                      className="unit-card"
+                      slot={feedAdSlot}
+                      layoutKey={feedAdLayoutKey}
+                      clientId={adsenseClient}
+                      enabledByEnv={adsEnabledByEnv}
+                    />
+                  )}
+                </>
               ))}
             </div>
           </section>

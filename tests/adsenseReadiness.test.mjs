@@ -84,10 +84,13 @@ test('keeps ads off quiz-running and owner editing pages', async () => {
   assert.match(ads, /startsWith\('\/editar\/'\)/)
 })
 
-test('hydrates every in-content ad unit on Astro pages', async () => {
-  for (const page of ['src/pages/index.astro', 'src/pages/prompt.astro']) {
+// AdSenseAd no renderiza nada en el servidor: con client:visible la isla queda vacía,
+// Astro no tiene qué observar y el anuncio nunca se hidrata.
+test('hydrates every ad unit on Astro pages with idle/load, never visible', async () => {
+  for (const page of ['src/pages/index.astro', 'src/pages/prompt.astro', 'src/pages/[grado].astro', 'src/pages/cursos.astro']) {
     const source = await readProjectFile(page)
     const usages = source.match(/<AdSenseAd\b[^>]*>/g) ?? []
-    for (const usage of usages) assert.match(usage, /client:(visible|idle|load)/, page)
+    assert.ok(usages.length > 0, page)
+    for (const usage of usages) assert.match(usage, /client:(idle|load)/, page)
   }
 })

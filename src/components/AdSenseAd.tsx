@@ -10,6 +10,10 @@ type AdSenseAdProps = {
   responsive?: boolean
   clientId?: string
   enabledByEnv: boolean
+  /** 'feed': fila con el mismo aspecto que las tarjetas del listado (anuncio in-feed). */
+  variant?: 'block' | 'feed'
+  /** Clave de diseño del bloque in-feed creado en AdSense (data-ad-layout-key). */
+  layoutKey?: string
 }
 
 export default function AdSenseAd({
@@ -19,6 +23,8 @@ export default function AdSenseAd({
   responsive = true,
   clientId,
   enabledByEnv,
+  variant = 'block',
+  layoutKey,
 }: AdSenseAdProps) {
   const [canRender, setCanRender] = useState(false)
   const hasPushedRef = useRef(false)
@@ -66,6 +72,26 @@ export default function AdSenseAd({
 
   if (!canRender || !clientId) {
     return null
+  }
+
+  if (variant === 'feed') {
+    // Sin bloque in-feed configurado se usa un anuncio horizontal adaptable dentro de la misma fila.
+    const formatProps = layoutKey
+      ? { 'data-ad-format': 'fluid', 'data-ad-layout-key': layoutKey }
+      : { 'data-ad-format': 'horizontal', 'data-full-width-responsive': 'true' }
+
+    return (
+      <aside className={`feed-ad ${className ?? ''}`.trim()} aria-label="Publicidad">
+        <span className="feed-ad__label" aria-hidden="true">Publicidad</span>
+        <ins
+          className="adsbygoogle feed-ad__unit"
+          style={{ display: 'block' }}
+          data-ad-client={clientId}
+          data-ad-slot={slot}
+          {...formatProps}
+        />
+      </aside>
+    )
   }
 
   // El contenedor reserva el hueco (evita saltos de diseño) y se oculta si AdSense no sirve anuncio.
