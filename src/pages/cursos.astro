@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import { neon } from '@neondatabase/serverless'
 import { getAdsenseConfig, getDatabaseUrl } from '../lib/server/env'
+import { getCourseInfo, getGradeInfo } from '../lib/curriculum'
 import AdSenseAd from '../components/AdSenseAd'
 import { getFeedAdPositions } from '../lib/feedAds'
 
@@ -67,8 +68,8 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
 ---
 
 <Layout
-  title="Cursos con cuestionarios"
-  description="Explora los cursos disponibles y accede a cuestionarios tipo test organizados por asignatura y unidad."
+  title="Tests de ASIR por curso y asignatura"
+  description="Tests tipo test con soluciones explicadas para 1.º y 2.º de ASIR, organizados por curso, asignatura y tema."
   robots={catalogLoadFailed ? 'noindex, nofollow' : 'index, follow'}
 >
   <div class="page-wrap courses-page">
@@ -86,6 +87,11 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
       ) : (
         <p>Explora los cuestionarios tipo test organizados por asignatura y unidad.</p>
       )}
+      <p class="catalog-intro">
+        Cuestionarios para preparar el ciclo de grado superior de Administración de Sistemas Informáticos en Red (ASIR).
+        Cada tema incluye todas sus preguntas con la respuesta correcta y una explicación, y un modo test aleatorio
+        para comprobar lo que sabes antes del examen.
+      </p>
     </header>
 
     {catalogLoadFailed ? (
@@ -102,7 +108,7 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
             <a href={`/${grade.id}`} class="grado-card">
               <article class="grado-card-main">
                 <div class="grado-info">
-                  <span class="grado-label">{grade.id.toUpperCase()}</span>
+                  <span class="grado-label">{getGradeInfo(grade.id).name}</span>
                   <span class="grado-meta">
                     {coursesInGrade} asignatura{coursesInGrade === 1 ? '' : 's'} · {unitsInGrade} tema{unitsInGrade === 1 ? '' : 's'}
                   </span>
@@ -125,7 +131,30 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
           )
         })}
       </section>
-    ) : (
+    ) : null}
+
+    {!catalogLoadFailed && catalog.map((grade) => (
+      <section class="course-section" aria-labelledby={`grade-${grade.id}`}>
+        <h2 id={`grade-${grade.id}`}>{getGradeInfo(grade.id).name}</h2>
+        <p class="course-section-desc">{getGradeInfo(grade.id).description}</p>
+        <div class="unit-grid">
+          {grade.courses.map((course) => (
+            <a href={`/${grade.id}#${course.id}`} class="unit-card">
+              <article>
+                <span class="unit-badge">{course.id.toUpperCase()}</span>
+                <strong>{getCourseInfo(course.id).name}</strong>
+                <span class="unit-title">
+                  {course.units.length} tema{course.units.length === 1 ? '' : 's'}{getCourseInfo(course.id).description ? ` · ${getCourseInfo(course.id).description}` : ''}
+                </span>
+              </article>
+              <span class="unit-action">Ver temas</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    {!catalogLoadFailed && catalog.length === 0 && (
       <div class="empty-state">
         <div class="empty-icon" />
         <p>No hay cuestionarios publicados todavía.</p>

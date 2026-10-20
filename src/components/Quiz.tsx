@@ -33,9 +33,13 @@ interface Props {
   quizId?: number | null
   pageTitle?: string | null
   questions?: unknown[] | null
+  description?: string | null
+  gradeName?: string | null
+  courseName?: string | null
+  courseDescription?: string | null
 }
 
-export default function Quiz({ grado = '', curso = '', unidad = '', quizId: initialQuizId = null, pageTitle: initialPageTitle = null, questions: serverQuestions = null }: Props) {
+export default function Quiz({ grado = '', curso = '', unidad = '', quizId: initialQuizId = null, pageTitle: initialPageTitle = null, questions: serverQuestions = null, description = null, gradeName = null, courseName = null, courseDescription = null }: Props) {
   const cachedQuiz = !serverQuestions ? getCachedQuizzesByGrado(grado)?.find(q => q.course_id === curso && (q.unidad || q.course_id) === unidad) || null : null
   const [quizId, setQuizId] = useState(initialQuizId || cachedQuiz?.id || null)
   const [allQuestions, setAllQuestions] = useState<QuizQuestion[] | null>(serverQuestions ? asQuestions(serverQuestions) : cachedQuiz ? asQuestions(cachedQuiz.questions) : null)
@@ -52,6 +56,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  // Modo repaso: por defecto se ven la respuesta correcta y la explicación de cada pregunta.
+  const [showAnswers, setShowAnswers] = useState(true)
   const startButtonRef = useRef<HTMLButtonElement>(null)
   const startBottomButtonRef = useRef<HTMLButtonElement>(null)
   const submitButtonRef = useRef<HTMLButtonElement>(null)
@@ -122,7 +128,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   const progress = activeQuestions.length > 0 ? (answeredCount / activeQuestions.length) * 100 : 0
   const quizTitle = pageTitle || `${curso?.toUpperCase()} — ${unidad?.toUpperCase()}`
   const gradoLabel = grado?.toUpperCase()
-  const cursoLabel = curso?.toUpperCase()
+  const cursoLabel = courseName || curso?.toUpperCase()
   const unidadLabel = unidad?.toUpperCase()
 
   function handleSelect(qIndex: number, optionIndex: number) {
@@ -450,10 +456,11 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
       </nav>
 
       <header className="quiz-header">
-        <p className="section-kicker">Cuestionario</p>
+        <p className="section-kicker">{[courseName || cursoLabel, gradeName || gradoLabel].filter(Boolean).join(' · ')}</p>
         <h1>{quizTitle}</h1>
+        {description && <p className="quiz-intro">{description}</p>}
         <p className="help-note">
-          {totalQuestions} preguntas disponibles. Haz un test aleatorio de {Math.min(TEST_SIZE, totalQuestions)} o repásalas todas aquí.
+          {totalQuestions} preguntas con su respuesta correcta y una explicación. Repásalas todas aquí o haz un test aleatorio de {Math.min(TEST_SIZE, totalQuestions)} para comprobar lo que sabes.
         </p>
         <button ref={startButtonRef} type="button" className="btn-primary btn-start-test" onClick={startTest}>
           Empezar test aleatorio
@@ -461,7 +468,24 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
       </header>
 
       <div className="quiz-container quiz-browse">
+        <section className="study-guide" aria-labelledby="study-guide-heading">
+          <h2 id="study-guide-heading">Cómo estudiar este tema</h2>
+          <ol>
+            <li><strong>Repasa</strong> las preguntas de abajo: cada una muestra la respuesta correcta y por qué lo es.</li>
+            <li><strong>Oculta las respuestas</strong> e intenta contestar mentalmente antes de mirarlas.</li>
+            <li><strong>Haz el test aleatorio</strong> de {Math.min(TEST_SIZE, totalQuestions)} preguntas y revisa las que falles.</li>
+          </ol>
+          {courseDescription && (
+            <p className="help-note">
+              Este tema forma parte de <strong>{courseName || cursoLabel}</strong>{gradeName ? ` (${gradeName})` : ''}: {courseDescription}
+            </p>
+          )}
+        </section>
+
         <div className="quiz-actions">
+          <button type="button" className="btn-secondary" aria-pressed={!showAnswers} onClick={() => setShowAnswers((value) => !value)}>
+            {showAnswers ? 'Ocultar respuestas' : 'Mostrar respuestas'}
+          </button>
           <button type="button" className="btn-secondary" onClick={() => setReportOpen((open) => !open)}>
             <span aria-hidden="true">{reportOpen ? '×' : '!'}</span>
             {reportOpen ? 'Cerrar reporte' : 'Reportar'}
@@ -500,6 +524,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
           </section>
         )}
 
+        <h2 className="browse-heading">Preguntas y respuestas ({totalQuestions})</h2>
+
         {questions.map((q, qi) => (
           <article
             key={qi}
@@ -509,12 +535,19 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
               <span className="question-number">{qi + 1}.</span> {q.question}
             </h3>
             <ol className="browse-options">
-              {q.options.map((option, oi) => (
-                <li key={oi} className="browse-option">
-                  {option}
-                </li>
-              ))}
+              {q.options.map((option, oi) => {
+                const isCorrect = showAnswers && oi === q.answer
+                return (
+                  <li key={oi} className={`browse-option${isCorrect ? ' is-correct' : ''}`}>
+                    {option}
+                    {isCorrect && <span className="browse-correct-tag">Correcta</span>}
+                  </li>
+                )
+              })}
             </ol>
+            {showAnswers && q.explanation && (
+              <p className="browse-explanation"><strong>Explicación:</strong> {q.explanation}</p>
+            )}
           </article>
         ))}
 

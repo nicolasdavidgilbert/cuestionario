@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import { neon } from '@neondatabase/serverless'
 import { getAdsenseConfig, getDatabaseUrl } from '../lib/server/env'
+import { getCourseInfo, getGradeInfo } from '../lib/curriculum'
 import AdSenseAd from '../components/AdSenseAd'
 import { getFeedAdPositions } from '../lib/feedAds'
 
@@ -13,9 +14,10 @@ interface QuizRow {
   course_id: string
   unidad: string | null
   title: string | null
+  question_count: number | null
 }
 
-interface ServedUnit { id: string; title: string }
+interface ServedUnit { id: string; title: string; questionCount: number }
 interface ServedCourse { id: string; units: ServedUnit[] }
 
 let courses: ServedCourse[] = []
@@ -25,12 +27,13 @@ let catalogLoadFailed = false
 try {
   const sql = neon(getDatabaseUrl())
   const rows = await sql`
-    SELECT course_id, unidad, title
+    SELECT DISTINCT ON (course_id, COALESCE(NULLIF(unidad, ''), course_id))
+      course_id, unidad, title, json_array_length(questions::json) AS question_count
     FROM user_quizzes
     WHERE grado = ${grado}
       AND deleted_at IS NULL
       AND course_id IS NOT NULL
-    ORDER BY course_id, unidad
+    ORDER BY course_id, COALESCE(NULLIF(unidad, ''), course_id), created_at DESC, id DESC
   `
   const map = new Map<string, ServedCourse>()
   for (const row of rows as QuizRow[]) {
@@ -43,7 +46,7 @@ try {
       courseCount += 1
     }
     if (!course.units.some((u) => u.id === unit)) {
-      course.units.push({ id: unit, title: row.title || '' })
+      course.units.push({ id: unit, title: row.title || '', questionCount: Number(row.question_count) || 0 })
       unitCount += 1
     }
   }
@@ -60,7 +63,9 @@ const feedAdLayoutKey = import.meta.env.PUBLIC_ADSENSE_INFEED_LAYOUT_KEY || '-fc
 // Los anuncios se reparten por el listado completo (todas las asignaturas), no por cada una.
 const feedAdPositions = getFeedAdPositions(unitCount)
 const courseOffsets = courses.map((_, index) => courses.slice(0, index).reduce((sum, c) => sum + c.units.length, 0))
-const gradoLabel = grado?.toUpperCase()
+const gradeInfo = getGradeInfo(grado || '')
+const gradoLabel = gradeInfo.name
+const totalQuestions = courses.reduce((sum, course) => sum + course.units.reduce((s, unit) => s + unit.questionCount, 0), 0)
 
 if (catalogLoadFailed) {
   Astro.response.status = 503
@@ -70,11 +75,11 @@ if (catalogLoadFailed) {
 ---
 
 <Layout
-  title={grado ? `Cuestionarios de ${grado}` : 'Cuestionarios por curso'}
+  title={`Tests de ${gradeInfo.name} con soluciones`}
   description={
     hasContent
-      ? `Practica cuestionarios tipo test de ${grado}: ${unitCount} temas distribuidos en ${courseCount} asignaturas. Responde, revisa y aprende.`
-      : `Practica cuestionarios tipo test de ${grado} organizados por curso y unidad.`
+      ? `${unitCount} temas y ${totalQuestions} preguntas tipo test con soluciones explicadas de ${gradeInfo.short}, organizados por asignatura.`.slice(0, 160)
+      : `Cuestionarios tipo test de ${gradeInfo.name} organizados por asignatura y tema.`
   }
   robots={hasContent && !catalogLoadFailed ? 'index, follow' : 'noindex, nofollow'}
 >
@@ -88,13 +93,14 @@ if (catalogLoadFailed) {
     </nav>
 
     <header class="home-header">
-      <p class="section-kicker">Catálogo de cuestionarios</p>
-      <h1>{gradoLabel}</h1>
+      <p class="section-kicker">{gradeInfo.short}</p>
+      <h1>Tests de {gradoLabel}</h1>
       {hasContent ? (
-        <p>{unitCount} tema{unitCount === 1 ? '' : 's'} disponibles en {courseCount} asignatura{courseCount === 1 ? '' : 's'}.</p>
+        <p>{unitCount} tema{unitCount === 1 ? '' : 's'} y {totalQuestions} preguntas con soluciones explicadas, en {courseCount} asignatura{courseCount === 1 ? '' : 's'}.</p>
       ) : (
         <p>Elige una asignatura y unidad para empezar a practicar.</p>
       )}
+      <p class="catalog-intro">{gradeInfo.description}</p>
     </header>
 
     {catalogLoadFailed ? (
@@ -104,8 +110,9 @@ if (catalogLoadFailed) {
     ) : hasContent ? (
       <section class="catalog-served" aria-label="Cuestionarios de este curso">
         {courses.map((course, courseIndex) => (
-          <section class="course-section">
-            <h2>{course.id.toUpperCase()}</h2>
+          <section class="course-section" id={course.id}>
+            <h2>{getCourseInfo(course.id).name}</h2>
+            {getCourseInfo(course.id).description && <p class="course-section-desc">{getCourseInfo(course.id).description}</p>}
             <div class="unit-grid">
               {course.units.map((unit, unitIndex) => (
                 <>
@@ -113,7 +120,7 @@ if (catalogLoadFailed) {
                     <article>
                       <span class="unit-badge">{course.id.toUpperCase()}</span>
                       <strong>{unit.title || unit.id.toUpperCase()}</strong>
-                      <span class="unit-title">Cuestionario tipo test</span>
+                      <span class="unit-title">{unit.questionCount} preguntas con soluciones</span>
                     </article>
                     <span class="unit-action">Empezar</span>
                   </a>

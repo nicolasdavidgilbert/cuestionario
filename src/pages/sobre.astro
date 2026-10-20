@@ -1,0 +1,86 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { getContactEmail } from '../lib/server/env'
+
+const contactEmail = getContactEmail()
+---
+
+<Layout
+  title="Sobre el proyecto"
+  description="Qué es cuestionario.online, quién lo hace, cómo se elaboran y revisan los tests de ASIR y cómo se financia el proyecto."
+>
+  <div class="page-wrap legal-page">
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">/</span>
+      <span>Sobre el proyecto</span>
+    </nav>
+
+    <header class="home-header">
+      <p class="section-kicker">Sobre nosotros</p>
+      <h1>Sobre cuestionario.online</h1>
+      <p>Un banco de tests con soluciones explicadas para estudiar el ciclo de Administración de Sistemas Informáticos en Red.</p>
+    </header>
+
+    <section class="legal-card">
+      <h2>Qué es</h2>
+      <p>
+        cuestionario.online es un proyecto independiente creado por y para estudiantes del ciclo formativo de grado
+        superior en Administración de Sistemas Informáticos en Red (ASIR). Reúne cuestionarios tipo test de las
+        asignaturas de primero y segundo, organizados por curso, asignatura y tema.
+      </p>
+      <p>
+        La idea es sencilla: estudiar con preguntas concretas es más eficaz que releer apuntes. Por eso cada tema
+        se puede repasar completo, con la respuesta correcta y una explicación de cada pregunta, o practicar con un
+        test aleatorio que corrige al instante y señala qué conceptos conviene repasar.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Cómo se elaboran los cuestionarios</h2>
+      <p>
+        Los cuestionarios se preparan a partir de los contenidos que se trabajan en clase: apuntes, prácticas y
+        temarios de cada módulo. Algunos se redactan a mano y otros se generan con ayuda de herramientas de
+        inteligencia artificial a partir de esos apuntes. En todos los casos cada pregunta tiene cuatro opciones,
+        una única respuesta correcta y una explicación que justifica la solución.
+      </p>
+      <p>
+        Antes de publicarse, cada cuestionario pasa una validación automática (número de preguntas, opciones
+        completas, respuesta correcta válida y ausencia de duplicados). Si encuentras una pregunta incorrecta,
+        confusa o repetida, usa el botón <strong>Reportar</strong> del propio cuestionario: los reportes se revisan
+        y el contenido se corrige o se retira.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Qué puedes hacer aquí</h2>
+      <ul>
+        <li><strong>Repasar un tema</strong> con todas sus preguntas, respuestas y explicaciones.</li>
+        <li><strong>Hacer un test aleatorio</strong> de hasta 15 preguntas y ver tu puntuación y tus errores.</li>
+        <li><strong>Crear tus propios cuestionarios</strong> a partir de un PDF de apuntes o de un JSON, y editarlos después.</li>
+      </ul>
+      <p>
+        No hace falta registrarse. Los cuestionarios que creas quedan asociados a tu navegador para que puedas
+        editarlos o eliminarlos desde <a href="/mis-cuestionarios">Mis cuestionarios</a>.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Cómo se financia</h2>
+      <p>
+        El sitio es gratuito. Para cubrir los costes de alojamiento y base de datos se muestran anuncios de Google
+        AdSense en las páginas de catálogo, siempre identificados como «Publicidad». No se muestran anuncios mientras
+        haces un test, creas o editas un cuestionario. Puedes consultar cómo se tratan los datos en la
+        <a href="/privacy-policy">política de privacidad</a>.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Contacto</h2>
+      <p>
+        Para sugerencias, correcciones o solicitudes sobre el contenido, escribe a
+        <a href={`mailto:${contactEmail}`}>{contactEmail}</a> o visita la página de <a href="/contact">contacto</a>.
+      </p>
+    </section>
+  </div>
+</Layout>

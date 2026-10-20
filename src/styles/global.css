@@ -282,6 +282,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .breadcrumbs a { text-decoration: none; }
 .breadcrumbs a:hover { text-decoration: underline; text-underline-offset: 3px; }
 
+.landing-topics,
 .landing-catalog,
 .landing-info,
 .landing-steps,
@@ -566,6 +567,26 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   color: var(--c-text);
   line-height: 1.5;
 }
+.browse-option.is-correct {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  justify-content: space-between;
+  border-color: color-mix(in srgb, var(--c-success) 45%, var(--c-border));
+  background: var(--c-success-soft);
+}
+.browse-correct-tag { flex: 0 0 auto; color: var(--c-success); font-size: 0.78rem; font-weight: 750; }
+.browse-explanation { margin: 10px 0 0; color: var(--c-code-text); font-size: 0.94rem; line-height: 1.55; }
+.browse-heading { margin: 26px 0 12px; font-size: 1.15rem; }
+.quiz-intro { max-width: 70ch; color: var(--c-code-text); }
+.study-guide { margin-bottom: 16px; padding: 16px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }
+.study-guide h2 { margin-bottom: 8px; font-size: 1.05rem; }
+.study-guide ol { margin: 0 0 8px; padding-left: 20px; display: grid; gap: 4px; }
+.study-guide .help-note { margin: 0; }
+.related-topics { margin-top: 36px; }
+.related-topics h2 { margin-bottom: 12px; font-size: 1.15rem; }
+.catalog-intro { max-width: 75ch; color: var(--c-code-text); }
+.course-section-desc { margin: -6px 0 12px; max-width: 75ch; color: var(--c-text-muted); font-size: 0.94rem; }
 .btn-start-test { margin: 6px 0 4px; min-height: 46px; padding: 12px 20px; }
 .btn-start-test--bottom { margin-top: 22px; }
 .quiz-actions--centered { justify-content: center; }
@@ -1039,3 +1060,8 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
 /* El anuncio va dentro de su <astro-island> (display: contents): ajustar el borde de la última fila */
 .unit-grid > astro-island:last-child > .feed-ad { border-bottom: 0; }
 .unit-grid > a.unit-card:not(:has(~ a.unit-card)):not(:has(~ astro-island .feed-ad.is-filled)) { border-bottom: 0; }
+.page-wrap:has(+ .related-wrap) { padding-bottom: 0; }
+.related-wrap { padding-top: 0; }
+.landing-topics .course-section h3 { margin: 0 0 10px; font-size: 1.05rem; }
+.landing-topics .course-section h3 a { text-decoration: none; }
+.landing-topics .course-section h3 a:hover { color: var(--c-accent-strong); }

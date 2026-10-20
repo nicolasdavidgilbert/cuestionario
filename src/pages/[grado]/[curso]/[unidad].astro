@@ -3,6 +3,7 @@ import Layout from '../../../layouts/Layout.astro'
 import Quiz from '../../../components/Quiz.tsx'
 import { neon } from '@neondatabase/serverless'
 import { getDatabaseUrl } from '../../../lib/server/env'
+import { getCourseInfo, getGradeInfo } from '../../../lib/curriculum'
 
 export const prerender = false
 
@@ -34,6 +35,7 @@ function hasRenderableQuestions(row: QuizRow | null): row is QuizRow {
 
 let quiz: QuizRow | null = null
 let quizLoadFailed = false
+let relatedUnits: { unidad: string; title: string }[] = []
 try {
   const sql = neon(getDatabaseUrl())
   const rows = await sql`
@@ -51,6 +53,16 @@ try {
   `
   if (rows.length > 0) {
     quiz = rows[0] as QuizRow
+    // Otros temas de la misma asignatura (el más reciente de cada unidad), para enlazarlos al final.
+    const related = await sql`
+      SELECT DISTINCT ON (unidad) unidad, title
+      FROM user_quizzes
+      WHERE grado = ${grado} AND course_id = ${curso} AND deleted_at IS NULL
+        AND unidad IS NOT NULL AND unidad <> '' AND unidad <> ${unidad || ''}
+      ORDER BY unidad, created_at DESC, id DESC
+    `
+    relatedUnits = (related as { unidad: string; title: string | null }[])
+      .map((row) => ({ unidad: row.unidad, title: row.title || row.unidad.toUpperCase() }))
   }
 } catch (error) {
   quizLoadFailed = true
@@ -67,11 +79,15 @@ if (quizLoadFailed || quizContentInvalid) {
   Astro.response.status = 404
 }
 
+const gradeInfo = getGradeInfo(grado || '')
+const courseInfo = getCourseInfo(curso || '')
+const questionCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0
 const readableTitle = quiz?.title || [unidad, curso, grado].filter(Boolean).join(' - ')
-const title = `Cuestionario ${readableTitle}`
-const description = quiz?.description
-  ? quiz.description.slice(0, 160)
-  : `Practica el cuestionario tipo test de ${unidad} en ${curso}, curso ${grado}. Responde preguntas, revisa tu puntuación y aprende con explicaciones.`
+const title = `${readableTitle}: test con soluciones · ${courseInfo.name}`
+const description = (quiz?.description
+  ? `${quiz.description} ${questionCount} preguntas tipo test con respuesta y explicación.`
+  : `${questionCount} preguntas tipo test con soluciones explicadas sobre ${readableTitle}, de ${courseInfo.name} (${gradeInfo.name}).`
+).slice(0, 160)
 ---
 
 <Layout
@@ -97,18 +113,18 @@ const description = quiz?.description
       {
         '@type': 'ListItem',
         position: 3,
-        name: grado,
+        name: gradeInfo.name,
         item: new URL('/' + grado, Astro.site ?? 'https://cuestionario.online').toString()
       },
       {
         '@type': 'ListItem',
         position: 4,
-        name: curso
+        name: courseInfo.name
       },
       {
         '@type': 'ListItem',
         position: 5,
-        name: unidad,
+        name: readableTitle,
         item: new URL(Astro.url.pathname, Astro.site ?? 'https://cuestionario.online').toString()
       }
     ]
@@ -121,6 +137,7 @@ const description = quiz?.description
       </div>
     </div>
   ) : renderableQuiz ? (
+    <>
     <Quiz
       grado={grado}
       curso={curso}
@@ -128,8 +145,32 @@ const description = quiz?.description
       quizId={renderableQuiz.id}
       pageTitle={renderableQuiz.title || ''}
       questions={renderableQuiz.questions}
+      description={renderableQuiz.description || ''}
+      gradeName={gradeInfo.name}
+      courseName={courseInfo.name}
+      courseDescription={courseInfo.description}
       client:load
     />
+    {relatedUnits.length > 0 && (
+      <div class="page-wrap related-wrap">
+        <section class="related-topics" aria-labelledby="related-heading">
+          <h2 id="related-heading">Más temas de {courseInfo.name}</h2>
+          <div class="unit-grid">
+            {relatedUnits.map((unit) => (
+              <a href={`/${grado}/${curso}/${unit.unidad}`} class="unit-card">
+                <article>
+                  <span class="unit-badge">{gradeInfo.name}</span>
+                  <strong>{unit.title}</strong>
+                  <span class="unit-title">Test con soluciones explicadas</span>
+                </article>
+                <span class="unit-action">Repasar</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      </div>
+    )}
+    </>
   ) : (
     <div class="page-wrap">
       <div class="error-msg" role="status">

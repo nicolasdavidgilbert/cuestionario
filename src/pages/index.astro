@@ -4,8 +4,41 @@ import { FAQ_ITEMS } from '../components/Landing.jsx'
 import AdSenseAd from '../components/AdSenseAd'
 import { getAdsenseConfig } from '../lib/server/env'
 import LandingCourses from '../components/LandingCourses.jsx'
+import { neon } from '@neondatabase/serverless'
+import { getDatabaseUrl } from '../lib/server/env'
+import { getCourseName, getGradeInfo } from '../lib/curriculum'
 
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
+
+// Listado de temas renderizado en el servidor: el buscador se monta en el navegador,
+// así que sin esto la portada no enlazaría a ningún tema en el HTML.
+interface TopicRow { grado: string; course_id: string; unidad: string | null; title: string | null; question_count: number | null }
+let topicsByGrade: { grado: string; topics: { href: string; title: string; course: string; questions: number }[] }[] = []
+try {
+  const sql = neon(getDatabaseUrl())
+  const rows = await sql`
+    SELECT DISTINCT ON (grado, course_id, COALESCE(NULLIF(unidad, ''), course_id))
+      grado, course_id, unidad, title, json_array_length(questions::json) AS question_count
+    FROM user_quizzes
+    WHERE deleted_at IS NULL AND grado IS NOT NULL AND course_id IS NOT NULL
+    ORDER BY grado, course_id, COALESCE(NULLIF(unidad, ''), course_id), created_at DESC, id DESC
+  `
+  const grouped = new Map<string, { href: string; title: string; course: string; questions: number }[]>()
+  for (const row of rows as TopicRow[]) {
+    const unit = row.unidad || row.course_id
+    const list = grouped.get(row.grado) ?? []
+    list.push({
+      href: `/${row.grado}/${row.course_id}/${unit}`,
+      title: row.title || unit.toUpperCase(),
+      course: getCourseName(row.course_id),
+      questions: Number(row.question_count) || 0
+    })
+    grouped.set(row.grado, list)
+  }
+  topicsByGrade = Array.from(grouped, ([grado, topics]) => ({ grado, topics }))
+} catch (error) {
+  console.error('SSR home topics error:', error)
+}
 ---
 <Layout
   title="Hacer y crear cuestionarios online"
@@ -50,6 +83,33 @@ const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfi
     </section>
 
     <AdSenseAd client:idle slot={import.meta.env.PUBLIC_ADSENSE_SLOT || "4731901740"}  className="ad-slot ad-slot--wide" clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />
+
+    {topicsByGrade.length > 0 && (
+      <section class="landing-topics" aria-labelledby="topics-heading">
+        <div class="section-heading">
+          <p class="section-kicker">Temas</p>
+          <h2 id="topics-heading">Tests de ASIR con soluciones explicadas</h2>
+          <p>Cada tema incluye todas sus preguntas con la respuesta correcta y una explicación, y un test aleatorio para practicar.</p>
+        </div>
+        {topicsByGrade.map(({ grado, topics }) => (
+          <section class="course-section">
+            <h3><a href={`/${grado}`}>{getGradeInfo(grado).name}</a></h3>
+            <div class="unit-grid">
+              {topics.map((topic) => (
+                <a href={topic.href} class="unit-card">
+                  <article>
+                    <span class="unit-badge">{topic.course}</span>
+                    <strong>{topic.title}</strong>
+                    <span class="unit-title">{topic.questions} preguntas con soluciones</span>
+                  </article>
+                  <span class="unit-action">Repasar</span>
+                </a>
+              ))}
+            </div>
+          </section>
+        ))}
+      </section>
+    )}
 
     <section class="landing-catalog" aria-labelledby="create-heading">
       <div class="section-heading">

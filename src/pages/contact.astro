@@ -14,20 +14,31 @@ const contactEmail = getContactEmail()
 
     <header class="home-header">
       <h1>Contacto</h1>
-      <p>Escríbenos para dudas sobre la app, privacidad o funcionamiento.</p>
+      <p>Escríbenos para dudas sobre la web, correcciones de contenido o privacidad.</p>
     </header>
 
     <section class="legal-card">
       <h2>Email de contacto</h2>
       <p>
-        Puedes escribir a <a href={`mailto:${contactEmail}`}>{contactEmail}</a>.
+        Puedes escribir a <a href={`mailto:${contactEmail}`}>{contactEmail}</a>. Respondemos normalmente en unos días laborables.
       </p>
     </section>
 
     <section class="legal-card">
-      <h2>Formulario</h2>
+      <h2>Errores en una pregunta</h2>
       <p>
-        Todavía no hay backend de contacto integrado en esta app, así que por ahora usamos correo directo.
+        Si una pregunta tiene la respuesta mal marcada, una explicación incorrecta o está repetida, lo más rápido es
+        usar el botón <strong>Reportar</strong> dentro del propio cuestionario: el reporte llega con el cuestionario
+        identificado y se revisa para corregirlo o retirarlo.
+      </p>
+    </section>
+
+    <section class="legal-card">
+      <h2>Privacidad y anuncios</h2>
+      <p>
+        Para ejercer tus derechos sobre datos personales o cambiar tus preferencias de anuncios, consulta la
+        <a href="/privacy-policy">política de privacidad</a>. Si quieres saber más sobre quién hace esta web y cómo
+        se elaboran los tests, visita <a href="/sobre">Sobre el proyecto</a>.
       </p>
     </section>
   </div>
