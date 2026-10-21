@@ -1,3 +1,4 @@
+import useExitTransition from './useExitTransition'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getQuizById, updateQuiz } from '../lib/api'
@@ -16,6 +17,7 @@ export default function EditQuiz({ id }) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
+  const editorTransition = useExitTransition(editorOpen)
   const saveButtonRef = useRef(null)
   const [savedSnapshot, setSavedSnapshot] = useState('')
   const hasUnsavedChanges = useMemo(
@@ -159,8 +161,9 @@ export default function EditQuiz({ id }) {
         { label: 'Editar preguntas', icon: 'pencil', variant: 'secondary', onClick: () => setEditorOpen(true) }
       ]} />
 
-      {editorOpen && (
+      {editorTransition.mounted && (
         <QuizQuestionEditor
+          transitionState={editorTransition.state}
           initialQuestions={questions}
           onSave={(nextQuestions) => {
             setQuestions(nextQuestions)

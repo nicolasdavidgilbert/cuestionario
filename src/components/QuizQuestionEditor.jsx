@@ -1,3 +1,5 @@
+import UndoToast from './UndoToast'
+import { scrollBehavior } from '../lib/motion'
 import { useState, useEffect, useRef } from 'react'
 import useUnsavedChangesWarning from './useUnsavedChangesWarning'
 
@@ -54,18 +56,34 @@ function validateDraftQuestions(questions) {
   return ''
 }
 
-export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel }) {
+export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel, transitionState = 'open' }) {
   const [draftQuestions, setDraftQuestions] = useState(() => cloneQuestionsForEdit(initialQuestions))
   const [initialSnapshot] = useState(() => JSON.stringify(cloneQuestionsForEdit(initialQuestions)))
   const hasChanges = JSON.stringify(draftQuestions) !== initialSnapshot
   useUnsavedChangesWarning(hasChanges)
+  const [undo, setUndo] = useState(null)
+  const modalRef = useRef(null)
+  const cancelRef = useRef(null)
   const [editorError, setEditorError] = useState('')
   const focusQuestionIndex = useRef(null)
 
   useEffect(() => {
+    const previousFocus = document.activeElement
     document.body.classList.add('modal-open')
+    modalRef.current?.querySelector('h2')?.focus()
+    const onKey = (event) => {
+      if (event.key === 'Escape') { event.preventDefault(); cancelRef.current?.(); return }
+      if (event.key !== 'Tab') return
+      const fields = [...modalRef.current.querySelectorAll('button:not(:disabled), input:not(:disabled), textarea:not(:disabled), select:not(:disabled), [tabindex="0"]')]
+      const first = fields[0], last = fields[fields.length - 1]
+      if (event.shiftKey && (document.activeElement === first || !fields.includes(document.activeElement))) { event.preventDefault(); last?.focus() }
+      else if (!event.shiftKey && (document.activeElement === last || !fields.includes(document.activeElement))) { event.preventDefault(); first?.focus() }
+    }
+    document.addEventListener('keydown', onKey)
     return () => {
       document.body.classList.remove('modal-open')
+      document.removeEventListener('keydown', onKey)
+      if (previousFocus?.isConnected) previousFocus.focus()
     }
   }, [])
 
@@ -92,7 +110,7 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
     const field = document.getElementById(`editor-question-${focusQuestionIndex.current}`)
     focusQuestionIndex.current = null
     if (!field) return
-    field.closest('.quiz-editor-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    field.closest('.quiz-editor-card')?.scrollIntoView({ behavior: scrollBehavior(), block: 'start' })
     field.focus({ preventScroll: true })
   }, [draftQuestions.length])
 
@@ -102,6 +120,8 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
   }
 
   const removeDraftQuestion = (questionIndex) => {
+    const removed = draftQuestions[questionIndex]
+    setUndo({ key: Date.now(), index: questionIndex, question: removed })
     setDraftQuestions((questions) => questions.filter((_, index) => index !== questionIndex))
   }
 
@@ -122,6 +142,8 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
     onCancel()
   }
 
+  cancelRef.current = cancelQuestionEditor
+
   const saveQuestionEditor = () => {
     const validationMessage = validateDraftQuestions(draftQuestions)
     if (validationMessage) {
@@ -138,12 +160,19 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel 
   }
 
   return (
-    <div className="quiz-editor-modal" role="dialog" aria-modal="true" aria-labelledby="quiz-editor-title" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+    <div ref={modalRef} data-state={transitionState} className="quiz-editor-modal" role="dialog" aria-modal="true" aria-labelledby="quiz-editor-title" onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
+      {undo && <UndoToast key={undo.key} message={`Pregunta ${undo.index + 1} eliminada`} onUndo={() => {
+        setDraftQuestions((questions) => {
+          const restored = [...questions]
+          restored.splice(Math.min(undo.index, restored.length), 0, undo.question)
+          return restored
+        })
+      }} />}
       <div className="quiz-editor-panel">
         <div className="quiz-editor-header">
           <div>
             <p className="section-kicker">Editor visual</p>
-            <h2 id="quiz-editor-title">Editar cuestionario</h2>
+            <h2 id="quiz-editor-title" tabIndex={-1}>Editar cuestionario</h2>
             <p>{draftQuestions.length} pregunta{draftQuestions.length === 1 ? '' : 's'} en edición</p>
           </div>
           <div className="quiz-editor-header-actions">
