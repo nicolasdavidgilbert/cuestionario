@@ -629,6 +629,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 }
 .question-card,
 .review-card {
+  scroll-margin-top: 16px;
   margin-top: 14px;
   padding: 18px;
   background: var(--c-surface);

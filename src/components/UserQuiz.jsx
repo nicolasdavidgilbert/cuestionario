@@ -1,12 +1,11 @@
 import usePendingDeletion from './usePendingDeletion'
 import useExitTransition from './useExitTransition'
 import UndoToast from './UndoToast'
-import { scrollBehavior } from '../lib/motion'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getQuizById, reportQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
-import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
+import FloatingActions, { SubmitNotice, scrollToQuestion, showViewStart } from './FloatingActions'
 
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -89,10 +88,16 @@ export default function UserQuiz({ id }) {
   const handleSubmit = () => {
     setConfirmSubmit(false)
     setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
+  // Tras pintar los resultados, al principio de la vista
+  useLayoutEffect(() => {
+    if (submitted) showViewStart()
+  }, [submitted])
+
   const handleRetry = () => {
+    // Sin esto el navegador restaura el scroll de abajo tras recargar
+    window.history.scrollRestoration = 'manual'
     window.location.reload()
   }
 

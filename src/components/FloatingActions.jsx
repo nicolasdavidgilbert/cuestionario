@@ -116,6 +116,22 @@ export function scrollToQuestion(index) {
   card.querySelector('input')?.focus({ preventScroll: true })
 }
 
+/**
+ * Lleva al principio de una vista recién pintada (empezar test, ver resultados, volver al repaso).
+ * El contenido es otro, así que salta sin animar el recorrido. Con firstQuestion, si la cabecera
+ * no deja ver la primera pregunta entera, baja hasta ella.
+ */
+export function showViewStart({ firstQuestion = false } = {}) {
+  window.scrollTo({ top: 0, behavior: 'instant' })
+  if (!firstQuestion) return
+  const card = document.getElementById('question-0')
+  if (!card) return
+  if (card.getBoundingClientRect().bottom > window.innerHeight) {
+    card.scrollIntoView({ behavior: 'instant', block: 'start' })
+  }
+  card.querySelector('input')?.focus({ preventScroll: true })
+}
+
 export function SubmitNotice({ missing, onGoToNext, onSubmit, onClose, state = 'open' }) {
   return (
     <div data-state={state} className="fab-confirm" role="alert">

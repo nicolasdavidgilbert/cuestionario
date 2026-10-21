@@ -1,10 +1,9 @@
 import useExitTransition from './useExitTransition'
 import UndoToast from './UndoToast'
-import { scrollBehavior } from '../lib/motion'
-import { useState, useEffect, useMemo, useCallback, useRef, type CSSProperties } from 'react'
+import { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef, type CSSProperties } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
-import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
+import FloatingActions, { SubmitNotice, scrollToQuestion, showViewStart } from './FloatingActions'
 
 const TEST_SIZE = 15
 
@@ -147,6 +146,15 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     setReportOpen(false)
   }} />
 
+  // El scroll se hace tras pintar la vista nueva; hacerlo en el clic actuaba sobre la vista anterior
+  const pendingScroll = useRef<'question' | 'top' | null>(null)
+  useLayoutEffect(() => {
+    const target = pendingScroll.current
+    if (!target) return
+    pendingScroll.current = null
+    showViewStart({ firstQuestion: target === 'question' })
+  }, [mode, submitted, testQuestions])
+
   function startTest() {
     preserveTest()
     const shuffled = shuffleArray(totalQuestions ? [...questions] : [])
@@ -156,7 +164,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     setMode('test')
     setConfirmSubmit(false)
     setReportOpen(false)
-    window.scrollTo({ top: 0, behavior: scrollBehavior() })
+    pendingScroll.current = 'question'
   }
 
   function backToBrowse() {
@@ -166,7 +174,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     setAnswers({})
     setSubmitted(false)
     setReportOpen(false)
-    window.scrollTo({ top: 0, behavior: scrollBehavior() })
+    pendingScroll.current = 'top'
   }
 
   const activeQuestions = mode === 'test' && testQuestions ? testQuestions : []
@@ -201,7 +209,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   function handleSubmit() {
     setConfirmSubmit(false)
     setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: scrollBehavior() })
+    pendingScroll.current = 'top'
   }
 
   function handleRetry() {
