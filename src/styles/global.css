@@ -243,7 +243,6 @@ h1,
 .landing-header--centered .hero-subtitle { margin-inline: auto; }
 .section-kicker,
 .result-type,
-.unit-badge,
 .grado-meta {
   font-family: var(--font-mono);
 }
@@ -476,7 +475,10 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 }
 
 .grado-grid { display: grid; gap: 10px; }
-.course-list-transition {
+/* Una sola tarjeta para cursos, asignaturas y cuestionarios: filas dentro de un contenedor con borde */
+.course-list-transition,
+.grade-grid,
+.unit-grid {
   display: grid;
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
@@ -500,6 +502,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .grado-card:active,
 .unit-card:active { background: var(--c-surface-muted); transition-duration: 0ms; }
 .course-list-transition > :last-child,
+.grade-grid > :last-child,
 .unit-grid > :last-child { border-bottom: 0; }
 .grado-card:hover,
 .unit-card:hover { background: var(--c-row-hover); }
@@ -512,11 +515,14 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .feed-ad__unit { width: 100%; }
 .feed-ad.is-filled { animation: ad-reveal 260ms ease; }
 .grado-card-main { display: contents; }
-.grado-info { display: grid; gap: 2px; min-width: 0; }
-.grado-label { font-size: 1rem; font-weight: 750; line-height: 1.25; }
+.grado-info,
+.unit-card article { display: grid; gap: 2px; min-width: 0; }
+.grado-label,
+.unit-card strong { font-size: 1rem; font-weight: 750; line-height: 1.25; }
 .grado-desc,
 .grado-meta,
 .unit-title { color: var(--c-text-muted); font-size: 0.88rem; line-height: 1.35; }
+.unit-title { font-family: var(--font-mono); }
 .grado-card-cta,
 .unit-action {
   flex: 0 0 auto;
@@ -525,6 +531,17 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   font-weight: 700;
   white-space: nowrap;
 }
+.unit-action::after {
+  content: "→" / "";
+  margin-left: 0.3em;
+}
+.grado-arrow,
+.unit-action::after {
+  display: inline-block;
+  transition: transform 160ms var(--ease-out);
+}
+.grado-card:hover .grado-arrow,
+.unit-card:hover .unit-action::after { transform: translateX(3px); }
 .grado-icon,
 .grado-stats,
 .grado-stat { display: none; }
@@ -558,13 +575,6 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 }
 .course-section { margin-top: 34px; }
 .course-section h2 { margin: 0 0 12px; font-size: 1.2rem; }
-.unit-grid {
-  display: grid;
-  border: 1px solid var(--c-border);
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: var(--c-surface);
-}
 .unit-card-link {
   display: flex;
   flex: 1;
@@ -576,14 +586,6 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   text-decoration: none;
 }
 .unit-card-extra { flex: 0 0 auto; display: flex; gap: 8px; align-items: center; }
-.unit-card article { display: grid; gap: 4px; min-width: 0; }
-.unit-card strong { line-height: 1.3; }
-.unit-badge {
-  width: fit-content;
-  color: var(--c-accent-strong);
-  font-size: 0.78rem;
-  font-weight: 750;
-}
 
 .quiz-container { width: min(100%, 760px); margin-inline: auto; }
 .quiz-header {
@@ -883,6 +885,58 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
 .faq-item { padding: 14px 16px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius); }
 .faq-item summary { cursor: pointer; font-weight: 700; }
 .faq-item p { margin: 10px 0 0; color: var(--c-text-muted); }
+
+/*
+ * Texto de contexto plegado: sigue en el HTML (Google lo indexa igual que el visible),
+ * pero no ocupa la página hasta que el usuario lo abre.
+ */
+.more-info { max-width: 760px; margin-top: 6px; }
+.more-info > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--c-text-muted);
+  font-size: 0.92rem;
+  font-weight: 650;
+  list-style: none;
+  cursor: pointer;
+  transition: color 140ms ease;
+}
+.more-info > summary::-webkit-details-marker { display: none; }
+.more-info > summary::after {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 200ms var(--ease-out);
+}
+.more-info[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+.more-info > summary:hover { color: var(--c-text); }
+.more-info[open] > .more-info__body { animation: drop-in 200ms var(--ease-out); }
+.more-info__body {
+  display: grid;
+  gap: 12px;
+  padding-bottom: 8px;
+  color: var(--c-code-text);
+  font-size: 0.95rem;
+}
+.more-info__body p,
+.more-info__body ol,
+.more-info__body ul { margin: 0; }
+.more-info__body > p,
+.more-info__list { max-width: 75ch; }
+.landing-info .more-info { max-width: none; }
+.more-info__body > h3 { margin: 6px 0 0; font-size: 1rem; }
+.more-info__list { display: grid; gap: 10px; margin: 0; }
+.more-info__list dt { color: var(--c-text); font-weight: 700; }
+.more-info__list dd { margin: 2px 0 0; color: var(--c-text-muted); }
+/* La guía de estudio del tema es una tarjeta plegable */
+.study-guide.more-info { max-width: none; padding: 0 16px; }
+.study-guide.more-info > summary { width: 100%; justify-content: space-between; color: var(--c-text); font-size: 1rem; font-weight: 700; }
+.study-guide.more-info[open] > .more-info__body { padding-bottom: 16px; }
 
 .prompt-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .prompt-card pre { overflow-x: auto; white-space: pre-wrap; }

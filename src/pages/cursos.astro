@@ -87,11 +87,27 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
       ) : (
         <p>Explora los cuestionarios tipo test organizados por asignatura y unidad.</p>
       )}
-      <p class="catalog-intro">
-        Cuestionarios para preparar el ciclo de grado superior de Administración de Sistemas Informáticos en Red (ASIR).
-        Cada tema incluye todas sus preguntas con la respuesta correcta y una explicación, y un modo test aleatorio
-        para comprobar lo que sabes antes del examen.
-      </p>
+      {/* Plegado: sigue en el HTML para buscadores, pero no llena la página de texto */}
+      <details class="more-info">
+        <summary>Sobre estos cuestionarios</summary>
+        <div class="more-info__body">
+          <p>
+            Cuestionarios para preparar el ciclo de grado superior de Administración de Sistemas Informáticos en Red (ASIR).
+            Cada tema incluye todas sus preguntas con la respuesta correcta y una explicación, y un modo test aleatorio
+            para comprobar lo que sabes antes del examen.
+          </p>
+          {!catalogLoadFailed && catalog.length > 0 && (
+            <dl class="more-info__list">
+              {catalog.map((grade) => (
+                <div>
+                  <dt>{getGradeInfo(grade.id).name}</dt>
+                  <dd>{getGradeInfo(grade.id).description}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </details>
     </header>
 
     {catalogLoadFailed ? (
@@ -136,16 +152,12 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
     {!catalogLoadFailed && catalog.map((grade) => (
       <section class="course-section" aria-labelledby={`grade-${grade.id}`}>
         <h2 id={`grade-${grade.id}`}>{getGradeInfo(grade.id).name}</h2>
-        <p class="course-section-desc">{getGradeInfo(grade.id).description}</p>
         <div class="unit-grid">
           {grade.courses.map((course) => (
             <a href={`/${grade.id}#${course.id}`} class="unit-card">
               <article>
-                <span class="unit-badge">{course.id.toUpperCase()}</span>
                 <strong>{getCourseInfo(course.id).name}</strong>
-                <span class="unit-title">
-                  {course.units.length} tema{course.units.length === 1 ? '' : 's'}{getCourseInfo(course.id).description ? ` · ${getCourseInfo(course.id).description}` : ''}
-                </span>
+                <span class="unit-title">{course.id.toUpperCase()} · {course.units.length} tema{course.units.length === 1 ? '' : 's'}</span>
               </article>
               <span class="unit-action">Ver temas</span>
             </a>

@@ -461,28 +461,29 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
         <p className="section-kicker">{[courseName || cursoLabel, gradeName || gradoLabel].filter(Boolean).join(' · ')}</p>
         <h1>{quizTitle}</h1>
         {description && <p className="quiz-intro">{description}</p>}
-        <p className="help-note">
-          {totalQuestions} preguntas con su respuesta correcta y una explicación. Repásalas todas aquí o haz un test aleatorio de {Math.min(TEST_SIZE, totalQuestions)} para comprobar lo que sabes.
-        </p>
+        <p className="help-note">{totalQuestions} preguntas con su respuesta correcta y una explicación.</p>
         <button ref={startButtonRef} type="button" className="btn-primary btn-start-test" onClick={startTest}>
           Empezar test aleatorio
         </button>
       </header>
 
       <div className="quiz-container quiz-browse">
-        <section className="study-guide" aria-labelledby="study-guide-heading">
-          <h2 id="study-guide-heading">Cómo estudiar este tema</h2>
-          <ol>
-            <li><strong>Repasa</strong> las preguntas de abajo: cada una muestra la respuesta correcta y por qué lo es.</li>
-            <li><strong>Oculta las respuestas</strong> e intenta contestar mentalmente antes de mirarlas.</li>
-            <li><strong>Haz el test aleatorio</strong> de {Math.min(TEST_SIZE, totalQuestions)} preguntas y revisa las que falles.</li>
-          </ol>
-          {courseDescription && (
-            <p className="help-note">
-              Este tema forma parte de <strong>{courseName || cursoLabel}</strong>{gradeName ? ` (${gradeName})` : ''}: {courseDescription}
-            </p>
-          )}
-        </section>
+        {/* Plegada: el texto sigue en el HTML para buscadores, pero no empuja las preguntas hacia abajo */}
+        <details className="study-guide more-info">
+          <summary>Cómo estudiar este tema</summary>
+          <div className="more-info__body">
+            <ol>
+              <li><strong>Repasa</strong> las preguntas de abajo: cada una muestra la respuesta correcta y por qué lo es.</li>
+              <li><strong>Oculta las respuestas</strong> e intenta contestar mentalmente antes de mirarlas.</li>
+              <li><strong>Haz el test aleatorio</strong> de {Math.min(TEST_SIZE, totalQuestions)} preguntas y revisa las que falles.</li>
+            </ol>
+            {courseDescription && (
+              <p className="help-note">
+                Este tema forma parte de <strong>{courseName || cursoLabel}</strong>{gradeName ? ` (${gradeName})` : ''}: {courseDescription}
+              </p>
+            )}
+          </div>
+        </details>
 
         <div className="quiz-actions">
           <button type="button" className="btn-secondary" aria-pressed={!showAnswers} onClick={() => setShowAnswers((value) => !value)}>
