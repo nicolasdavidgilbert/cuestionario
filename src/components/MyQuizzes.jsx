@@ -1,6 +1,8 @@
+import UndoToast from './UndoToast'
+import usePendingDeletion from './usePendingDeletion'
 import { useState, useEffect } from 'react'
 import * as Sentry from '@sentry/astro'
-import { deleteQuiz, getPaginatedQuizzes } from '../lib/api'
+import { getPaginatedQuizzes } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizCard from './QuizCard'
 import FloatingActions from './FloatingActions'
@@ -14,7 +16,7 @@ export default function MyQuizzes() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [deletingId, setDeletingId] = useState(null)
+  const deletion = usePendingDeletion()
 
   useEffect(() => {
     loadQuizzes(page)
@@ -30,8 +32,8 @@ export default function MyQuizzes() {
         owner: 'me',
         ownerToken: getOwnerToken()
       })
-      setQuizzes(data.quizzes)
-      setTotal(data.total)
+      setQuizzes(data.quizzes.filter((quiz) => !deletion.hiddenIds.has(quiz.id)))
+      setTotal(Math.max(0, data.total - deletion.hiddenIds.size))
       setError('')
     } catch (error) {
       Sentry.captureException(error, { tags: { feature: 'my-quizzes-load' } })
@@ -47,19 +49,25 @@ export default function MyQuizzes() {
     loadQuizzes(0)
   }
 
-  const handleDelete = async (quizId) => {
-    if (!window.confirm('¿Eliminar este cuestionario? Se ocultará del catálogo.')) return
-
-    setDeletingId(quizId)
-    try {
-      await deleteQuiz(quizId, getOwnerToken())
-      await loadQuizzes()
-    } catch (e) {
-      Sentry.captureException(e, { tags: { feature: 'my-quizzes-delete' } })
-      setError('No se pudo eliminar: ' + e.message)
-    } finally {
-      setDeletingId(null)
-    }
+  const handleDelete = (quizId) => {
+    const index = quizzes.findIndex((quiz) => quiz.id === quizId)
+    const removed = quizzes[index]
+    if (!removed) return
+    setQuizzes((items) => items.filter((quiz) => quiz.id !== quizId))
+    setTotal((value) => value - 1)
+    deletion.schedule(quizId, (error) => {
+      setQuizzes((items) => {
+        if (items.some((quiz) => quiz.id === quizId)) return items
+        const restored = [...items]
+        restored.splice(Math.min(index, restored.length), 0, removed)
+        return restored
+      })
+      setTotal((value) => value + 1)
+      if (error) {
+        Sentry.captureException(error, { tags: { feature: 'my-quizzes-delete' } })
+        setError('No se pudo eliminar: ' + error.message)
+      }
+    })
   }
 
   const totalPages = Math.max(Math.ceil(total / PAGE_SIZE), 1)
@@ -71,8 +79,6 @@ export default function MyQuizzes() {
       <div className="skeleton-card" />
       <div className="skeleton-card" />
     </div>
-  ) : error ? (
-    <div className="error-msg">{error}</div>
   ) : quizzes.length === 0 ? (
     <div className="empty-state">
       <div className="empty-icon" />
@@ -96,10 +102,9 @@ export default function MyQuizzes() {
             type="button"
             className="btn-clear btn-danger"
             onClick={() => handleDelete(quiz.id)}
-            disabled={deletingId === quiz.id}
           >
-            <span aria-hidden="true">{deletingId === quiz.id ? '…' : '×'}</span>
-            {deletingId === quiz.id ? 'Eliminando...' : 'Eliminar'}
+            <span aria-hidden="true">×</span>
+            Eliminar
           </button>
         </QuizCard>
       ))}
@@ -127,7 +132,9 @@ export default function MyQuizzes() {
         <button type="submit" className="btn-validate"><span aria-hidden="true">⌕</span> Buscar</button>
       </form>
 
+      {error && <div className="error-msg" role="alert">{error}</div>}
       {listContent}
+      {deletion.toast && <UndoToast key={deletion.toast.key} message="Cuestionario eliminado" onUndo={deletion.toast.onUndo} onExpire={deletion.toast.onExpire} />}
 
       <FloatingActions actions={[{ label: 'Crear cuestionario', icon: 'plus', href: '/crear' }]} />
 
