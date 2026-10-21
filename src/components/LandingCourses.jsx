@@ -1,6 +1,7 @@
-import { useMemo, useState, useEffect, useCallback } from 'react'
+import { useMemo, useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getQuizCatalog } from '../lib/api'
+import { prefersReducedMotion } from '../lib/motion'
 
 function normalize(value = '') {
   return value.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
@@ -78,6 +79,16 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   const [query, setQuery] = useState(initialQuery)
   const [expanded, setExpanded] = useState(false)
   const [activeType, setActiveType] = useState('all')
+  const formRef = useRef(null)
+  const formTopBefore = useRef(null)
+  const formAnimation = useRef(null)
+
+  // Al empezar o borrar la búsqueda la portada cambia de layout de golpe; antes se guarda dónde estaba
+  // el buscador (incluida una animación a medias) para que FLIP lo lleve desde ahí a su nuevo sitio.
+  const changeQuery = (value) => {
+    if (formRef.current) formTopBefore.current = formRef.current.getBoundingClientRect().top
+    setQuery(value)
+  }
 
   const loadCatalog = useCallback(async () => {
     setLoading(true)
@@ -129,19 +140,33 @@ export default function LandingCourses({ limit = null, compact = false, showSear
   const visibleGrados = visibleLimit ? filteredGrados.slice(0, visibleLimit) : filteredGrados
   const hiddenCount = Math.max(filteredGrados.length - visibleGrados.length, 0)
 
+  useLayoutEffect(() => {
+    const form = formRef.current
+    const first = formTopBefore.current
+    formTopBefore.current = null
+    if (!form || first === null) return
+    formAnimation.current?.cancel()
+    const delta = first - form.getBoundingClientRect().top
+    if (Math.abs(delta) < 1 || prefersReducedMotion()) return
+    formAnimation.current = form.animate(
+      [{ transform: `translateY(${delta}px)` }, { transform: 'none' }],
+      { duration: 320, easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)' }
+    )
+  }, [hasQuery])
+
   return (
     <section className={`grado-grid ${compact ? 'is-compact' : ''} ${hasQuery ? 'has-query' : 'is-idle'} ${loading || !catalog ? 'is-loading' : 'is-ready'}`} aria-labelledby="courses-heading">
       <h2 id="courses-heading" className="sr-only">Cursos disponibles</h2>
 
       {showSearch && (
         <>
-          <form className="catalog-search" role="search" onSubmit={(e) => e.preventDefault()}>
+          <form ref={formRef} className="catalog-search" role="search" onSubmit={(e) => e.preventDefault()}>
             <label className="sr-only" htmlFor="catalog-search-input">Buscar cuestionarios</label>
             <input
               id="catalog-search-input"
               type="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => changeQuery(e.target.value)}
               placeholder="Buscar curso, asignatura o tema"
               autoComplete="off"
             />
@@ -193,7 +218,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
         !hasQuery && emptyUntilSearch ? null : visibleSearchResults.length === 0 ? (
           <div className="empty-state">
             <p>No hay resultados para tu búsqueda.</p>
-            <button type="button" className="btn-secondary" onClick={() => setQuery('')}>Limpiar búsqueda</button>
+            <button type="button" className="btn-secondary" onClick={() => changeQuery('')}>Limpiar búsqueda</button>
           </div>
         ) : (
           <div className="catalog-results">
@@ -220,7 +245,7 @@ export default function LandingCourses({ limit = null, compact = false, showSear
       ) : filteredGrados.length === 0 ? (
         <div className="empty-state">
           <p>No hay cursos que coincidan con tu búsqueda.</p>
-          <button type="button" className="btn-secondary" onClick={() => setQuery('')}>Limpiar búsqueda</button>
+          <button type="button" className="btn-secondary" onClick={() => changeQuery('')}>Limpiar búsqueda</button>
         </div>
       ) : (
         <>

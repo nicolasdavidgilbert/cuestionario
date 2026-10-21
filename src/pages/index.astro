@@ -98,9 +98,8 @@ try {
               {topics.map((topic) => (
                 <a href={topic.href} class="unit-card">
                   <article>
-                    <span class="unit-badge">{topic.course}</span>
                     <strong>{topic.title}</strong>
-                    <span class="unit-title">{topic.questions} preguntas con soluciones</span>
+                    <span class="unit-title"><span class="card-tag">{topic.course}</span> · {topic.questions} preguntas con soluciones</span>
                   </article>
                   <span class="unit-action">Repasar</span>
                 </a>
@@ -123,37 +122,34 @@ try {
       </nav>
     </section>
 
-    <section class="landing-info" aria-labelledby="project-heading">
-      <div class="section-heading">
-        <p class="section-kicker">Para estudiar mejor</p>
-        <h2 id="project-heading">Pensada para hacer cuestionarios, no para navegar menús</h2>
-      </div>
-      <div class="content-grid">
-        <article>
-          <h3>Buscar</h3>
-          <p>Encuentra cuestionarios por curso, asignatura o tema sin revisar listas enormes.</p>
-        </article>
-        <article>
-          <h3>Resolver</h3>
-          <p>Al abrir un cuestionario ves pregunta, opciones, progreso y resultado. Nada más.</p>
-        </article>
-        <article>
-          <h3>Crear</h3>
-          <p>Sube apuntes o pega JSON para preparar tests propios y guardarlos para estudiar.</p>
-        </article>
-      </div>
-    </section>
-
-    <section class="landing-steps" aria-labelledby="how-heading">
-      <div class="section-heading">
-        <p class="section-kicker">Cómo funciona</p>
-        <h2 id="how-heading">Empieza en tres pasos</h2>
-      </div>
-      <ol class="steps-list">
-        <li><strong>Busca.</strong> Escribe curso, asignatura o tema.</li>
-        <li><strong>Entra.</strong> Abre el curso o unidad que necesitas practicar.</li>
-        <li><strong>Resuelve o crea.</strong> Contesta el test o genera uno nuevo desde tus apuntes.</li>
-      </ol>
+    {/* Plegado: sigue en el HTML para buscadores, pero no llena la portada de texto */}
+    <section class="landing-info" aria-label="Cómo funciona">
+      <details class="more-info">
+        <summary>Cómo funciona Cuestionarios</summary>
+        <div class="more-info__body">
+          <h3>Pensada para hacer cuestionarios, no para navegar menús</h3>
+          <div class="content-grid">
+            <article>
+              <h3>Buscar</h3>
+              <p>Encuentra cuestionarios por curso, asignatura o tema sin revisar listas enormes.</p>
+            </article>
+            <article>
+              <h3>Resolver</h3>
+              <p>Al abrir un cuestionario ves pregunta, opciones, progreso y resultado. Nada más.</p>
+            </article>
+            <article>
+              <h3>Crear</h3>
+              <p>Sube apuntes o pega JSON para preparar tests propios y guardarlos para estudiar.</p>
+            </article>
+          </div>
+          <h3>Empieza en tres pasos</h3>
+          <ol class="steps-list">
+            <li><strong>Busca.</strong> Escribe curso, asignatura o tema.</li>
+            <li><strong>Entra.</strong> Abre el curso o unidad que necesitas practicar.</li>
+            <li><strong>Resuelve o crea.</strong> Contesta el test o genera uno nuevo desde tus apuntes.</li>
+          </ol>
+        </div>
+      </details>
     </section>
 
     <section class="landing-faq" aria-labelledby="faq-heading">

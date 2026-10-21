@@ -1,3 +1,4 @@
+import { scrollBehavior } from '../lib/motion'
 import { useState, useEffect, useRef } from 'react'
 
 const COLLAPSE_AFTER_PX = 80
@@ -111,13 +112,29 @@ function useAnchorsVisible(anchorRefs) {
 export function scrollToQuestion(index) {
   const card = document.getElementById(`question-${index}`)
   if (!card) return
-  card.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  card.scrollIntoView({ behavior: scrollBehavior(), block: 'center' })
   card.querySelector('input')?.focus({ preventScroll: true })
 }
 
-export function SubmitNotice({ missing, onGoToNext, onSubmit, onClose }) {
+/**
+ * Lleva al principio de una vista recién pintada (empezar test, ver resultados, volver al repaso).
+ * El contenido es otro, así que salta sin animar el recorrido. Con firstQuestion, si la cabecera
+ * no deja ver la primera pregunta entera, baja hasta ella.
+ */
+export function showViewStart({ firstQuestion = false } = {}) {
+  window.scrollTo({ top: 0, behavior: 'instant' })
+  if (!firstQuestion) return
+  const card = document.getElementById('question-0')
+  if (!card) return
+  if (card.getBoundingClientRect().bottom > window.innerHeight) {
+    card.scrollIntoView({ behavior: 'instant', block: 'start' })
+  }
+  card.querySelector('input')?.focus({ preventScroll: true })
+}
+
+export function SubmitNotice({ missing, onGoToNext, onSubmit, onClose, state = 'open' }) {
   return (
-    <div className="fab-confirm" role="alert">
+    <div data-state={state} className="fab-confirm" role="alert">
       <p>
         Te falta{missing === 1 ? '' : 'n'} <strong>{missing}</strong> pregunta{missing === 1 ? '' : 's'} sin responder.
       </p>
@@ -151,6 +168,7 @@ function FabLabel({ text }) {
  * anchorRefs: refs a los botones normales equivalentes; mientras alguno se ve, los flotantes se ocultan.
  * notice: contenido que se muestra encima de los botones (p. ej. el aviso de envío incompleto).
  */
+/** @param {{ actions: Array<any>, anchorRefs?: Array<import('react').RefObject<HTMLElement | null>>, notice?: import('react').ReactNode }} props */
 export default function FloatingActions({ actions, anchorRefs = [], notice = null }) {
   const hidden = useAnchorsVisible(anchorRefs)
   const collapsed = useCollapsedOnScroll(hidden)

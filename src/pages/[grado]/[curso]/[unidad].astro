@@ -159,9 +159,8 @@ const description = (quiz?.description
             {relatedUnits.map((unit) => (
               <a href={`/${grado}/${curso}/${unit.unidad}`} class="unit-card">
                 <article>
-                  <span class="unit-badge">{gradeInfo.name}</span>
                   <strong>{unit.title}</strong>
-                  <span class="unit-title">Test con soluciones explicadas</span>
+                  <span class="unit-title"><span class="card-tag">{gradeInfo.name}</span> · Test con soluciones explicadas</span>
                 </article>
                 <span class="unit-action">Repasar</span>
               </a>

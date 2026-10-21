@@ -1,8 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
+import usePendingDeletion from './usePendingDeletion'
+import useExitTransition from './useExitTransition'
+import UndoToast from './UndoToast'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
-import { deleteQuiz, getQuizById, reportQuiz } from '../lib/api'
+import { getQuizById, reportQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
-import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
+import FloatingActions, { SubmitNotice, scrollToQuestion, showViewStart } from './FloatingActions'
 
 export default function UserQuiz({ id }) {
   const [quiz, setQuiz] = useState(null)
@@ -17,7 +20,17 @@ export default function UserQuiz({ id }) {
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const deletion = usePendingDeletion()
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const reportTransition = useExitTransition(reportOpen)
+  const noticeTransition = useExitTransition(confirmSubmit)
+  useEffect(() => {
+    const close = (event) => {
+      if (event.key === 'Escape') { setReportOpen(false); setConfirmSubmit(false) }
+    }
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [])
   const submitButtonRef = useRef(null)
   const retryButtonRef = useRef(null)
 
@@ -75,10 +88,16 @@ export default function UserQuiz({ id }) {
   const handleSubmit = () => {
     setConfirmSubmit(false)
     setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Tras pintar los resultados, al principio de la vista
+  useLayoutEffect(() => {
+    if (submitted) showViewStart()
+  }, [submitted])
+
   const handleRetry = () => {
+    // Sin esto el navegador restaura el scroll de abajo tras recargar
+    window.history.scrollRestoration = 'manual'
     window.location.reload()
   }
 
@@ -98,24 +117,45 @@ export default function UserQuiz({ id }) {
     }
   }
 
-  const handleDelete = async () => {
-    if (!window.confirm('¿Eliminar este cuestionario? Se ocultará del catálogo.')) return
-
+  const handleDelete = () => {
     setDeleting(true)
-    try {
-      await deleteQuiz(Number(id), getOwnerToken())
-      window.location.href = '/mis-cuestionarios'
-    } catch (error) {
-      Sentry.captureException(error, { tags: { feature: 'user-quiz-delete' } })
-      setReportOpen(true)
-      setReportMessage('No se pudo eliminar: ' + error.message)
+    deletion.schedule(Number(id), (error) => {
       setDeleting(false)
-    }
+      if (error) {
+        Sentry.captureException(error, { tags: { feature: 'user-quiz-delete' } })
+        setReportOpen(true)
+        setReportMessage('No se pudo eliminar: ' + error.message)
+      }
+    }, () => { window.location.href = '/mis-cuestionarios' })
   }
+
+  const answeredCount = Object.keys(answers).length
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
+
+  const submitNotice = noticeTransition.mounted && (
+    <SubmitNotice
+      state={noticeTransition.state}
+      missing={questions.length - answeredCount}
+      onGoToNext={goToNextUnanswered}
+      onSubmit={handleSubmit}
+      onClose={() => setConfirmSubmit(false)}
+    />
+  )
+
+  const deletionToast = deletion.toast && <UndoToast key={deletion.toast.key} message="Cuestionario eliminado" onUndo={deletion.toast.onUndo} onExpire={deletion.toast.onExpire} />
+
+  if (deleting) return (
+    <div className="page-wrap">
+      {deletionToast}
+      <p>Cuestionario eliminado.</p>
+      <a href="/mis-cuestionarios" className="quiz-back">← Mis cuestionarios</a>
+    </div>
+  )
 
   if (loading) {
     return (
       <div className="page-wrap">
+        {deletionToast}
         <div className="loading">Cargando...</div>
       </div>
     )
@@ -124,14 +164,12 @@ export default function UserQuiz({ id }) {
   if (error || !quiz) {
     return (
       <div className="page-wrap">
+        {deletionToast}
         <a href="/" className="quiz-back">← Volver</a>
         <div className="error-msg">Cuestionario no encontrado.</div>
       </div>
     )
   }
-
-  const answeredCount = Object.keys(answers).length
-  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0
 
   if (submitted) {
     const score = questions.reduce(
@@ -141,6 +179,7 @@ export default function UserQuiz({ id }) {
 
     return (
       <div className="page-wrap">
+        {deletionToast}
         <div className="quiz-container results">
           <a href="/" className="quiz-back"><span>←</span> Volver al inicio</a>
 
@@ -192,7 +231,7 @@ export default function UserQuiz({ id }) {
           </button>
         </div>
 
-        <FloatingActions anchorRefs={[retryButtonRef]} actions={[
+        <FloatingActions notice={submitNotice} anchorRefs={[retryButtonRef]} actions={[
           { label: 'Reintentar', icon: 'retry', onClick: handleRetry },
           quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
         ]} />
@@ -202,6 +241,7 @@ export default function UserQuiz({ id }) {
 
   return (
     <div className="page-wrap">
+      {deletionToast}
       <div className="quiz-container">
         <a href="/" className="quiz-back">← Volver</a>
 
@@ -211,7 +251,7 @@ export default function UserQuiz({ id }) {
           <div className="quiz-progress">
             <span>{answeredCount}/{questions.length} respondidas</span>
             <div className="quiz-progress-bar">
-              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
+              <div className="quiz-progress-fill" style={{ '--progress': progress / 100 }} />
             </div>
           </div>
         </div>
@@ -234,8 +274,8 @@ export default function UserQuiz({ id }) {
           )}
         </div>
 
-        {reportOpen && (
-          <section className="report-box" aria-label="Reportar cuestionario">
+        {reportTransition.mounted && (
+          <section data-state={reportTransition.state} className="report-box" aria-label="Reportar cuestionario">
             <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
               <label htmlFor="report-type">
@@ -281,7 +321,6 @@ export default function UserQuiz({ id }) {
                 <label
                   key={oi}
                   className={`option-label ${answers[qi] === oi ? 'selected' : ''}`}
-                  onClick={() => handleSelect(qi, oi)}
                 >
                   <input
                     type="radio"
@@ -314,14 +353,7 @@ export default function UserQuiz({ id }) {
           nextUnanswered >= 0 && { label: 'Siguiente pregunta', icon: 'next', variant: 'secondary', onClick: goToNextUnanswered },
           quiz.can_delete && { label: 'Editar', icon: 'pencil', variant: 'secondary', href: `/editar/${id}` }
         ]}
-        notice={confirmSubmit && nextUnanswered >= 0 && (
-          <SubmitNotice
-            missing={questions.length - answeredCount}
-            onGoToNext={goToNextUnanswered}
-            onSubmit={handleSubmit}
-            onClose={() => setConfirmSubmit(false)}
-          />
-        )}
+        notice={submitNotice}
       />
     </div>
   )

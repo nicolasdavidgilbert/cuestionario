@@ -100,7 +100,23 @@ if (catalogLoadFailed) {
       ) : (
         <p>Elige una asignatura y unidad para empezar a practicar.</p>
       )}
-      <p class="catalog-intro">{gradeInfo.description}</p>
+      {/* Plegado: sigue en el HTML para buscadores, pero no llena la página de texto */}
+      <details class="more-info">
+        <summary>Sobre este curso y sus asignaturas</summary>
+        <div class="more-info__body">
+          <p>{gradeInfo.description}</p>
+          {hasContent && !catalogLoadFailed && (
+            <dl class="more-info__list">
+              {courses.filter((course) => getCourseInfo(course.id).description).map((course) => (
+                <div>
+                  <dt>{getCourseInfo(course.id).name}</dt>
+                  <dd>{getCourseInfo(course.id).description}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </div>
+      </details>
     </header>
 
     {catalogLoadFailed ? (
@@ -112,15 +128,13 @@ if (catalogLoadFailed) {
         {courses.map((course, courseIndex) => (
           <section class="course-section" id={course.id}>
             <h2>{getCourseInfo(course.id).name}</h2>
-            {getCourseInfo(course.id).description && <p class="course-section-desc">{getCourseInfo(course.id).description}</p>}
             <div class="unit-grid">
               {course.units.map((unit, unitIndex) => (
                 <>
                   <a href={`/${grado}/${course.id}/${unit.id}`} class="unit-card">
                     <article>
-                      <span class="unit-badge">{course.id.toUpperCase()}</span>
                       <strong>{unit.title || unit.id.toUpperCase()}</strong>
-                      <span class="unit-title">{unit.questionCount} preguntas con soluciones</span>
+                      <span class="unit-title"><span class="card-tag">{course.id.toUpperCase()}</span> · {unit.questionCount} preguntas con soluciones</span>
                     </article>
                     <span class="unit-action">Empezar</span>
                   </a>

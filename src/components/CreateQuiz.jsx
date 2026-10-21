@@ -1,3 +1,4 @@
+import useExitTransition from './useExitTransition'
 import { useState, useEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
 import { createQuiz, generateQuizFromPdf, getAllQuizzes } from '../lib/api'
@@ -19,6 +20,7 @@ export default function CreateQuiz() {
   const submitButtonRef = useRef(null)
   const [selectedPdfName, setSelectedPdfName] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
+  const editorTransition = useExitTransition(editorOpen)
   const fileInputRef = useRef(null)
 
   const [quiz, setQuiz] = useState({
@@ -573,9 +575,10 @@ export default function CreateQuiz() {
         ]} />
       )}
 
-      {editorOpen && (
+      {editorTransition.mounted && (
         <QuizQuestionEditor
-          initialQuestions={preview.questions}
+          transitionState={editorTransition.state}
+          initialQuestions={preview?.questions || []}
           onSave={saveQuestionEditor}
           onCancel={() => setEditorOpen(false)}
         />
