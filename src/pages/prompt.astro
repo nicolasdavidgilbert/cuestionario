@@ -134,18 +134,18 @@ Donde "answer" es el índice (0-3) de la opción correcta.`
 
   .btn-copy {
     padding: 8px 16px;
-    background: var(--c-accent);
-    color: #fff;
+    background: var(--c-accent-strong);
+    color: var(--c-on-accent);
     border: none;
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all var(--transition);
+    transition: background-color var(--transition), transform 160ms var(--ease-out);
   }
 
   .btn-copy:hover {
-    background: #7d6ff0;
+    background: var(--c-accent-hover);
   }
 
   .btn-copy.copied {
