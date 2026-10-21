@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { deleteQuiz } from '../lib/api'
+import { clearQuizCache, deleteQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import { createPendingDeletion } from './pendingDeletion'
 
@@ -11,6 +11,8 @@ export default function usePendingDeletion() {
       onChange: setToast,
       remove: (id) => deleteQuiz(id, getOwnerToken()),
       removeOnLeave: async (id) => {
+        // Se limpia ya: la página se está cerrando y no habrá ocasión tras la respuesta
+        clearQuizCache()
         const response = await fetch(`/api/quizzes/${id}`, {
           method: 'DELETE', keepalive: true,
           headers: { 'x-owner-token': getOwnerToken() }

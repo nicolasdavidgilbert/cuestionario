@@ -1055,7 +1055,9 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   box-shadow: 0 12px 32px rgb(var(--shadow-rgb) / 0.24);
   transform: translateX(-50%);
 }
-body:has(.fab-stack:not(.is-hidden)) .undo-toast { bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--ad-anchor-bottom, 0px) + 76px); }
+/* Dentro del editor sube por encima del pie con Cancelar / Guardar */
+.quiz-editor-modal .undo-toast { bottom: calc(max(16px, env(safe-area-inset-bottom)) + 88px); }
+body:not(.modal-open):has(.fab-stack:not(.is-hidden)) .undo-toast { bottom: calc(max(16px, env(safe-area-inset-bottom)) + var(--ad-anchor-bottom, 0px) + 76px); }
 .undo-toast[data-state="open"] { animation: toast-in 240ms var(--ease-out); }
 .undo-toast[data-state="closing"] { animation: toast-out 200ms ease-in forwards; pointer-events: none; }
 @keyframes toast-in { from { opacity: 0; transform: translate(-50%, 16px); } }
