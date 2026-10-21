@@ -500,17 +500,25 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   transition: background-color 140ms ease, border-color 140ms ease;
 }
 .grado-card:active,
-.unit-card:active { background: var(--c-surface-muted); transition-duration: 0ms; }
+.unit-card:active { background: color-mix(in srgb, var(--c-accent) 12%, var(--c-surface)); transition-duration: 0ms; }
 .course-list-transition > :last-child,
 .grade-grid > :last-child,
 .unit-grid > :last-child { border-bottom: 0; }
+/* Hover con el morado de la marca: tinte suave y barra a la izquierda (inset, no mueve el layout) */
 .grado-card:hover,
-.unit-card:hover { background: var(--c-row-hover); }
+.unit-card:hover {
+  background: color-mix(in srgb, var(--c-accent) 7%, var(--c-surface));
+  box-shadow: inset 3px 0 0 var(--c-accent-strong);
+}
+.grado-card:hover .grado-label,
+.unit-card:hover strong { color: var(--c-accent-strong); }
+.grado-label,
+.unit-card strong { transition: color 140ms ease; }
 /* Anuncio in-feed: misma fila que las tarjetas, pero sin aspecto de enlace y siempre etiquetado */
 .feed-ad.unit-card,
 .feed-ad.grado-card { display: grid; grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 6px; align-items: stretch; background: var(--c-surface-muted); }
 .feed-ad.unit-card:hover,
-.feed-ad.grado-card:hover { background: var(--c-surface-muted); }
+.feed-ad.grado-card:hover { background: var(--c-surface-muted); box-shadow: none; }
 .feed-ad__label { color: var(--c-text-muted); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
 .feed-ad__unit { width: 100%; }
 .feed-ad.is-filled { animation: ad-reveal 260ms ease; }
@@ -523,13 +531,23 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
 .grado-meta,
 .unit-title { color: var(--c-text-muted); font-size: 0.88rem; line-height: 1.35; }
 .unit-title { font-family: var(--font-mono); }
+.card-tag { color: var(--c-accent-strong); font-weight: 700; }
 .grado-card-cta,
 .unit-action {
   flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
   color: var(--c-accent-strong);
+  background: var(--c-accent-soft);
   font-size: 0.88rem;
   font-weight: 700;
   white-space: nowrap;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+.grado-card:hover .grado-card-cta,
+.unit-card:hover .unit-action {
+  color: var(--c-on-accent);
+  background: var(--c-accent-strong);
 }
 .unit-action::after {
   content: "→" / "";
@@ -1263,8 +1281,6 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
   .unit-card-link { align-items: flex-start; }
   .unit-card--with-actions { flex-wrap: wrap; }
   .unit-card--with-actions .unit-card-extra { width: 100%; }
-  .grado-card-cta,
-  .unit-action { padding-top: 2px; }
   .site-footer__inner { display: grid; }
 }
 

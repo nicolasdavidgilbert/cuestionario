@@ -157,7 +157,7 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
             <a href={`/${grade.id}#${course.id}`} class="unit-card">
               <article>
                 <strong>{getCourseInfo(course.id).name}</strong>
-                <span class="unit-title">{course.id.toUpperCase()} · {course.units.length} tema{course.units.length === 1 ? '' : 's'}</span>
+                <span class="unit-title"><span class="card-tag">{course.id.toUpperCase()}</span> · {course.units.length} tema{course.units.length === 1 ? '' : 's'}</span>
               </article>
               <span class="unit-action">Ver temas</span>
             </a>

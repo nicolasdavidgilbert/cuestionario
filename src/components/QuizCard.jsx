@@ -3,7 +3,7 @@ export default function QuizCard({ href, badge, title, subtitle = 'Cuestionario 
     <>
       <article>
         <strong>{title}</strong>
-        <span className="unit-title">{[badge, subtitle].filter(Boolean).join(' · ')}</span>
+        <span className="unit-title">{badge && <><span className="card-tag">{badge}</span> · </>}{subtitle}</span>
       </article>
       <span className="unit-action">{actionLabel}</span>
     </>

@@ -134,7 +134,7 @@ if (catalogLoadFailed) {
                   <a href={`/${grado}/${course.id}/${unit.id}`} class="unit-card">
                     <article>
                       <strong>{unit.title || unit.id.toUpperCase()}</strong>
-                      <span class="unit-title">{course.id.toUpperCase()} · {unit.questionCount} preguntas con soluciones</span>
+                      <span class="unit-title"><span class="card-tag">{course.id.toUpperCase()}</span> · {unit.questionCount} preguntas con soluciones</span>
                     </article>
                     <span class="unit-action">Empezar</span>
                   </a>
