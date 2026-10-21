@@ -26,42 +26,61 @@ pnpm build        # → genera /dist
 ## Estructura del proyecto
 
 ```
-cuestionarios/
+cuestionario/
 ├── public/
-│   ├── catalog.json              # Catálogo de grados y cursos
-│   └── favicon.svg
+│   ├── ads.txt                   # Registro de vendedor de AdSense
+│   ├── robots.txt
+│   └── favicon.png
 ├── src/
 │   ├── components/
-│   │   ├── Landing.jsx           # Página principal
-│   │   ├── Catalog.jsx           # Catálogo por grado
-│   │   ├── Quiz.jsx              # Cuestionario interactivo
-│   │   ├── CreateQuiz.jsx        # Formulario para subir PDF/JSON
-│   │   ├── MyQuizzes.jsx         # Lista de cuestionarios de usuarios
-│   │   └── UserQuiz.jsx          # Reproducir cuestionario de usuario
+│   │   ├── Quiz.tsx              # Tema: repaso con soluciones + test aleatorio de 15
+│   │   ├── UserQuiz.jsx          # Reproducir un cuestionario de usuario
+│   │   ├── CreateQuiz.jsx        # Crear desde PDF o JSON
+│   │   ├── EditQuiz.jsx          # Editar un cuestionario propio
+│   │   ├── QuizQuestionEditor.jsx  # Editor visual de preguntas (modal)
+│   │   ├── MyQuizzes.jsx         # Cuestionarios creados en este navegador
+│   │   ├── LandingCourses.jsx    # Buscador de la portada
+│   │   ├── QuizCard.jsx          # Tarjeta de cuestionario (fila de listado)
+│   │   ├── FloatingActions.jsx   # Botones flotantes + showViewStart / scrollToQuestion
+│   │   ├── UndoToast.jsx         # Aviso "Deshacer"
+│   │   ├── useExitTransition.js  # Montaje con salida animada (data-state)
+│   │   ├── usePendingDeletion.js # Borrado optimista con deshacer
+│   │   ├── pendingDeletion.js    # Lógica del borrado pendiente (testeada)
+│   │   ├── useUnsavedChangesWarning.js
+│   │   ├── AdSenseAd.tsx / AdSenseManager.tsx / CookieConsentBanner.tsx
+│   │   ├── Landing.jsx           # FAQ_ITEMS de la portada
+│   │   └── Catalog.jsx           # Sin uso en ninguna página
 │   ├── layouts/
-│   │   └── Layout.astro          # Layout base
+│   │   └── Layout.astro          # Header, selector de tema, footer, SEO
 │   ├── lib/
-│   │   ├── api.ts                # Cliente de API
-│   │   ├── quizLimits.ts         # Límites de validación
-│   │   └── quizValidator.ts      # Validador de JSON
+│   │   ├── api.ts                # Cliente de API + caché en localStorage
+│   │   ├── curriculum.ts         # Nombres y descripciones de cursos y asignaturas
+│   │   ├── motion.ts             # prefersReducedMotion / scrollBehavior
+│   │   ├── ads.ts / feedAds.ts   # Dónde se pueden servir anuncios y en qué posiciones
+│   │   ├── quizLimits.ts / quizValidator.ts / slug.ts / ownerToken.ts
+│   │   └── server/               # env, http, rateLimit, audit, hash, generateQuizFromPdf
 │   ├── pages/
-│   │   ├── index.astro           # Landing
-│   │   ├── [grado].astro         # Catálogo por grado
-│   │   ├── [grado]/[curso]/[unidad].astro  # Cuestionario
-│   │   ├── crear.astro           # Crear cuestionario
-│   │   ├── mis-cuestionarios.astro  # Mis cuestionarios
-│   │   ├── user-quiz/[id].astro  # Reproducir cuestionario
+│   │   ├── index.astro           # Portada: buscador + todos los temas
+│   │   ├── cursos.astro          # Catálogo de cursos
+│   │   ├── [grado].astro         # Asignaturas y temas de un curso
+│   │   ├── [grado]/[curso]/[unidad].astro  # Tema (renderizado en servidor)
+│   │   ├── crear.astro / editar/[id].astro / mis-cuestionarios.astro
+│   │   ├── user-quiz/[id].astro  # Cuestionario de usuario
+│   │   ├── prompt.astro          # Prompt para generar JSON con IA
+│   │   ├── sobre.astro / contact.astro / privacy-policy.astro / terms.astro
+│   │   ├── sitemap.xml.ts
 │   │   └── api/
-│   │       ├── quizzes.ts
-│   │       ├── quizzes/[id].ts
-│   │       ├── quizzes/[id]/report.ts
+│   │       ├── quizzes.ts, quizzes/[id].ts, quizzes/[id]/report.ts
 │   │       ├── generate-quiz-from-pdf.ts
-│   │       └── admin/export.ts
+│   │       ├── admin/export.ts
+│   │       └── cron/cleanup-rate-limits.ts
 │   └── styles/
-│       └── global.css            # Estilos
-├── migrate-questions.sql         # SQL para importar preguntas existentes
-├── neon-setup.sql               # SQL para crear/actualizar tabla
-└── package.json
+│       └── global.css            # Todos los estilos y tokens de diseño
+├── sql/                          # Migraciones (pnpm db:migrate)
+├── scripts/                      # run-sql.mjs, env-dev.mjs
+├── tests/                        # node --test
+├── neon-setup.sql                # Esquema inicial
+└── vercel.json                   # Cron diario de limpieza de rate limits
 ```
 
 ---
@@ -186,11 +205,7 @@ CREATE INDEX IF NOT EXISTS idx_user_quizzes_grado ON user_quizzes(grado);
 CREATE INDEX IF NOT EXISTS idx_user_quizzes_created ON user_quizzes(created_at DESC);
 ```
 
-La migración completa actual está en `sql/public-growth-practices.sql`.
-
-### Migrar preguntas existentes
-
-Ejecuta `migrate-questions.sql` para importar las preguntas existentes a la DB.
+Las migraciones actuales están en `sql/public-growth-practices.sql` y `sql/rate-limits.sql` (`pnpm db:migrate` ejecuta ambas).
 
 ### Variables de entorno
 
@@ -200,6 +215,14 @@ Ejecuta `migrate-questions.sql` para importar las preguntas existentes a la DB.
 | `GROQ_API_KEY`| Clave de Groq para generar desde PDF |
 | `GROQ_MODEL`| Modelo de Groq, opcional |
 | `ADMIN_API_KEY`| Clave admin para export y borrados admin |
+| `CRON_SECRET`| Protege `/api/cron/cleanup-rate-limits` |
+| `PUBLIC_ADSENSE_CLIENT` / `PUBLIC_ADSENSE_SLOT` | Cliente y bloque de AdSense |
+| `PUBLIC_ADSENSE_INFEED_SLOT` / `PUBLIC_ADSENSE_INFEED_LAYOUT_KEY` | Bloque in-feed de los listados (opcional) |
+| `PUBLIC_ENABLE_ADS`| `true` para servir anuncios |
+| `PUBLIC_CONTACT_EMAIL`| Email de la página de contacto |
+| `SENTRY_AUTH_TOKEN`| Subida de source maps a Sentry en el build |
+
+La plantilla completa está en `.env.example`.
 
 ---
 
@@ -399,11 +422,10 @@ Por qué:
 - La app permite creación pública.
 - Sin límites, un bot podría llenar la base de datos o gastar llamadas a Groq.
 
-Limitación:
+Cómo se guarda:
 
-- Es rate limit en memoria.
-- En serverless puede reiniciarse o no compartirse entre instancias.
-- Para producción con más tráfico, conviene usar Redis/Upstash o una tabla en Postgres.
+- Cada petición se registra en la tabla `rate_limits` de Postgres (`sql/rate-limits.sql`), así el límite se comparte entre instancias serverless.
+- Las filas caducadas se borran de vez en cuando durante las peticiones y con un cron diario (`vercel.json` → `/api/cron/cleanup-rate-limits`, protegido con `CRON_SECRET`).
 
 ### 7. Paginación y búsqueda
 
@@ -626,29 +648,23 @@ Por qué:
 
 ### 16. Tests
 
-Archivo:
-
-```text
-tests/quizValidator.test.mjs
-```
-
 Comando:
 
 ```bash
 pnpm test
 ```
 
-Qué cubre:
-
-- Acepta un quiz válido.
-- Rechaza `answer` no entero.
-- Rechaza número inválido de preguntas.
-- Rechaza contenido demasiado largo.
+| Archivo | Qué cubre |
+| --- | --- |
+| `tests/quizValidator.test.mjs` | Quiz válido, `answer` no entero, número de preguntas, contenido demasiado largo |
+| `tests/adsenseReadiness.test.mjs` | `ads.txt`, `robots.txt`, páginas legales enlazadas, soft-404, sitemap, sin anuncios en páginas sensibles |
+| `tests/feedAds.test.mjs` | Posiciones de los anuncios in-feed en los listados |
+| `tests/uxBehavior.test.mjs` | Borrado con deshacer (deshacer, expirar, reemplazar, error de API, salir de la página) y scroll con movimiento reducido |
 
 Por qué:
 
 - El validador protege la calidad de datos.
-- Si se rompe, la app puede guardar quizzes corruptos.
+- Los tests de AdSense evitan romper requisitos de la revisión sin darse cuenta.
 
 ### 17. CI
 
@@ -744,3 +760,56 @@ Las buenas prácticas añadidas controlan daños sin bloquear el uso:
 - Auditoría ayuda a investigar.
 - Export facilita backups.
 - Token local permite gestión básica sin login.
+
+---
+
+## Publicidad (AdSense)
+
+- Los anuncios solo se sirven si `PUBLIC_ENABLE_ADS=true` y hay cliente configurado (`src/lib/ads.ts`).
+- Nunca en páginas sensibles: `/crear`, `/mis-cuestionarios`, `/editar/*`, `/user-quiz/*` ni en las páginas de tema (`/grado/curso/unidad`), donde se repasa y se hace el test.
+- En los listados se intercalan anuncios in-feed como una fila más, siempre etiquetados como anuncio (`src/lib/feedAds.ts`: tras la 3.ª tarjeta, luego cada 8, máximo 3).
+- Un hueco de anuncio solo ocupa espacio cuando hay un anuncio servido y visible (`.is-filled`). Si no, queda a 0 px para no dejar huecos ni mover el contenido.
+- **Texto para la revisión:** el contexto largo (introducciones, descripciones de asignaturas, guía de estudio, "Cómo funciona") va en desplegables `<details class="more-info">`. Sigue en el HTML del servidor, y Google lo indexa igual. **No ocultar texto con CSS solo para buscadores** (`display:none`, `sr-only`, fuera de pantalla): las políticas de Google lo tratan como texto oculto y puede costar la aprobación.
+
+---
+
+## Diseño e interacción
+
+Criterios aplicados tras una auditoría con la skill *apple-design*. Mantenerlos al añadir UI.
+
+### Tokens y tema
+
+- Todos los colores son variables en `:root` de `global.css` definidas con `light-dark(claro, oscuro)`. No usar colores fijos en componentes; si hace falta uno nuevo, añadir un token.
+- El tema lo decide `color-scheme`. Sin `data-theme` en `<html>` sigue al sistema; `data-theme="light" | "dark"` lo fija.
+- El selector claro / oscuro / sistema está en el header (`Layout.astro`). La elección se guarda en `localStorage` (`cuestionario.theme`) y la aplica un script inline en `<head>` antes del primer pintado, para que no haya parpadeo. El cambio usa un fundido con View Transitions y se sincroniza entre pestañas.
+- Se respetan `prefers-contrast: more` (bordes y texto secundario más marcados) y `prefers-reduced-transparency` (barras translúcidas pasan a sólidas).
+- Fuente del sistema y `font-size: 100%`, para respetar el tamaño de letra del usuario.
+
+### Tarjetas de listado
+
+- Una sola tarjeta para cursos, asignaturas y cuestionarios: filas (`.grado-card` / `.unit-card`) dentro de un contenedor con borde (`.unit-grid`, `.grade-grid`, `.course-list-transition`).
+- Contenido: título y una línea de datos en monoespaciada, con la etiqueta de la asignatura en morado (`.card-tag`).
+- La acción es una píldora lila con flecha. Al pasar el ratón, la fila se tiñe de morado, aparece una barra morada a la izquierda (inset) y la píldora se rellena.
+- El morado de la marca debe seguir presente: no dejar las tarjetas en gris.
+
+### Movimiento
+
+- Respuesta al pulsar (`:active`, `scale(0.97)` en 60 ms) en botones, opciones del test y filas.
+- Solo se animan `transform` y `opacity`. Nada de animar `height`, `max-height`, `margin` ni `padding`. Para mover algo que cambia de sitio por layout, usar FLIP (ejemplo: el buscador de la portada en `LandingCourses.jsx`).
+- Curva por defecto `--ease-out` (sin rebote). Rebote solo si viene de un gesto con inercia.
+- Entradas y salidas por el mismo camino con `data-state="open" | "closing"` y `useExitTransition` (200 ms). Lo usan el editor modal, el aviso de envío, la caja de reporte y `UndoToast`.
+- Movimiento reducido: el CSS cambia el movimiento por fundidos de 150 ms y el JS usa `scrollBehavior()` de `src/lib/motion.ts`.
+- Al cambiar de vista (empezar test, corregir, volver al repaso) se llama a `showViewStart()` después de pintar, con salto directo. Al empezar un test garantiza que la primera pregunta se ve entera.
+
+### Deshacer en vez de confirmar
+
+- Lo que se puede recuperar se hace al instante y muestra un `UndoToast` de 6 s: borrar una pregunta en el editor, descartar un test a medias, eliminar un cuestionario.
+- Eliminar un cuestionario es optimista (`usePendingDeletion`): la petición se envía cuando caduca el aviso, o con `keepalive` si se sale de la página. Si falla, el elemento vuelve a su sitio.
+- `window.confirm` queda solo para lo irreversible (descartar cambios sin guardar del editor).
+
+### Accesibilidad
+
+- Zonas táctiles de 44 px en pantallas táctiles.
+- Editor modal: Escape cierra, el foco queda atrapado dentro y vuelve al botón que lo abrió.
+- Escape también cierra la caja de reporte y el aviso de envío.
+
