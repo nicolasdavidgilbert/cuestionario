@@ -1,75 +1,52 @@
 /* Skills.sh-inspired study directory */
 :root {
-  --c-bg: #fafafa;
-  --c-surface: #ffffff;
-  --c-surface-muted: #f4f4f5;
-  --c-border: #e4e4e7;
-  --c-border-strong: #c7c7d1;
-  --c-text: #18181b;
-  --c-text-muted: #71717a;
-  --c-accent: #6c5ce7;
-  --c-accent-strong: #5145cd;
-  --c-accent-hover: #4338ca;
-  --c-accent-soft: #f1efff;
-  --c-success: #15803d;
-  --c-success-soft: #f0fdf4;
-  --c-danger: #b91c1c;
-  --c-danger-soft: #fef2f2;
-  --c-danger-border: #fecaca;
+  /*
+   * Cada color lleva su versión clara y oscura con light-dark(); manda color-scheme.
+   * Sin data-theme sigue al sistema; data-theme="light" | "dark" lo fija (selector del header).
+   */
+  color-scheme: light dark;
+  --c-bg: light-dark(#fafafa, #0f0f12);
+  --c-surface: light-dark(#ffffff, #18181b);
+  --c-surface-muted: light-dark(#f4f4f5, #232328);
+  --c-border: light-dark(#e4e4e7, #2e2e35);
+  --c-border-strong: light-dark(#c7c7d1, #45454f);
+  --c-text: light-dark(#18181b, #f4f4f5);
+  --c-text-muted: light-dark(#71717a, #a1a1aa);
+  --c-accent: light-dark(#6c5ce7, #a5a0ff);
+  --c-accent-strong: light-dark(#5145cd, #a5a0ff);
+  --c-accent-hover: light-dark(#4338ca, #bcb8ff);
+  --c-accent-soft: light-dark(#f1efff, #24213d);
+  --c-success: light-dark(#15803d, #4ade80);
+  --c-success-soft: light-dark(#f0fdf4, #0f2a1a);
+  --c-danger: light-dark(#b91c1c, #f87171);
+  --c-danger-soft: light-dark(#fef2f2, #2a1414);
+  --c-danger-border: light-dark(#fecaca, #5b2626);
   --radius: 8px;
   --radius-sm: 6px;
-  --c-correct: #16a34a;
-  --c-row-hover: #f7f7fb;
-  --c-code-text: #3f3f46;
-  --c-on-accent: #ffffff;
-  --c-toast-action: #c4bfff;
-  --c-scrim: rgb(24 24 27 / 0.42);
-  --shadow-rgb: 24 24 27;
-  --focus-ring: 0 0 0 3px rgba(108, 92, 231, 0.22);
+  --c-correct: light-dark(#16a34a, #22c55e);
+  --c-row-hover: light-dark(#f7f7fb, #1d1d22);
+  --c-code-text: light-dark(#3f3f46, #d4d4d8);
+  --c-on-accent: light-dark(#ffffff, #16133a);
+  --c-toast-action: light-dark(#c4bfff, #4338ca);
+  --c-toast-action-hover: light-dark(rgb(255 255 255 / 0.1), rgb(0 0 0 / 0.08));
+  --c-scrim: light-dark(rgb(24 24 27 / 0.42), rgb(0 0 0 / 0.6));
+  --c-shadow: light-dark(#18181b, #000000);
+  --c-focus: light-dark(rgb(108 92 231 / 0.22), rgb(165 160 255 / 0.35));
+  --focus-ring: 0 0 0 3px var(--c-focus);
   --transition: 180ms ease;
   /* Curva sin rebote para todo lo que no viene de un gesto con inercia */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
   --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   --container: 1088px;
-  color-scheme: light dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --c-bg: #0f0f12;
-    --c-surface: #18181b;
-    --c-surface-muted: #232328;
-    --c-border: #2e2e35;
-    --c-border-strong: #45454f;
-    --c-text: #f4f4f5;
-    --c-text-muted: #a1a1aa;
-    --c-accent: #a5a0ff;
-    --c-accent-strong: #a5a0ff;
-    --c-accent-hover: #bcb8ff;
-    --c-accent-soft: #24213d;
-    --c-success: #4ade80;
-    --c-success-soft: #0f2a1a;
-    --c-danger: #f87171;
-    --c-danger-soft: #2a1414;
-    --c-danger-border: #5b2626;
-    --c-correct: #22c55e;
-    --c-row-hover: #1d1d22;
-    --c-code-text: #d4d4d8;
-    --c-on-accent: #16133a;
-    --c-toast-action: #4338ca;
-    --c-scrim: rgb(0 0 0 / 0.6);
-    --shadow-rgb: 0 0 0;
-    --focus-ring: 0 0 0 3px rgba(165, 160, 255, 0.35);
-  }
-}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
 @media (prefers-contrast: more) {
   :root {
     --c-border: var(--c-border-strong);
-    --c-text-muted: #52525b;
+    --c-text-muted: light-dark(#52525b, #d4d4d8);
   }
-}
-@media (prefers-contrast: more) and (prefers-color-scheme: dark) {
-  :root { --c-text-muted: #d4d4d8; }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -137,6 +114,7 @@ button { cursor: pointer; }
   font-family: var(--font-mono);
   font-weight: 800;
 }
+.site-nav { margin-left: auto; }
 .site-nav a {
   min-height: 36px;
   display: inline-flex;
@@ -163,13 +141,57 @@ button { cursor: pointer; }
 .site-nav__cta:hover { background: var(--c-accent-hover) !important; }
 .site-nav__cta.is-active { box-shadow: var(--focus-ring); }
 
+/* Selector de tema: control segmentado claro / oscuro / sistema con un indicador que se desliza */
+.theme-switch {
+  --theme-pos: 2;
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(3, 32px);
+  margin: 0;
+  padding: 2px;
+  border: 1px solid var(--c-border);
+  border-radius: 999px;
+  background: var(--c-surface-muted);
+}
+.theme-switch::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: var(--c-surface);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--c-shadow) 18%, transparent);
+  transform: translateX(calc(var(--theme-pos) * 100%));
+  transition: transform 240ms var(--ease-out);
+}
+.theme-switch:has(input[value="light"]:checked) { --theme-pos: 0; }
+.theme-switch:has(input[value="dark"]:checked) { --theme-pos: 1; }
+.theme-switch label {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  color: var(--c-text-muted);
+  cursor: pointer;
+  transition: color 140ms ease, transform 160ms var(--ease-out);
+}
+.theme-switch label:hover,
+.theme-switch label:has(input:checked) { color: var(--c-text); }
+.theme-switch label:active { transform: scale(0.9); transition-duration: 60ms; }
+.theme-switch label:has(input:focus-visible) { box-shadow: var(--focus-ring); }
+.theme-switch svg { width: 17px; height: 17px; }
+
 .page-wrap { padding-block: 36px 72px; }
 .page-wrap.landing { padding-top: 0; }
 .landing-search {
   min-height: min(650px, calc(100vh - 96px));
   display: grid;
   align-content: center;
-  transition: min-height 320ms var(--ease-out), padding 320ms var(--ease-out);
+  /* Sin transición de layout: el desplazamiento del buscador lo anima LandingCourses con FLIP */
 }
 .landing-search:has(.grado-grid.has-query) {
   min-height: 0;
@@ -178,15 +200,14 @@ button { cursor: pointer; }
 }
 .landing-search .landing-header {
   overflow: hidden;
-  transition: opacity 200ms ease, max-height 320ms var(--ease-out), margin 320ms var(--ease-out), transform 320ms var(--ease-out);
-  max-height: 330px;
+  transition: opacity 240ms ease;
 }
 .landing-search:has(.grado-grid.has-query) .landing-header {
   opacity: 0;
   max-height: 0;
   margin-bottom: 0;
-  transform: translateY(-14px);
   pointer-events: none;
+  transition: none;
 }
 
 .home-header,
@@ -382,7 +403,6 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   gap: 10px;
   align-items: center;
   margin-bottom: 10px;
-  transition: margin 350ms ease;
 }
 .landing-search .catalog-search { max-width: 100%; }
 .catalog-search input[type="search"] {
@@ -522,7 +542,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--c-bg) 88%, transparent);
   backdrop-filter: blur(14px);
-  box-shadow: 0 12px 28px rgb(var(--shadow-rgb) / 0.08);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--c-shadow) 8%, transparent);
 }
 .courses-catalog-shell .catalog-search {
   position: sticky;
@@ -534,7 +554,7 @@ button:disabled, .btn-submit:disabled, .submit-btn:disabled { opacity: 0.55; cur
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--c-bg) 88%, transparent);
   backdrop-filter: blur(14px);
-  box-shadow: 0 12px 28px rgb(var(--shadow-rgb) / 0.08);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--c-shadow) 8%, transparent);
 }
 .course-section { margin-top: 34px; }
 .course-section h2 { margin: 0 0 12px; font-size: 1.2rem; }
@@ -731,7 +751,7 @@ textarea, .json-textarea { min-height: 160px; resize: vertical; }
   border: 1px solid var(--c-border);
   border-radius: var(--radius);
   background: var(--c-bg);
-  box-shadow: 0 24px 70px rgb(var(--shadow-rgb) / 0.22);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--c-shadow) 22%, transparent);
 }
 .quiz-editor-header,
 .quiz-editor-footer {
@@ -903,7 +923,7 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   font-size: 1rem;
   white-space: nowrap;
   text-decoration: none;
-  box-shadow: 0 10px 28px rgba(81, 69, 205, 0.32), 0 2px 6px rgb(var(--shadow-rgb) / 0.12);
+  box-shadow: 0 10px 28px rgba(81, 69, 205, 0.32), 0 2px 6px color-mix(in srgb, var(--c-shadow) 12%, transparent);
   pointer-events: auto;
   transition: padding 320ms var(--fab-ease), transform 220ms var(--fab-ease), box-shadow 160ms ease, background-color 140ms ease, opacity 220ms ease, visibility 0s;
 }
@@ -922,12 +942,12 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   background: var(--c-surface);
   color: var(--c-text);
   font-size: 0.95rem;
-  box-shadow: 0 8px 22px rgb(var(--shadow-rgb) / 0.14);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--c-shadow) 14%, transparent);
 }
 @media (hover: hover) {
-  .fab:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(81, 69, 205, 0.38), 0 3px 8px rgb(var(--shadow-rgb) / 0.14); }
+  .fab:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(81, 69, 205, 0.38), 0 3px 8px color-mix(in srgb, var(--c-shadow) 14%, transparent); }
   .fab--primary:hover:not(:disabled) { background: var(--c-accent-hover); }
-  .fab--secondary:hover:not(:disabled) { background: var(--c-surface-muted); box-shadow: 0 12px 26px rgb(var(--shadow-rgb) / 0.18); }
+  .fab--secondary:hover:not(:disabled) { background: var(--c-surface-muted); box-shadow: 0 12px 26px color-mix(in srgb, var(--c-shadow) 18%, transparent); }
 }
 .fab:active:not(:disabled) { transform: scale(0.95); }
 .fab:focus-visible { box-shadow: var(--focus-ring), 0 10px 28px rgba(81, 69, 205, 0.32); }
@@ -992,7 +1012,7 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   border: 1px solid var(--c-border-strong);
   border-radius: var(--radius);
   background: var(--c-surface);
-  box-shadow: 0 16px 40px rgb(var(--shadow-rgb) / 0.2);
+  box-shadow: 0 16px 40px color-mix(in srgb, var(--c-shadow) 20%, transparent);
   pointer-events: auto;
   animation: fab-confirm-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -1052,7 +1072,7 @@ body:has(.fab-stack) .page-wrap { padding-bottom: 112px; }
   color: var(--c-bg);
   font-size: 0.95rem;
   font-weight: 600;
-  box-shadow: 0 12px 32px rgb(var(--shadow-rgb) / 0.24);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--c-shadow) 24%, transparent);
   transform: translateX(-50%);
 }
 /* Dentro del editor sube por encima del pie con Cancelar / Guardar */
@@ -1074,11 +1094,8 @@ body:not(.modal-open):has(.fab-stack:not(.is-hidden)) .undo-toast { bottom: calc
   font-weight: 750;
   transition: background-color 120ms ease, transform 160ms var(--ease-out);
 }
-.undo-toast__action:hover { background: rgb(255 255 255 / 0.1); }
+.undo-toast__action:hover { background: var(--c-toast-action-hover); }
 .undo-toast__action:active { transform: scale(0.95); transition-duration: 60ms; }
-@media (prefers-color-scheme: dark) {
-  .undo-toast__action:hover { background: rgb(0 0 0 / 0.08); }
-}
 
 /* Zonas táctiles de 44px en pantallas táctiles */
 @media (pointer: coarse) {
@@ -1157,11 +1174,15 @@ ins.adsbygoogle[data-ad-status="unfilled"] { display: none !important; }
   }
   .site-nav a { min-height: 44px; padding-inline: 8px; }
   .site-nav__cta { grid-column: 1 / -1; }
+  .site-header__inner { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .site-nav { grid-column: 1 / -1; grid-row: 2; }
+  .theme-switch { grid-template-columns: repeat(3, 40px); }
+  .theme-switch::before,
+  .theme-switch label { width: 40px; height: 40px; }
   .page-wrap { padding-block: 28px 52px; }
   .page-wrap.landing { padding-top: 0; }
   .landing-search,
   .landing-search:has(.grado-grid.has-query) { min-height: auto; padding: 34px 0 12px; }
-  .landing-search .landing-header { max-height: 360px; }
   .course-search-section,
   .courses-catalog-shell .catalog-search { top: calc(8px + var(--ad-anchor-top, 0px)); padding: 8px; }
   .course-search-section { min-height: 154px; }

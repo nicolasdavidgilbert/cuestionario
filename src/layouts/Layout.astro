@@ -35,6 +35,11 @@ const navLinks = [
   { href: "/mis-cuestionarios", label: "Mis cuestionarios" },
   { href: "/prompt", label: "Prompt IA" }
 ]
+const themeOptions = [
+  { value: 'light', label: 'Tema claro', icon: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>' },
+  { value: 'dark', label: 'Tema oscuro', icon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>' },
+  { value: 'system', label: 'Tema del sistema', icon: '<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>' }
+]
 const isActivePath = (href: string) => {
   if (href === "/cursos" && Astro.params.grado) return true
   return currentPath === href || currentPath.startsWith(`${href}/`)
@@ -81,6 +86,17 @@ const jsonLd = structuredData
     <meta name="twitter:image" content={absoluteImageUrl} />
 
     <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <!-- Aplica el tema guardado antes del primer pintado para que no parpadee -->
+    <script is:inline>
+      (function () {
+        var theme = null
+        try { theme = localStorage.getItem('cuestionario.theme') } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') return
+        document.documentElement.dataset.theme = theme
+        var color = theme === 'dark' ? '#0f0f12' : '#fafafa'
+        document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) { meta.content = color })
+      })()
+    </script>
   </head>
   <body>
     <div id="root">
@@ -108,6 +124,16 @@ const jsonLd = structuredData
               Crear
             </a>
           </nav>
+          <fieldset class="theme-switch">
+            <legend class="sr-only">Tema</legend>
+            {themeOptions.map((option) => (
+              <label title={option.label}>
+                <input class="sr-only" type="radio" name="theme" value={option.value} checked={option.value === 'system'} />
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" set:html={option.icon} />
+                <span class="sr-only">{option.label}</span>
+              </label>
+            ))}
+          </fieldset>
         </div>
       </header>
       <main class="site-shell">
@@ -130,6 +156,68 @@ const jsonLd = structuredData
     </div>
     {adsOnThisPage && <AdSenseManager client:idle clientId={adsenseClient} enabledByEnv={adsEnabledByEnv} />}
     <CookieConsentBanner client:idle enabled={adsOnThisPage} />
+    <script>
+      import { prefersReducedMotion } from '../lib/motion'
+
+      const STORAGE_KEY = 'cuestionario.theme'
+      const THEME_COLORS = { light: '#fafafa', dark: '#0f0f12' }
+      type ThemeChoice = 'light' | 'dark' | 'system'
+
+      function readChoice(): ThemeChoice {
+        try {
+          const value = localStorage.getItem(STORAGE_KEY)
+          return value === 'light' || value === 'dark' ? value : 'system'
+        } catch {
+          return 'system'
+        }
+      }
+
+      function applyChoice(choice: ThemeChoice) {
+        const root = document.documentElement
+        const metas = document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')
+        if (choice === 'system') {
+          delete root.dataset.theme
+          metas.forEach((meta) => {
+            meta.content = meta.media.includes('dark') ? THEME_COLORS.dark : THEME_COLORS.light
+          })
+        } else {
+          root.dataset.theme = choice
+          metas.forEach((meta) => { meta.content = THEME_COLORS[choice] })
+        }
+      }
+
+      function syncRadios(choice: ThemeChoice) {
+        document.querySelectorAll<HTMLInputElement>('.theme-switch input').forEach((input) => {
+          input.checked = input.value === choice
+        })
+      }
+
+      syncRadios(readChoice())
+
+      document.querySelector('.theme-switch')?.addEventListener('change', (event) => {
+        const choice = (event.target as HTMLInputElement).value as ThemeChoice
+        try {
+          if (choice === 'system') localStorage.removeItem(STORAGE_KEY)
+          else localStorage.setItem(STORAGE_KEY, choice)
+        } catch {
+          // Sin almacenamiento el tema se aplica igualmente en esta página
+        }
+        // Fundido entre temas en vez de un salto brusco de brillo
+        if (document.startViewTransition && !prefersReducedMotion()) {
+          document.startViewTransition(() => applyChoice(choice))
+        } else {
+          applyChoice(choice)
+        }
+      })
+
+      // Otra pestaña cambió el tema
+      window.addEventListener('storage', (event) => {
+        if (event.key !== STORAGE_KEY) return
+        const choice = readChoice()
+        applyChoice(choice)
+        syncRadios(choice)
+      })
+    </script>
   </body>
 </html>
 
