@@ -1,4 +1,7 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import useExitTransition from './useExitTransition'
+import UndoToast from './UndoToast'
+import { scrollBehavior } from '../lib/motion'
+import { useState, useEffect, useMemo, useCallback, useRef, type CSSProperties } from 'react'
 import * as Sentry from '@sentry/astro'
 import { getCachedQuizzesByGrado, getQuizzesByGrado, reportQuiz } from '../lib/api'
 import FloatingActions, { SubmitNotice, scrollToQuestion } from './FloatingActions'
@@ -39,6 +42,22 @@ interface Props {
   courseDescription?: string | null
 }
 
+function QuizBreadcrumbs({ grado, gradoLabel, cursoLabel, unidadLabel }: { grado: string; gradoLabel: string; cursoLabel: string; unidadLabel: string }) {
+  return (
+    <nav className="breadcrumbs" aria-label="Migas de pan">
+      <a href="/">Inicio</a>
+      <span aria-hidden="true">/</span>
+      <a href="/cursos">Cursos</a>
+      <span aria-hidden="true">/</span>
+      <a href={`/${grado}`}>{gradoLabel}</a>
+      <span aria-hidden="true">/</span>
+      <span>{cursoLabel}</span>
+      <span aria-hidden="true">/</span>
+      <span>{unidadLabel}</span>
+    </nav>
+  )
+}
+
 export default function Quiz({ grado = '', curso = '', unidad = '', quizId: initialQuizId = null, pageTitle: initialPageTitle = null, questions: serverQuestions = null, description = null, gradeName = null, courseName = null, courseDescription = null }: Props) {
   const cachedQuiz = !serverQuestions ? getCachedQuizzesByGrado(grado)?.find(q => q.course_id === curso && (q.unidad || q.course_id) === unidad) || null : null
   const [quizId, setQuizId] = useState(initialQuizId || cachedQuiz?.id || null)
@@ -56,6 +75,15 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   const [reportMessage, setReportMessage] = useState('')
   const [reporting, setReporting] = useState(false)
   const [confirmSubmit, setConfirmSubmit] = useState(false)
+  const reportTransition = useExitTransition(reportOpen)
+  const noticeTransition = useExitTransition(confirmSubmit)
+  useEffect(() => {
+    const close = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setReportOpen(false); setConfirmSubmit(false) }
+    }
+    document.addEventListener('keydown', close)
+    return () => document.removeEventListener('keydown', close)
+  }, [])
   // Modo repaso: por defecto se ven la respuesta correcta y la explicación de cada pregunta.
   const [showAnswers, setShowAnswers] = useState(true)
   const startButtonRef = useRef<HTMLButtonElement>(null)
@@ -104,7 +132,23 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
 
   const totalQuestions = questions.length
 
+  const [discarded, setDiscarded] = useState<{ key: number; questions: QuizQuestion[] | null; answers: Record<number, number> } | null>(null)
+  function preserveTest() {
+    if (mode === 'test' && !submitted && Object.keys(answers).length > 0) {
+      setDiscarded({ key: Date.now(), questions: testQuestions, answers: { ...answers } })
+    }
+  }
+  const undoToast = discarded && <UndoToast key={discarded.key} message="Test descartado" onUndo={() => {
+    setTestQuestions(discarded.questions)
+    setAnswers(discarded.answers)
+    setSubmitted(false)
+    setMode('test')
+    setConfirmSubmit(false)
+    setReportOpen(false)
+  }} />
+
   function startTest() {
+    preserveTest()
     const shuffled = shuffleArray(totalQuestions ? [...questions] : [])
     setTestQuestions(shuffled.slice(0, Math.min(TEST_SIZE, shuffled.length)))
     setAnswers({})
@@ -112,15 +156,17 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     setMode('test')
     setConfirmSubmit(false)
     setReportOpen(false)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   function backToBrowse() {
+    preserveTest()
+    setConfirmSubmit(false)
     setMode('browse')
     setAnswers({})
     setSubmitted(false)
     setReportOpen(false)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   const activeQuestions = mode === 'test' && testQuestions ? testQuestions : []
@@ -155,11 +201,10 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   function handleSubmit() {
     setConfirmSubmit(false)
     setSubmitted(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    window.scrollTo({ top: 0, behavior: scrollBehavior() })
   }
 
   function handleRetry() {
-    setTestQuestions(null)
     startTest()
   }
 
@@ -180,20 +225,21 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
     }
   }
 
+  const submitNotice = noticeTransition.mounted && (
+    <SubmitNotice
+      state={noticeTransition.state}
+      missing={activeQuestions.length - answeredCount}
+      onGoToNext={goToNextUnanswered}
+      onSubmit={handleSubmit}
+      onClose={() => setConfirmSubmit(false)}
+    />
+  )
+
   if (error) {
     return (
       <div className="page-wrap">
-        <nav className="breadcrumbs" aria-label="Migas de pan">
-          <a href="/">Inicio</a>
-          <span aria-hidden="true">/</span>
-          <a href="/cursos">Cursos</a>
-          <span aria-hidden="true">/</span>
-          <a href={`/${grado}`}>{gradoLabel}</a>
-          <span aria-hidden="true">/</span>
-          <span>{cursoLabel}</span>
-          <span aria-hidden="true">/</span>
-          <span>{unidadLabel}</span>
-        </nav>
+        {undoToast}
+        <QuizBreadcrumbs grado={grado} gradoLabel={gradoLabel} cursoLabel={cursoLabel} unidadLabel={unidadLabel} />
         <div className="error-msg">
           No se encontraron preguntas para <strong>{curso?.toUpperCase()}/{unidad?.toUpperCase()}</strong>
         </div>
@@ -204,17 +250,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
   if (loading || !allQuestions || allQuestions.length === 0) {
     return (
       <div className="page-wrap">
-        <nav className="breadcrumbs" aria-label="Migas de pan">
-          <a href="/">Inicio</a>
-          <span aria-hidden="true">/</span>
-          <a href="/cursos">Cursos</a>
-          <span aria-hidden="true">/</span>
-          <a href={`/${grado}`}>{gradoLabel}</a>
-          <span aria-hidden="true">/</span>
-          <span>{cursoLabel}</span>
-          <span aria-hidden="true">/</span>
-          <span>{unidadLabel}</span>
-        </nav>
+        {undoToast}
+        <QuizBreadcrumbs grado={grado} gradoLabel={gradoLabel} cursoLabel={cursoLabel} unidadLabel={unidadLabel} />
         <div className="quiz-skeleton" aria-label="Cargando preguntas">
           <div className="skeleton-title" />
           <div className="skeleton-progress" />
@@ -234,18 +271,9 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
 
       return (
         <div className="page-wrap">
+          {undoToast}
           <div className="quiz-container results">
-            <nav className="breadcrumbs" aria-label="Migas de pan">
-              <a href="/">Inicio</a>
-              <span aria-hidden="true">/</span>
-              <a href="/cursos">Cursos</a>
-              <span aria-hidden="true">/</span>
-              <a href={`/${grado}`}>{gradoLabel}</a>
-              <span aria-hidden="true">/</span>
-              <span>{cursoLabel}</span>
-              <span aria-hidden="true">/</span>
-              <span>{unidadLabel}</span>
-            </nav>
+            <QuizBreadcrumbs grado={grado} gradoLabel={gradoLabel} cursoLabel={cursoLabel} unidadLabel={unidadLabel} />
 
             <section className="results-summary" aria-labelledby="results-heading">
               <p className="section-kicker">Resultados</p>
@@ -296,7 +324,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             </div>
           </div>
 
-          <FloatingActions anchorRefs={[retryButtonRef]} actions={[
+          <FloatingActions notice={submitNotice} anchorRefs={[retryButtonRef]} actions={[
             { label: 'Hacer otro test', icon: 'retry', onClick: handleRetry },
             { label: 'Ver preguntas', icon: 'list', variant: 'secondary', onClick: backToBrowse }
           ]} />
@@ -306,17 +334,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
 
     return (
       <div className="page-wrap">
-        <nav className="breadcrumbs" aria-label="Migas de pan">
-          <a href="/">Inicio</a>
-          <span aria-hidden="true">/</span>
-          <a href="/cursos">Cursos</a>
-          <span aria-hidden="true">/</span>
-          <a href={`/${grado}`}>{gradoLabel}</a>
-          <span aria-hidden="true">/</span>
-          <span>{cursoLabel}</span>
-          <span aria-hidden="true">/</span>
-          <span>{unidadLabel}</span>
-        </nav>
+        {undoToast}
+        <QuizBreadcrumbs grado={grado} gradoLabel={gradoLabel} cursoLabel={cursoLabel} unidadLabel={unidadLabel} />
 
         <header className="quiz-header">
           <p className="section-kicker">Cuestionario — test aleatorio</p>
@@ -335,7 +354,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
               aria-valuetext={`${answeredCount} de ${activeQuestions.length} respondidas`}
               aria-label="Progreso de respuestas"
             >
-              <div className="quiz-progress-fill" style={{ width: `${progress}%` }} />
+              <div className="quiz-progress-fill" style={{ '--progress': progress / 100 } as CSSProperties} />
             </div>
           </div>
         </header>
@@ -350,8 +369,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             </button>
           </div>
 
-          {reportOpen && (
-            <section className="report-box" aria-label="Reportar cuestionario">
+          {reportTransition.mounted && (
+            <section data-state={reportTransition.state} className="report-box" aria-label="Reportar cuestionario">
               <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
               <form onSubmit={handleReport}>
                 <label htmlFor="report-type">
@@ -396,7 +415,6 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
                   <label
                     key={oi}
                     className={`option-label ${answers[qi] === oi ? 'selected' : ''}`}
-                    onClick={() => handleSelect(qi, oi)}
                   >
                     <input
                       type="radio"
@@ -428,14 +446,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
             },
             nextUnanswered >= 0 && { label: 'Siguiente pregunta', icon: 'next', variant: 'secondary', onClick: goToNextUnanswered }
           ]}
-          notice={confirmSubmit && nextUnanswered >= 0 && (
-            <SubmitNotice
-              missing={activeQuestions.length - answeredCount}
-              onGoToNext={goToNextUnanswered}
-              onSubmit={handleSubmit}
-              onClose={() => setConfirmSubmit(false)}
-            />
-          )}
+          notice={submitNotice}
         />
       </div>
     )
@@ -443,17 +454,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
 
   return (
     <div className="page-wrap">
-      <nav className="breadcrumbs" aria-label="Migas de pan">
-        <a href="/">Inicio</a>
-        <span aria-hidden="true">/</span>
-        <a href="/cursos">Cursos</a>
-        <span aria-hidden="true">/</span>
-        <a href={`/${grado}`}>{gradoLabel}</a>
-        <span aria-hidden="true">/</span>
-        <span>{cursoLabel}</span>
-        <span aria-hidden="true">/</span>
-        <span>{unidadLabel}</span>
-      </nav>
+      {undoToast}
+      <QuizBreadcrumbs grado={grado} gradoLabel={gradoLabel} cursoLabel={cursoLabel} unidadLabel={unidadLabel} />
 
       <header className="quiz-header">
         <p className="section-kicker">{[courseName || cursoLabel, gradeName || gradoLabel].filter(Boolean).join(' · ')}</p>
@@ -492,8 +494,8 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
           </button>
         </div>
 
-        {reportOpen && (
-          <section className="report-box" aria-label="Reportar cuestionario">
+        {reportTransition.mounted && (
+          <section data-state={reportTransition.state} className="report-box" aria-label="Reportar cuestionario">
             <h2><span aria-hidden="true">!</span> Reportar este cuestionario</h2>
             <form onSubmit={handleReport}>
               <label htmlFor="report-type">
@@ -557,6 +559,7 @@ export default function Quiz({ grado = '', curso = '', unidad = '', quizId: init
       </div>
 
       <FloatingActions
+        notice={submitNotice}
         anchorRefs={[startButtonRef, startBottomButtonRef]}
         actions={[{ label: 'Empezar test', icon: 'play', onClick: startTest }]}
       />
