@@ -1,25 +1,19 @@
 import type { APIRoute } from 'astro'
 import * as Sentry from '@sentry/astro'
-import { neon } from '@neondatabase/serverless'
-import { getAdminApiKey, getDatabaseUrl } from '../../../lib/server/env'
-import { jsonResponse, serverErrorResponse } from '../../../lib/server/http'
+import { getSql } from '../../../lib/server/db'
+import { errorResponse, hasValidAdminApiKey, jsonResponse, noStore, publicCache, readOwnerToken } from '../../../lib/server/http'
 import { rateLimit } from '../../../lib/server/rateLimit'
-import { logAudit } from '../../../lib/server/audit'
-import { getQuizHash } from '../../../lib/server/hash'
-import { validateQuizJson } from '../../../lib/quizValidator'
+import { ServiceError } from '../../../lib/server/errors'
+import { trashQuiz, updateQuiz } from '../../../lib/server/quizService'
 
 export const prerender = false
 
-function applyReadCacheHeaders(response: Response, hasOwnerToken: boolean) {
-  response.headers.set(
-    'Cache-Control',
-    hasOwnerToken ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-  )
-  return response
-}
-
-function getSql() {
-  return neon(getDatabaseUrl())
+function failure(label: string, error: unknown) {
+  if (!(error instanceof ServiceError)) {
+    console.error(`${label}:`, error)
+    Sentry.captureException(error)
+  }
+  return noStore(errorResponse(label, error))
 }
 
 export const GET: APIRoute = async ({ params, request }) => {
@@ -27,13 +21,13 @@ export const GET: APIRoute = async ({ params, request }) => {
     const sql = getSql()
     const id = Number(params.id)
     
-    if (isNaN(id)) {
+    if (!Number.isInteger(id)) {
       return jsonResponse({ message: 'ID inválido' }, 400)
     }
     
-    const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
+    const ownerToken = readOwnerToken(request)
     const rows = await sql`
-      SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at,
+      SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at,
         (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete
       FROM user_quizzes
       WHERE id = ${id} AND deleted_at IS NULL
@@ -43,116 +37,47 @@ export const GET: APIRoute = async ({ params, request }) => {
       return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
     }
     
-    return applyReadCacheHeaders(jsonResponse(rows[0]), Boolean(ownerToken))
+    // Con token de propietario la respuesta es personal (can_delete) y no se cachea.
+    const response = jsonResponse(rows[0])
+    return ownerToken ? noStore(response) : publicCache(response)
   } catch (error) {
-    console.error('GET quiz error:', error)
-    Sentry.captureException(error)
-    return serverErrorResponse('Error al obtener cuestionario', error)
+    return failure('Error al obtener cuestionario', error)
   }
 }
 
+// Edición por su propietario: título, descripción y preguntas. Exige la versión cargada
+// para detectar cambios concurrentes (409) en lugar de sobrescribirlos.
 export const PATCH: APIRoute = async ({ params, request }) => {
   try {
     const limitError = await rateLimit(request, { key: 'update-quiz', limit: 60, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
-    const sql = getSql()
-    const id = Number(params.id)
-
-    if (isNaN(id)) {
-      return jsonResponse({ message: 'ID inválido' }, 400)
-    }
-
-    const existing = await sql`
-      SELECT id, title, description, grado, course_id, unidad, questions, owner_token
-      FROM user_quizzes WHERE id = ${id} AND deleted_at IS NULL
-    `
-
-    if (existing.length === 0) {
-      return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
-    }
-
-    const ownerToken = request.headers.get('x-owner-token') || ''
-    const isOwner = existing[0].owner_token && existing[0].owner_token === ownerToken
-    if (!isOwner) return jsonResponse({ message: 'No autorizado' }, 401)
-
-    const body = await request.json()
-    const current = existing[0]
-    // Solo se editan título, descripción y preguntas; grado, curso y unidad definen la URL pública.
-    const validation = validateQuizJson({
-      title: body.title ?? current.title,
-      description: body.description ?? current.description,
-      grado: current.grado,
-      course_id: current.course_id,
-      unidad: current.unidad,
-      questions: body.questions ?? current.questions
+    const body = await request.json().catch(() => ({}))
+    const quiz = await updateQuiz(Number(params.id), {
+      expectedVersion: body?.version,
+      changes: { title: body?.title, description: body?.description, questions: body?.questions },
+      actor: 'public',
+      ownerToken: readOwnerToken(request)
     })
-
-    if (!validation.valid || !validation.data) {
-      return jsonResponse({ message: validation.errors.map((error) => error.message).join('\n') }, 400)
-    }
-
-    const { title, description, questions } = validation.data
-    const quizHash = getQuizHash({ title, grado: current.grado, course_id: current.course_id, unidad: current.unidad, questions })
-
-    const duplicateRows = await sql`
-      SELECT id FROM user_quizzes
-      WHERE deleted_at IS NULL AND quiz_hash = ${quizHash} AND id <> ${id}
-      LIMIT 1
-    `
-
-    if (duplicateRows.length > 0) {
-      return jsonResponse({ message: 'Ya existe otro cuestionario idéntico', id: duplicateRows[0].id }, 409)
-    }
-
-    const rows = await sql`
-      UPDATE user_quizzes
-      SET title = ${title || ''}, description = ${description || ''}, questions = ${JSON.stringify(questions)}, quiz_hash = ${quizHash}
-      WHERE id = ${id}
-      RETURNING id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, true AS can_delete
-    `
-    await logAudit(sql, 'quiz_updated', { quiz_id: id })
-
-    return jsonResponse(rows[0])
+    return noStore(jsonResponse({ ...quiz, can_delete: true }))
   } catch (error) {
-    console.error('PATCH quiz error:', error)
-    Sentry.captureException(error)
-    return serverErrorResponse('Error al actualizar cuestionario', error)
+    return failure('Error al actualizar cuestionario', error)
   }
 }
 
+// Envío a la papelera por su propietario, o desde scripts con la clave técnica.
 export const DELETE: APIRoute = async ({ params, request }) => {
   try {
     const limitError = await rateLimit(request, { key: 'delete-quiz', limit: 30, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
-    const sql = getSql()
-    const id = Number(params.id)
-    
-    if (isNaN(id)) {
-      return jsonResponse({ message: 'ID inválido' }, 400)
-    }
-    
-    const existing = await sql`SELECT id, owner_token FROM user_quizzes WHERE id = ${id} AND deleted_at IS NULL`
-
-    if (existing.length === 0) {
-      return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
-    }
-
-    const adminApiKey = getAdminApiKey()
-    const ownerToken = request.headers.get('x-owner-token') || ''
-    const isOwner = existing[0].owner_token && existing[0].owner_token === ownerToken
-    const isAdmin = adminApiKey && request.headers.get('x-admin-api-key') === adminApiKey
-
-    if (!isOwner && !isAdmin) return jsonResponse({ message: 'No autorizado' }, 401)
-
-    await sql`UPDATE user_quizzes SET deleted_at = NOW() WHERE id = ${id}`
-    await logAudit(sql, 'quiz_soft_deleted', { quiz_id: id, by_owner: isOwner })
-    
-    return new Response(null, { status: 204 })
+    const viaApiKey = hasValidAdminApiKey(request)
+    await trashQuiz(Number(params.id), {
+      actor: viaApiKey ? 'script' : 'public',
+      ownerToken: readOwnerToken(request)
+    })
+    return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } })
   } catch (error) {
-    console.error('DELETE quiz error:', error)
-    Sentry.captureException(error)
-    return serverErrorResponse('Error al eliminar cuestionario', error)
+    return failure('Error al eliminar cuestionario', error)
   }
 }

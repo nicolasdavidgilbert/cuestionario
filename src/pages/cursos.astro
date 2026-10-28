@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import { neon } from '@neondatabase/serverless'
 import { getAdsenseConfig, getDatabaseUrl } from '../lib/server/env'
-import { getCourseInfo, getGradeInfo } from '../lib/curriculum'
+import { getCatalog, gradeInfo, subjectInfo, type Catalog } from '../lib/server/catalogService'
 import AdSenseAd from '../components/AdSenseAd'
 import { getFeedAdPositions } from '../lib/feedAds'
 
@@ -20,10 +20,12 @@ interface ServedCourse { id: string; units: ServedUnit[] }
 interface ServedGrade { id: string; courses: ServedCourse[] }
 
 let catalog: ServedGrade[] = []
+let names: Catalog = { grades: [] }
 let totalUnits = 0
 let catalogLoadFailed = false
 try {
   const sql = neon(getDatabaseUrl())
+  names = await getCatalog()
   const rows = await sql`
     SELECT grado, course_id, unidad, title
     FROM user_quizzes
@@ -51,7 +53,11 @@ try {
       totalUnits += 1
     }
   }
-  catalog = Array.from(gradeMap.values())
+  // Orden administrado en el catálogo.
+  catalog = Array.from(gradeMap.values()).sort((a, b) => gradeInfo(names, a.id).sort_order - gradeInfo(names, b.id).sort_order)
+  for (const grade of catalog) {
+    grade.courses.sort((a, b) => subjectInfo(names, grade.id, a.id).sort_order - subjectInfo(names, grade.id, b.id).sort_order)
+  }
 } catch (error) {
   catalogLoadFailed = true
   console.error('SSR cursos lookup error:', error)
@@ -100,8 +106,8 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
             <dl class="more-info__list">
               {catalog.map((grade) => (
                 <div>
-                  <dt>{getGradeInfo(grade.id).name}</dt>
-                  <dd>{getGradeInfo(grade.id).description}</dd>
+                  <dt>{gradeInfo(names, grade.id).name}</dt>
+                  <dd>{gradeInfo(names, grade.id).description}</dd>
                 </div>
               ))}
             </dl>
@@ -124,7 +130,7 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
             <a href={`/${grade.id}`} class="grado-card">
               <article class="grado-card-main">
                 <div class="grado-info">
-                  <span class="grado-label">{getGradeInfo(grade.id).name}</span>
+                  <span class="grado-label">{gradeInfo(names, grade.id).name}</span>
                   <span class="grado-meta">
                     {coursesInGrade} asignatura{coursesInGrade === 1 ? '' : 's'} · {unitsInGrade} tema{unitsInGrade === 1 ? '' : 's'}
                   </span>
@@ -151,12 +157,12 @@ const feedAdPositions = getFeedAdPositions(catalog.length)
 
     {!catalogLoadFailed && catalog.map((grade) => (
       <section class="course-section" aria-labelledby={`grade-${grade.id}`}>
-        <h2 id={`grade-${grade.id}`}>{getGradeInfo(grade.id).name}</h2>
+        <h2 id={`grade-${grade.id}`}>{gradeInfo(names, grade.id).name}</h2>
         <div class="unit-grid">
           {grade.courses.map((course) => (
             <a href={`/${grade.id}#${course.id}`} class="unit-card">
               <article>
-                <strong>{getCourseInfo(course.id).name}</strong>
+                <strong>{subjectInfo(names, grade.id, course.id).name}</strong>
                 <span class="unit-title"><span class="card-tag">{course.id.toUpperCase()}</span> · {course.units.length} tema{course.units.length === 1 ? '' : 's'}</span>
               </article>
               <span class="unit-action">Ver temas</span>

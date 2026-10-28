@@ -1,0 +1,12 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro'
+import AdminIssueDetail from '../../../components/admin/AdminIssueDetail.jsx'
+
+export const prerender = false
+
+const id = Number(Astro.params.id)
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/incidencias')
+---
+<AdminLayout title="Incidencia" section="incidencias">
+  <AdminIssueDetail client:load id={id} />
+</AdminLayout>

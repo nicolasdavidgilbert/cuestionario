@@ -33,6 +33,11 @@ export function getAdminApiKey(): string {
   return getOptionalEnv('ADMIN_API_KEY')
 }
 
+// Hash scrypt generado con `pnpm admin:password`. Sin él, el panel queda cerrado.
+export function getAdminPasswordHash(): string {
+  return getOptionalEnv('ADMIN_PASSWORD_HASH')
+}
+
 export function getContactEmail(): string {
   return getOptionalEnv('PUBLIC_CONTACT_EMAIL', 'contacto@cuestionario.online')
 }

@@ -10,6 +10,18 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
+declare namespace App {
+  interface Locals {
+    // Sesión de administración comprobada por src/middleware.ts en /admin y /api/admin/*
+    admin?: {
+      id: string
+      csrfToken: string
+      expiresAt: string
+      viaApiKey: boolean
+    }
+  }
+}
+
 declare module 'pdf-parse/lib/pdf-parse.js' {
   interface PdfParseResult {
     text?: string

@@ -1,0 +1,13 @@
+---
+// Aplica el tema guardado antes del primer pintado. Va dentro de <head>.
+---
+<script is:inline>
+  (function () {
+    var theme = null
+    try { theme = localStorage.getItem('cuestionario.theme') } catch (e) {}
+    if (theme !== 'light' && theme !== 'dark') return
+    document.documentElement.dataset.theme = theme
+    var color = theme === 'dark' ? '#0f0f12' : '#fafafa'
+    document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) { meta.content = color })
+  })()
+</script>

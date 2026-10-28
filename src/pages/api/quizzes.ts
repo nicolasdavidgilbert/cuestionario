@@ -1,26 +1,18 @@
 import type { APIRoute } from 'astro'
 import * as Sentry from '@sentry/astro'
-import { neon } from '@neondatabase/serverless'
-import { validateQuizJson } from '../../lib/quizValidator'
 import { normalizeSlug } from '../../lib/slug'
-import { getDatabaseUrl } from '../../lib/server/env'
-import { jsonResponse, serverErrorResponse } from '../../lib/server/http'
+import { getSql } from '../../lib/server/db'
+import { errorResponse, jsonResponse, noStore, publicCache, readOwnerToken } from '../../lib/server/http'
 import { rateLimit } from '../../lib/server/rateLimit'
-import { logAudit } from '../../lib/server/audit'
-import { getQuizHash } from '../../lib/server/hash'
+import { createQuiz } from '../../lib/server/quizService'
+import { ServiceError } from '../../lib/server/errors'
+import { getCatalog, gradeInfo, subjectInfo, topicInfo, type Catalog } from '../../lib/server/catalogService'
 
 export const prerender = false
 
+// Con token de propietario la respuesta es personal (can_delete) y no se cachea.
 function applyReadCacheHeaders(response: Response, hasOwnerToken: boolean) {
-  response.headers.set(
-    'Cache-Control',
-    hasOwnerToken ? 'no-store' : 'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-  )
-  return response
-}
-
-function getSql() {
-  return neon(getDatabaseUrl())
+  return hasOwnerToken ? noStore(response) : publicCache(response)
 }
 
 export const GET: APIRoute = async ({ request, url }) => {
@@ -30,7 +22,7 @@ export const GET: APIRoute = async ({ request, url }) => {
     const type = url.searchParams.get('type')
     const q = String(url.searchParams.get('q') || '').trim()
     const owner = url.searchParams.get('owner')
-    const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
+    const ownerToken = readOwnerToken(request)
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit') || 50), 1), 100)
     const offset = Math.max(Number(url.searchParams.get('offset') || 0), 0)
     
@@ -40,13 +32,13 @@ export const GET: APIRoute = async ({ request, url }) => {
 
     if (type === 'catalog') {
       if (grado) {
-        rows = await sql`SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes WHERE deleted_at IS NULL AND grado = ${grado} ORDER BY created_at DESC`
+        rows = await sql`SELECT grado, course_id, unidad, title FROM user_quizzes WHERE deleted_at IS NULL AND grado = ${grado} ORDER BY created_at DESC`
       } else {
-        rows = await sql`SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes WHERE deleted_at IS NULL ORDER BY created_at DESC`
+        rows = await sql`SELECT grado, course_id, unidad, title FROM user_quizzes WHERE deleted_at IS NULL ORDER BY created_at DESC`
       }
     } else if (owner === 'me' && ownerToken && q) {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL
           AND owner_token = ${ownerToken}
           AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
@@ -61,7 +53,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       `
     } else if (owner === 'me' && ownerToken) {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL AND owner_token = ${ownerToken}
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -69,7 +61,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       totalRows = await sql`SELECT COUNT(*)::int AS count FROM user_quizzes WHERE deleted_at IS NULL AND owner_token = ${ownerToken}`
     } else if (grado && q) {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL
           AND grado = ${grado}
           AND (title ILIKE ${search} OR description ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
@@ -84,7 +76,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       `
     } else if (grado) {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL AND grado = ${grado}
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -92,7 +84,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       totalRows = await sql`SELECT COUNT(*)::int AS count FROM user_quizzes WHERE deleted_at IS NULL AND grado = ${grado}`
     } else if (q) {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL
           AND (title ILIKE ${search} OR description ILIKE ${search} OR grado ILIKE ${search} OR course_id ILIKE ${search} OR unidad ILIKE ${search})
         ORDER BY created_at DESC
@@ -105,7 +97,7 @@ export const GET: APIRoute = async ({ request, url }) => {
       `
     } else {
       rows = await sql`
-        SELECT id, title, description, grado, course_id, unidad, questions, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
+        SELECT id, title, description, grado, course_id, unidad, questions, version, created_at, deleted_at, (owner_token <> '' AND owner_token = ${ownerToken}) AS can_delete FROM user_quizzes
         WHERE deleted_at IS NULL
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -114,8 +106,9 @@ export const GET: APIRoute = async ({ request, url }) => {
     }
 
     if (type === 'catalog') {
-      const catalog = buildCatalog(rows)
-      return applyReadCacheHeaders(jsonResponse(catalog), Boolean(ownerToken))
+      const catalog = buildCatalog(rows, await getCatalog())
+      // El catálogo no depende del propietario: siempre se puede cachear en la CDN.
+      return publicCache(jsonResponse(catalog))
     }
     
     const response = applyReadCacheHeaders(jsonResponse(rows), Boolean(ownerToken) || owner === 'me')
@@ -126,26 +119,8 @@ export const GET: APIRoute = async ({ request, url }) => {
   } catch (error) {
     console.error('GET quizzes error:', error)
     Sentry.captureException(error)
-    return serverErrorResponse('Error al obtener cuestionarios', error)
+    return errorResponse('Error al obtener cuestionarios', error)
   }
-}
-
-interface CatalogUnit {
-  id: string
-  title: string
-}
-
-interface CatalogCourse {
-  id: string
-  label: string
-  units: Map<string, CatalogUnit>
-}
-
-interface CatalogGrade {
-  id: string
-  label: string
-  description: string
-  courses: Map<string, CatalogCourse>
 }
 
 interface CatalogQuizRow {
@@ -155,59 +130,46 @@ interface CatalogQuizRow {
   title?: unknown
 }
 
-function buildCatalog(quizzes: CatalogQuizRow[]) {
-  const gradoMap = new Map<string, CatalogGrade>()
-  
+// Catálogo público: solo lo que tiene cuestionarios publicados, con los nombres y el orden administrados.
+function buildCatalog(quizzes: CatalogQuizRow[], names: Catalog) {
+  const grades = new Map<string, Map<string, Set<string>>>()
+
   for (const quiz of quizzes) {
     const g = typeof quiz.grado === 'string' ? quiz.grado : ''
     const c = typeof quiz.course_id === 'string' ? quiz.course_id : ''
     const u = typeof quiz.unidad === 'string' && quiz.unidad ? quiz.unidad : c
-
     if (!g || !c) continue
-    
-    if (!gradoMap.has(g)) {
-      gradoMap.set(g, {
-        id: g,
-        label: g.toUpperCase(),
-        description: '',
-        courses: new Map()
-      })
-    }
-    
-    const grado = gradoMap.get(g)!
-    const courses = grado.courses
-    
-    if (!courses.has(c)) {
-      courses.set(c, {
-        id: c,
-        label: c.toUpperCase(),
-        units: new Map()
-      })
-    }
-    
-    const course = courses.get(c)!
-    const units = course.units
-    
-    if (!units.has(u)) {
-      units.set(u, {
-        id: u,
-        title: typeof quiz.title === 'string' ? quiz.title : ''
-      })
-    }
+    if (!grades.has(g)) grades.set(g, new Map())
+    const courses = grades.get(g)!
+    if (!courses.has(c)) courses.set(c, new Set())
+    courses.get(c)!.add(u)
   }
-  
-  const grados = Array.from(gradoMap.values()).map(g => ({
-    id: g.id,
-    label: g.label,
-    description: g.description,
-    courses: Array.from(g.courses.values()).map(c => ({
-      id: c.id,
-      label: c.label,
-      units: Array.from(c.units.values()).map(u => u)
-    }))
-  }))
-  
-  return { grados }
+
+  const bySortOrder = <T extends { sort_order: number; label: string }>(a: T, b: T) => a.sort_order - b.sort_order || a.label.localeCompare(b.label, 'es')
+
+  return {
+    grados: Array.from(grades, ([gradeId, courses]) => {
+      const grade = gradeInfo(names, gradeId)
+      return {
+        id: gradeId,
+        label: grade.name,
+        description: grade.short,
+        sort_order: grade.sort_order,
+        courses: Array.from(courses, ([courseId, units]) => {
+          const subject = subjectInfo(names, gradeId, courseId)
+          return {
+            id: courseId,
+            label: subject.name,
+            sort_order: subject.sort_order,
+            units: Array.from(units, (unitId) => {
+              const topic = topicInfo(names, gradeId, courseId, unitId)
+              return { id: unitId, title: topic.name, label: topic.name, sort_order: topic.sort_order }
+            }).sort(bySortOrder).map(({ id, title }) => ({ id, title }))
+          }
+        }).sort(bySortOrder).map(({ sort_order: _order, ...course }) => course)
+      }
+    }).sort(bySortOrder).map(({ sort_order: _order, ...grade }) => grade)
+  }
 }
 
 export const POST: APIRoute = async ({ request }) => {
@@ -215,64 +177,14 @@ export const POST: APIRoute = async ({ request }) => {
     const limitError = await rateLimit(request, { key: 'create-quiz', limit: 20, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
-    const sql = getSql()
-    const body = await request.json()
-
-    const validation = validateQuizJson(body)
-
-    if (!validation.valid || !validation.data) {
-      return jsonResponse({ message: validation.errors.map((error) => error.message).join('\n') }, 400)
-    }
-
-    const { title, description, questions } = validation.data
-    const grado = normalizeSlug(validation.data.grado)
-    const course_id = normalizeSlug(validation.data.course_id)
-    const unidad = normalizeSlug(validation.data.unidad)
-    const ownerToken = request.headers.get('x-owner-token')?.trim().slice(0, 120) || ''
-    const quizHash = getQuizHash({ title, grado, course_id, unidad, questions })
-    const publicUnit = unidad || course_id
-
-    const routeCollisionRows = await sql`
-      SELECT id FROM user_quizzes
-      WHERE deleted_at IS NULL
-        AND grado = ${grado}
-        AND course_id = ${course_id}
-        AND (
-          unidad = ${publicUnit}
-          OR ((unidad IS NULL OR unidad = '') AND ${publicUnit} = ${course_id})
-        )
-      LIMIT 1
-    `
-
-    if (routeCollisionRows.length > 0) {
-      return jsonResponse({
-        message: 'Ya existe un cuestionario publicado para ese grado, asignatura y unidad',
-        id: routeCollisionRows[0].id
-      }, 409)
-    }
-
-    const duplicateRows = await sql`
-      SELECT id FROM user_quizzes
-      WHERE deleted_at IS NULL AND quiz_hash = ${quizHash}
-      LIMIT 1
-    `
-
-    if (duplicateRows.length > 0) {
-      return jsonResponse({ message: 'Este cuestionario ya existe', id: duplicateRows[0].id }, 409)
-    }
-
-    const rows = await sql`
-      INSERT INTO user_quizzes (title, description, grado, course_id, unidad, questions, quiz_hash, owner_token)
-      VALUES (${title || ''}, ${description || ''}, ${grado}, ${course_id}, ${unidad || ''}, ${JSON.stringify(questions)}, ${quizHash}, ${ownerToken})
-      RETURNING *
-    `
-
-    await logAudit(sql, 'quiz_created', { quiz_id: rows[0].id, grado, course_id, unidad })
-    
-    return jsonResponse(rows[0], 201)
+    const body = await request.json().catch(() => null)
+    const quiz = await createQuiz(body, { actor: 'public', ownerToken: readOwnerToken(request) })
+    return noStore(jsonResponse({ ...quiz, can_delete: true }, 201))
   } catch (error) {
-    console.error('POST quiz error:', error)
-    Sentry.captureException(error)
-    return serverErrorResponse('Error al crear cuestionario', error)
+    if (!(error instanceof ServiceError)) {
+      console.error('POST quiz error:', error)
+      Sentry.captureException(error)
+    }
+    return noStore(errorResponse('Error al crear cuestionario', error))
   }
 }

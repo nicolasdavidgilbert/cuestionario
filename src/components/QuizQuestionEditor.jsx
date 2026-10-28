@@ -56,7 +56,8 @@ function validateDraftQuestions(questions) {
   return ''
 }
 
-export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel, transitionState = 'open' }) {
+// initialFocusIndex abre el editor directamente en esa pregunta (p. ej. desde la búsqueda del panel).
+export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel, transitionState = 'open', initialFocusIndex = null }) {
   const [draftQuestions, setDraftQuestions] = useState(() => cloneQuestionsForEdit(initialQuestions))
   const [initialSnapshot] = useState(() => JSON.stringify(cloneQuestionsForEdit(initialQuestions)))
   const hasChanges = JSON.stringify(draftQuestions) !== initialSnapshot
@@ -65,12 +66,12 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel,
   const modalRef = useRef(null)
   const cancelRef = useRef(null)
   const [editorError, setEditorError] = useState('')
-  const focusQuestionIndex = useRef(null)
+  const focusQuestionIndex = useRef(initialFocusIndex)
 
   useEffect(() => {
     const previousFocus = document.activeElement
     document.body.classList.add('modal-open')
-    modalRef.current?.querySelector('h2')?.focus()
+    if (initialFocusIndex === null) modalRef.current?.querySelector('h2')?.focus()
     const onKey = (event) => {
       if (event.key === 'Escape') { event.preventDefault(); cancelRef.current?.(); return }
       if (event.key !== 'Tab') return
@@ -117,6 +118,14 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel,
   const addDraftQuestion = () => {
     focusQuestionIndex.current = draftQuestions.length
     setDraftQuestions((questions) => [...questions, createEmptyQuestion()])
+  }
+
+  const duplicateDraftQuestion = (questionIndex) => {
+    focusQuestionIndex.current = questionIndex + 1
+    setDraftQuestions((questions) => {
+      const copy = { ...questions[questionIndex], options: [...questions[questionIndex].options] }
+      return [...questions.slice(0, questionIndex + 1), copy, ...questions.slice(questionIndex + 1)]
+    })
   }
 
   const removeDraftQuestion = (questionIndex) => {
@@ -194,6 +203,7 @@ export default function QuizQuestionEditor({ initialQuestions, onSave, onCancel,
                 <div className="quiz-editor-card-actions">
                   <button type="button" className="btn-secondary" onClick={() => moveDraftQuestion(questionIndex, -1)} disabled={questionIndex === 0}>Subir</button>
                   <button type="button" className="btn-secondary" onClick={() => moveDraftQuestion(questionIndex, 1)} disabled={questionIndex === draftQuestions.length - 1}>Bajar</button>
+                  <button type="button" className="btn-secondary" onClick={() => duplicateDraftQuestion(questionIndex)}>Duplicar</button>
                   <button type="button" className="btn-clear btn-danger" onClick={() => removeDraftQuestion(questionIndex)}>Eliminar</button>
                 </div>
               </div>

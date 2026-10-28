@@ -1,0 +1,107 @@
+---
+import ThemeInit from '../components/ThemeInit.astro'
+import ThemeSwitch from '../components/ThemeSwitch.astro'
+import AdminLogout from '../components/admin/AdminLogout.jsx'
+
+// Diseño del panel: navegación lateral en escritorio y menú desplegable en móvil.
+// Sin anuncios, banner de cookies ni indexación.
+interface Props {
+  title: string
+  section?: string
+  bare?: boolean
+}
+
+const { title, section = '', bare = false } = Astro.props
+const sections = [
+  { id: 'resumen', href: '/admin', label: 'Resumen' },
+  { id: 'catalogo', href: '/admin/catalogo', label: 'Catálogo' },
+  { id: 'cuestionarios', href: '/admin/cuestionarios', label: 'Cuestionarios' },
+  { id: 'preguntas', href: '/admin/preguntas', label: 'Preguntas' },
+  { id: 'incidencias', href: '/admin/incidencias', label: 'Incidencias' },
+  { id: 'papelera', href: '/admin/papelera', label: 'Papelera' },
+  { id: 'auditoria', href: '/admin/auditoria', label: 'Auditoría' },
+  { id: 'transferencia', href: '/admin/importar-exportar', label: 'Importar / exportar' }
+]
+const csrfToken = Astro.locals.admin?.csrfToken || ''
+---
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{`${title} · Administración`}</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="referrer" content="same-origin" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#fafafa" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f0f12" />
+    {csrfToken && <meta name="admin-csrf" content={csrfToken} />}
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <ThemeInit />
+  </head>
+  <body>
+    {bare ? (
+      <main class="admin-login" id="contenido">
+        <slot />
+      </main>
+    ) : (
+      <>
+        <a class="admin-skip" href="#contenido">Saltar al contenido</a>
+        <div class="admin-shell">
+          <div class="admin-topbar">
+            <a class="admin-brand" href="/admin">
+              <span class="site-brand__mark" aria-hidden="true">?</span>
+              <span>{sections.find((item) => item.id === section)?.label || 'Administración'}</span>
+            </a>
+            <button type="button" class="btn-secondary btn-small" aria-controls="admin-sidebar" aria-expanded="false" data-admin-menu>Menú</button>
+          </div>
+
+          <aside class="admin-sidebar" id="admin-sidebar" aria-label="Administración">
+            <a class="admin-brand admin-brand--sidebar" href="/admin">
+              <span class="site-brand__mark" aria-hidden="true">?</span>
+              <span>Cuestionarios<small>Administración</small></span>
+            </a>
+            <nav class="admin-nav" aria-label="Secciones del panel">
+              {sections.map((item) => (
+                <a href={item.href} aria-current={item.id === section ? 'page' : undefined}>{item.label}</a>
+              ))}
+            </nav>
+            <div class="admin-sidebar__footer">
+              <ThemeSwitch />
+              <div class="admin-sidebar__links">
+                <a href="/" target="_blank" rel="noopener">Ver la web ↗</a>
+                <AdminLogout client:idle />
+              </div>
+            </div>
+          </aside>
+
+          <main class="admin-main" id="contenido" tabindex="-1">
+            <slot />
+          </main>
+        </div>
+      </>
+    )}
+  </body>
+</html>
+
+<script>
+  // Menú desplegable en móvil: la misma barra lateral se muestra bajo la barra superior.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-admin-menu]')
+  const sidebar = document.getElementById('admin-sidebar')
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') !== 'true'
+    toggle.setAttribute('aria-expanded', String(open))
+    sidebar?.toggleAttribute('data-open', open)
+  })
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape' || toggle?.getAttribute('aria-expanded') !== 'true') return
+    toggle.setAttribute('aria-expanded', 'false')
+    sidebar?.removeAttribute('data-open')
+    toggle.focus()
+  })
+</script>
+
+<style is:global>
+  @import '../styles/global.css';
+  @import '../styles/admin.css';
+</style>

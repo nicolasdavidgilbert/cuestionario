@@ -8,9 +8,12 @@
     "env:pull": "pnpm dlx vercel@64.7.0 env pull .env.production.local --environment=production --yes",
     "env:dev": "node scripts/env-dev.mjs",
     "build": "astro build",
-    "db:migrate": "node scripts/run-sql.mjs sql/public-growth-practices.sql && node scripts/run-sql.mjs sql/rate-limits.sql",
-    "test": "node --test tests/*.test.mjs",
-    "preview": "astro preview"
+    "db:migrate": "node scripts/run-sql.mjs sql/public-growth-practices.sql && node scripts/run-sql.mjs sql/rate-limits.sql && node scripts/run-sql.mjs sql/admin-panel.sql",
+    "test": "node --import ./tests/helpers/register.mjs --test tests/*.test.mjs",
+    "preview": "astro preview",
+    "db:constraints": "node scripts/run-sql.mjs sql/admin-panel-constraints.sql",
+    "db:inspect": "node scripts/inspect-db.mjs",
+    "admin:password": "node scripts/admin-password.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^6.0.5",

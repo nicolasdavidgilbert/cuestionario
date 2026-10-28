@@ -20,6 +20,12 @@ export const GET: APIRoute = async ({ request }) => {
       WHERE created_at < now() - interval '1 hour'
     `
 
+    // Sesiones de administración caducadas o cerradas hace más de 30 días (se conservan un tiempo para auditoría).
+    await sql`
+      DELETE FROM admin_sessions
+      WHERE COALESCE(revoked_at, expires_at) < now() - interval '30 days'
+    `
+
     return Response.json({ ok: true })
   } catch (error) {
     console.error('Cron cleanup rate limits error:', error)

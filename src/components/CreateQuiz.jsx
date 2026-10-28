@@ -1,7 +1,7 @@
 import useExitTransition from './useExitTransition'
 import { useState, useEffect, useRef } from 'react'
 import * as Sentry from '@sentry/astro'
-import { createQuiz, generateQuizFromPdf, getAllQuizzes } from '../lib/api'
+import { createQuiz, generateQuizFromPdf, getQuizCatalog } from '../lib/api'
 import { validateQuizJson, getPreviewMessage } from '../lib/quizValidator'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
@@ -9,7 +9,7 @@ import FloatingActions from './FloatingActions'
 import useUnsavedChangesWarning from './useUnsavedChangesWarning'
 
 export default function CreateQuiz() {
-  const [existingQuizzes, setExistingQuizzes] = useState([])
+  const [catalog, setCatalog] = useState({ grados: [] })
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
@@ -40,20 +40,12 @@ export default function CreateQuiz() {
 
   const loadData = async () => {
     try {
-      const quizzes = await getAllQuizzes()
-      setExistingQuizzes(quizzes)
+      // Solo hace falta el catálogo (identificadores y nombres), no las preguntas de todos los cuestionarios.
+      setCatalog(await getQuizCatalog())
     } catch (error) {
       Sentry.captureException(error, { tags: { feature: 'create-quiz-load' } })
       setError('Error cargando datos')
     }
-  }
-
-  const getUniqueValues = (field) => {
-    const values = existingQuizzes
-      .map(q => q[field])
-      .filter(Boolean)
-
-    return [...new Set(values)]
   }
 
   const parseJson = (jsonString, source = 'texto pegado') => {
@@ -285,9 +277,12 @@ export default function CreateQuiz() {
     )
   }
 
-  const grados = getUniqueValues('grado')
-  const cursos = getUniqueValues('course_id')
-  const unidades = getUniqueValues('unidad')
+  // Sugerencias del catálogo con sus nombres; se pueden escribir identificadores nuevos.
+  const selectedGrade = catalog.grados.find((g) => g.id === quiz.grado.trim().toLowerCase())
+  const selectedCourse = selectedGrade?.courses.find((c) => c.id === quiz.course_id.trim().toLowerCase())
+  const grados = catalog.grados.map((g) => ({ id: g.id, label: g.label }))
+  const cursos = (selectedGrade?.courses || []).map((c) => ({ id: c.id, label: c.label }))
+  const unidades = (selectedCourse?.units || []).map((u) => ({ id: u.id, label: u.title }))
 
   return (
     <div className="page-wrap">
@@ -348,7 +343,7 @@ export default function CreateQuiz() {
             />
             <datalist id="grados-list">
               {grados.map(g => (
-                <option key={g} value={g} />
+                <option key={g.id} value={g.id} label={g.label} />
               ))}
             </datalist>
           </div>
@@ -365,7 +360,7 @@ export default function CreateQuiz() {
             />
             <datalist id="cursos-list">
               {cursos.map(c => (
-                <option key={c} value={c} />
+                <option key={c.id} value={c.id} label={c.label} />
               ))}
             </datalist>
           </div>
@@ -383,7 +378,7 @@ export default function CreateQuiz() {
           />
           <datalist id="unidades-list">
             {unidades.map(u => (
-              <option key={u} value={u} />
+              <option key={u.id} value={u.id} label={u.label} />
             ))}
           </datalist>
         </div>

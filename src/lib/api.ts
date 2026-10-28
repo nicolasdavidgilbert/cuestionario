@@ -1,7 +1,9 @@
 const API_BASE = '/api'
 
-const CACHE_PREFIX = 'cuestionarios-cache:'
-const PUBLIC_CACHE_TTL_MS = 5 * 60 * 1000
+// Caché solo en memoria (se pierde al recargar) y corta: el contenido se edita desde el panel
+// y la web debe reflejarlo en menos de un minuto. No se guarda contenido en localStorage.
+const LEGACY_CACHE_PREFIX = 'cuestionarios-cache:'
+const PUBLIC_CACHE_TTL_MS = 60 * 1000
 
 interface CacheEntry<T> {
   expiresAt: number
@@ -11,55 +13,30 @@ interface CacheEntry<T> {
 const memoryCache = new Map<string, CacheEntry<unknown>>()
 const inflightRequests = new Map<string, Promise<unknown>>()
 
-function canUseBrowserCache() {
-  return typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
+// Borra la caché persistente que guardaban versiones anteriores.
+function removeLegacyCache() {
+  if (typeof window === 'undefined') return
+  try {
+    for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+      const key = window.localStorage.key(index)
+      if (key?.startsWith(LEGACY_CACHE_PREFIX)) window.localStorage.removeItem(key)
+    }
+  } catch {
+    // Almacenamiento bloqueado: no hay nada que limpiar.
+  }
 }
 
+removeLegacyCache()
+
 export function getCachedValue<T>(key: string): T | null {
-  const now = Date.now()
-  const memoryEntry = memoryCache.get(key) as CacheEntry<T> | undefined
-
-  if (memoryEntry && memoryEntry.expiresAt > now) {
-    return memoryEntry.value
-  }
-
-  if (!canUseBrowserCache()) return null
-
-  try {
-    const raw = window.localStorage.getItem(CACHE_PREFIX + key)
-    if (!raw) return null
-
-    const entry = JSON.parse(raw) as CacheEntry<T>
-    if (!entry || entry.expiresAt <= now) {
-      window.localStorage.removeItem(CACHE_PREFIX + key)
-      memoryCache.delete(key)
-      return null
-    }
-
-    memoryCache.set(key, entry)
-    return entry.value
-  } catch {
-    window.localStorage.removeItem(CACHE_PREFIX + key)
-    memoryCache.delete(key)
-    return null
-  }
+  const entry = memoryCache.get(key) as CacheEntry<T> | undefined
+  if (entry && entry.expiresAt > Date.now()) return entry.value
+  memoryCache.delete(key)
+  return null
 }
 
 function setCachedValue<T>(key: string, value: T, ttlMs = PUBLIC_CACHE_TTL_MS) {
-  const entry: CacheEntry<T> = {
-    expiresAt: Date.now() + ttlMs,
-    value
-  }
-
-  memoryCache.set(key, entry)
-
-  if (!canUseBrowserCache()) return
-
-  try {
-    window.localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry))
-  } catch {
-    // If storage is full or blocked, memory cache still helps this session.
-  }
+  memoryCache.set(key, { expiresAt: Date.now() + ttlMs, value })
 }
 
 async function cachedFetchJson<T>(key: string, url: string, ttlMs = PUBLIC_CACHE_TTL_MS): Promise<T> {
@@ -86,15 +63,6 @@ async function cachedFetchJson<T>(key: string, url: string, ttlMs = PUBLIC_CACHE
 export function clearQuizCache() {
   memoryCache.clear()
   inflightRequests.clear()
-
-  if (!canUseBrowserCache()) return
-
-  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
-    const key = window.localStorage.key(index)
-    if (key?.startsWith(CACHE_PREFIX)) {
-      window.localStorage.removeItem(key)
-    }
-  }
 }
 
 export interface CatalogUnit {
@@ -127,6 +95,7 @@ export interface ApiQuiz {
   course_id: string
   unidad: string
   questions: unknown[]
+  version?: number
   created_at: string
   deleted_at?: string | null
   can_delete?: boolean
@@ -151,13 +120,25 @@ export interface GeneratedQuizPayload extends CreateQuizPayload {
   notice?: string
 }
 
+// Error de la API con su código (p. ej. version_conflict) para que la interfaz pueda reaccionar.
+export class ApiError extends Error {
+  status: number
+  code: string
+
+  constructor(message: string, status: number, code = '') {
+    super(message)
+    this.status = status
+    this.code = code
+  }
+}
+
 async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const body = await response.text().catch(() => '')
 
     try {
       const json = JSON.parse(body)
-      if (json?.message) throw new Error(json.message)
+      if (json?.message) throw new ApiError(json.message, response.status, json.code || '')
     } catch (parseError) {
       if (parseError instanceof SyntaxError) {
         const detail = body.trim().replace(/\s+/g, ' ').slice(0, 180)
@@ -260,7 +241,7 @@ export async function createQuiz(quiz: CreateQuizPayload, ownerToken?: string): 
 
 export async function updateQuiz(
   id: number,
-  changes: Pick<CreateQuizPayload, 'title' | 'description' | 'questions'>,
+  changes: Pick<CreateQuizPayload, 'title' | 'description' | 'questions'> & { version: number },
   ownerToken?: string
 ): Promise<ApiQuiz> {
   const response = await fetch(`${API_BASE}/quizzes/${id}`, {

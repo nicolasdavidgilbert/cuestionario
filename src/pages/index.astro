@@ -6,16 +6,18 @@ import { getAdsenseConfig } from '../lib/server/env'
 import LandingCourses from '../components/LandingCourses.jsx'
 import { neon } from '@neondatabase/serverless'
 import { getDatabaseUrl } from '../lib/server/env'
-import { getCourseName, getGradeInfo } from '../lib/curriculum'
+import { getCatalog, gradeInfo, subjectInfo, topicInfo, type Catalog } from '../lib/server/catalogService'
 
 const { client: adsenseClient, enabledByEnv: adsEnabledByEnv } = getAdsenseConfig()
 
 // Listado de temas renderizado en el servidor: el buscador se monta en el navegador,
 // así que sin esto la portada no enlazaría a ningún tema en el HTML.
 interface TopicRow { grado: string; course_id: string; unidad: string | null; title: string | null; question_count: number | null }
-let topicsByGrade: { grado: string; topics: { href: string; title: string; course: string; questions: number }[] }[] = []
+let topicsByGrade: { grado: string; name: string; topics: { href: string; title: string; course: string; questions: number }[] }[] = []
+let catalog: Catalog = { grades: [] }
 try {
   const sql = neon(getDatabaseUrl())
+  catalog = await getCatalog()
   const rows = await sql`
     SELECT DISTINCT ON (grado, course_id, COALESCE(NULLIF(unidad, ''), course_id))
       grado, course_id, unidad, title, json_array_length(questions::json) AS question_count
@@ -23,19 +25,28 @@ try {
     WHERE deleted_at IS NULL AND grado IS NOT NULL AND course_id IS NOT NULL
     ORDER BY grado, course_id, COALESCE(NULLIF(unidad, ''), course_id), created_at DESC, id DESC
   `
-  const grouped = new Map<string, { href: string; title: string; course: string; questions: number }[]>()
+  type Topic = { href: string; title: string; course: string; questions: number; order: [number, number] }
+  const grouped = new Map<string, Topic[]>()
   for (const row of rows as TopicRow[]) {
     const unit = row.unidad || row.course_id
+    const subject = subjectInfo(catalog, row.grado, row.course_id)
+    const topic = topicInfo(catalog, row.grado, row.course_id, unit, row.title || '')
     const list = grouped.get(row.grado) ?? []
     list.push({
       href: `/${row.grado}/${row.course_id}/${unit}`,
-      title: row.title || unit.toUpperCase(),
-      course: getCourseName(row.course_id),
-      questions: Number(row.question_count) || 0
+      title: topic.name,
+      course: subject.name,
+      questions: Number(row.question_count) || 0,
+      order: [subject.sort_order, topic.sort_order]
     })
     grouped.set(row.grado, list)
   }
-  topicsByGrade = Array.from(grouped, ([grado, topics]) => ({ grado, topics }))
+  // Orden administrado en el catálogo: cursos, asignaturas y temas.
+  topicsByGrade = Array.from(grouped, ([grado, topics]) => ({
+    grado,
+    name: gradeInfo(catalog, grado).name,
+    topics: topics.sort((a, b) => a.order[0] - b.order[0] || a.order[1] - b.order[1] || a.title.localeCompare(b.title, 'es'))
+  })).sort((a, b) => gradeInfo(catalog, a.grado).sort_order - gradeInfo(catalog, b.grado).sort_order)
 } catch (error) {
   console.error('SSR home topics error:', error)
 }
@@ -91,9 +102,9 @@ try {
           <h2 id="topics-heading">Tests de ASIR con soluciones explicadas</h2>
           <p>Cada tema incluye todas sus preguntas con la respuesta correcta y una explicación, y un test aleatorio para practicar.</p>
         </div>
-        {topicsByGrade.map(({ grado, topics }) => (
+        {topicsByGrade.map(({ grado, name, topics }) => (
           <section class="course-section">
-            <h3><a href={`/${grado}`}>{getGradeInfo(grado).name}</a></h3>
+            <h3><a href={`/${grado}`}>{name}</a></h3>
             <div class="unit-grid">
               {topics.map((topic) => (
                 <a href={topic.href} class="unit-card">

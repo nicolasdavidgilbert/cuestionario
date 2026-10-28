@@ -36,5 +36,14 @@ const devEnv = prodEnv
   .replace(/^DATABASE_URL=.*$/m, `DATABASE_URL="${pooledUrl}"`)
   .replace(/^DATABASE_URL_UNPOOLED=.*$/m, `DATABASE_URL_UNPOOLED="${directUrl}"`)
 
-await writeFile('.env', `# Base de datos: rama Neon '${BRANCH}'. Producción en .env.production.local\n${devEnv}`)
+// Variables solo locales que no vienen de producción: se conservan del .env actual.
+const LOCAL_ONLY = ['ADMIN_PASSWORD_HASH']
+const currentEnv = await readFile('.env', 'utf8').catch(() => '')
+const kept = LOCAL_ONLY
+  .filter((key) => !new RegExp(`^${key}=.+`, 'm').test(devEnv))
+  .map((key) => currentEnv.match(new RegExp(`^${key}=.+$`, 'm'))?.[0])
+  .filter(Boolean)
+const keptBlock = kept.length ? `\n# Conservado del .env anterior\n${kept.join('\n')}\n` : ''
+
+await writeFile('.env', `# Base de datos: rama Neon '${BRANCH}'. Producción en .env.production.local\n${devEnv.replace(/\n*$/, '\n')}${keptBlock}`)
 console.log(`.env actualizado: base de datos -> rama Neon '${BRANCH}' (${devEndpoint})`)

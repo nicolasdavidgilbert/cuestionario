@@ -1,7 +1,7 @@
 import useExitTransition from './useExitTransition'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import * as Sentry from '@sentry/astro'
-import { getQuizById, updateQuiz } from '../lib/api'
+import { ApiError, getQuizById, updateQuiz } from '../lib/api'
 import { getOwnerToken } from '../lib/ownerToken'
 import QuizQuestionEditor from './QuizQuestionEditor'
 import FloatingActions from './FloatingActions'
@@ -16,6 +16,7 @@ export default function EditQuiz({ id }) {
   const [loadError, setLoadError] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [conflict, setConflict] = useState(false)
   const [editorOpen, setEditorOpen] = useState(false)
   const editorTransition = useExitTransition(editorOpen)
   const saveButtonRef = useRef(null)
@@ -61,12 +62,19 @@ export default function EditQuiz({ id }) {
       await updateQuiz(Number(id), {
         title: title.trim(),
         description: description.trim(),
-        questions
+        questions,
+        version: quiz.version
       }, getOwnerToken())
       window.location.href = '/mis-cuestionarios'
     } catch (err) {
-      Sentry.captureException(err, { tags: { feature: 'edit-quiz-save' } })
-      setError('No se pudo guardar: ' + err.message)
+      // Otro guardado (otra pestaña o la administración) llegó antes: no se sobrescribe.
+      if (err instanceof ApiError && (err.code === 'version_conflict' || err.code === 'version_required')) {
+        setConflict(true)
+        setError(err.message)
+      } else {
+        Sentry.captureException(err, { tags: { feature: 'edit-quiz-save' } })
+        setError('No se pudo guardar: ' + err.message)
+      }
       setSaving(false)
     }
   }
@@ -149,7 +157,22 @@ export default function EditQuiz({ id }) {
           </button>
         </div>
 
-        {error && <div className="error-msg error-box">{error}</div>}
+        {error && (
+          <div className="error-msg error-box" role="alert">
+            {error}
+            {conflict && (
+              <div className="preview-actions" style={{ marginTop: 10 }}>
+                <button type="button" className="btn-secondary" onClick={() => {
+                  if (!window.confirm('Se descartarán tus cambios y se cargará la versión guardada. ¿Continuar?')) return
+                  setConflict(false)
+                  setError('')
+                  setLoading(true)
+                  loadQuiz()
+                }}>Cargar la versión guardada</button>
+              </div>
+            )}
+          </div>
+        )}
 
         <button ref={saveButtonRef} type="submit" disabled={saving} className="btn-submit">
           {saving ? 'Guardando...' : 'Guardar cambios'}

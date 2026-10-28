@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro'
+import AdminQuizEditor from '../../../components/admin/AdminQuizEditor.jsx'
+
+export const prerender = false
+
+---
+<AdminLayout title="Nuevo cuestionario" section="cuestionarios">
+  <AdminQuizEditor client:load  />
+</AdminLayout>

@@ -1,0 +1,17 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import AdminLogin from '../../components/admin/AdminLogin.jsx'
+import { getAdminSession } from '../../lib/server/adminAuth'
+
+export const prerender = false
+
+const requested = Astro.url.searchParams.get('next') || ''
+// Solo destinos del panel; volver a la página de acceso encadenaría redirecciones.
+const next = /^\/admin(\/|$|\?)/.test(requested) && !/^\/admin\/login(\/|$|\?)/.test(requested) ? requested : '/admin'
+// Con una sesión válida no tiene sentido volver a pedir la contraseña.
+const session = await getAdminSession(Astro.cookies).catch(() => null)
+if (session) return Astro.redirect(next, 303)
+---
+<AdminLayout title="Acceso" bare>
+  <AdminLogin client:load next={next} />
+</AdminLayout>

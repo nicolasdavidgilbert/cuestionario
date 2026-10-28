@@ -2,7 +2,7 @@
 import Layout from '../layouts/Layout.astro'
 import { neon } from '@neondatabase/serverless'
 import { getAdsenseConfig, getDatabaseUrl } from '../lib/server/env'
-import { getCourseInfo, getGradeInfo } from '../lib/curriculum'
+import { getCatalog, gradeInfo as findGradeInfo, subjectInfo, topicInfo, type Catalog } from '../lib/server/catalogService'
 import AdSenseAd from '../components/AdSenseAd'
 import { getFeedAdPositions } from '../lib/feedAds'
 
@@ -24,8 +24,10 @@ let courses: ServedCourse[] = []
 let courseCount = 0
 let unitCount = 0
 let catalogLoadFailed = false
+let names: Catalog = { grades: [] }
 try {
   const sql = neon(getDatabaseUrl())
+  names = await getCatalog()
   const rows = await sql`
     SELECT DISTINCT ON (course_id, COALESCE(NULLIF(unidad, ''), course_id))
       course_id, unidad, title, json_array_length(questions::json) AS question_count
@@ -46,11 +48,15 @@ try {
       courseCount += 1
     }
     if (!course.units.some((u) => u.id === unit)) {
-      course.units.push({ id: unit, title: row.title || '', questionCount: Number(row.question_count) || 0 })
+      course.units.push({ id: unit, title: topicInfo(names, grado || '', row.course_id, unit, row.title || '').name, questionCount: Number(row.question_count) || 0 })
       unitCount += 1
     }
   }
-  courses = Array.from(map.values())
+  // Orden administrado en el catálogo.
+  courses = Array.from(map.values()).sort((a, b) => subjectInfo(names, grado || '', a.id).sort_order - subjectInfo(names, grado || '', b.id).sort_order)
+  for (const course of courses) {
+    course.units.sort((a, b) => topicInfo(names, grado || '', course.id, a.id).sort_order - topicInfo(names, grado || '', course.id, b.id).sort_order || a.title.localeCompare(b.title, 'es'))
+  }
 } catch (error) {
   catalogLoadFailed = true
   console.error('SSR grado lookup error:', error)
@@ -63,7 +69,8 @@ const feedAdLayoutKey = import.meta.env.PUBLIC_ADSENSE_INFEED_LAYOUT_KEY || '-fc
 // Los anuncios se reparten por el listado completo (todas las asignaturas), no por cada una.
 const feedAdPositions = getFeedAdPositions(unitCount)
 const courseOffsets = courses.map((_, index) => courses.slice(0, index).reduce((sum, c) => sum + c.units.length, 0))
-const gradeInfo = getGradeInfo(grado || '')
+const gradeInfo = findGradeInfo(names, grado || '')
+const courseInfo = (courseId: string) => subjectInfo(names, grado || '', courseId)
 const gradoLabel = gradeInfo.name
 const totalQuestions = courses.reduce((sum, course) => sum + course.units.reduce((s, unit) => s + unit.questionCount, 0), 0)
 
@@ -107,10 +114,10 @@ if (catalogLoadFailed) {
           <p>{gradeInfo.description}</p>
           {hasContent && !catalogLoadFailed && (
             <dl class="more-info__list">
-              {courses.filter((course) => getCourseInfo(course.id).description).map((course) => (
+              {courses.filter((course) => courseInfo(course.id).description).map((course) => (
                 <div>
-                  <dt>{getCourseInfo(course.id).name}</dt>
-                  <dd>{getCourseInfo(course.id).description}</dd>
+                  <dt>{courseInfo(course.id).name}</dt>
+                  <dd>{courseInfo(course.id).description}</dd>
                 </div>
               ))}
             </dl>
@@ -127,7 +134,7 @@ if (catalogLoadFailed) {
       <section class="catalog-served" aria-label="Cuestionarios de este curso">
         {courses.map((course, courseIndex) => (
           <section class="course-section" id={course.id}>
-            <h2>{getCourseInfo(course.id).name}</h2>
+            <h2>{courseInfo(course.id).name}</h2>
             <div class="unit-grid">
               {course.units.map((unit, unitIndex) => (
                 <>

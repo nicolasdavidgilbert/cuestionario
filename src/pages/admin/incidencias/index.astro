@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro'
+import AdminIssues from '../../../components/admin/AdminIssues.jsx'
+
+export const prerender = false
+
+---
+<AdminLayout title="Incidencias" section="incidencias">
+  <AdminIssues client:load search={Astro.url.search} />
+</AdminLayout>

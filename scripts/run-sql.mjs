@@ -13,16 +13,43 @@ async function loadEnv() {
     if (separatorIndex === -1) continue
 
     const key = trimmed.slice(0, separatorIndex).trim()
-    const value = trimmed.slice(separatorIndex + 1).trim()
+    // env-dev.mjs escribe los valores entre comillas dobles
+    const value = trimmed.slice(separatorIndex + 1).trim().replace(/^"(.*)"$/, '$1')
     if (key && process.env[key] === undefined) process.env[key] = value
   }
 }
 
+// Divide por ';' fuera de comillas simples y comentarios '--', para que los textos del seed puedan contener ';'.
 function splitStatements(sqlText) {
-  return sqlText
-    .split(';')
+  const statements = []
+  let current = ''
+  let inString = false
+  let inComment = false
+
+  for (let index = 0; index < sqlText.length; index += 1) {
+    const char = sqlText[index]
+
+    if (inComment) {
+      if (char === '\n') inComment = false
+      current += char
+      continue
+    }
+    if (!inString && char === '-' && sqlText[index + 1] === '-') inComment = true
+    if (char === "'") inString = !inString
+
+    if (char === ';' && !inString && !inComment) {
+      statements.push(current)
+      current = ''
+    } else {
+      current += char
+    }
+  }
+  statements.push(current)
+
+  // Descarta trozos que solo contienen comentarios o espacios.
+  return statements
     .map((statement) => statement.trim())
-    .filter(Boolean)
+    .filter((statement) => statement.replace(/--.*$/gm, '').trim())
 }
 
 const file = process.argv[2]

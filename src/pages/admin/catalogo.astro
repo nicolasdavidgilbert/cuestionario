@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import AdminCatalog from '../../components/admin/AdminCatalog.jsx'
+
+export const prerender = false
+
+---
+<AdminLayout title="Catálogo" section="catalogo">
+  <AdminCatalog client:load  />
+</AdminLayout>

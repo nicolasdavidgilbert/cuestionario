@@ -25,8 +25,9 @@ export function isSensitiveAdPage(pathname: string) {
     return true
   }
 
-  // Pantallas de uso (resolver o editar un cuestionario propio): sin anuncios.
-  if (normalized.startsWith('/user-quiz/') || normalized.startsWith('/editar/')) {
+  // Panel de administración y pantallas de uso (resolver o editar un cuestionario propio): sin anuncios.
+  if (normalized === '/admin' || normalized.startsWith('/admin/')
+    || normalized.startsWith('/user-quiz/') || normalized.startsWith('/editar/')) {
     return true
   }
 

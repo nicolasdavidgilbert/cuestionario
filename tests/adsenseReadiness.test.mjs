@@ -60,10 +60,14 @@ test('dynamic public routes prevent soft-404 indexing', async () => {
 })
 
 test('new quizzes cannot silently collide on the same public URL', async () => {
+  // La comprobación vive en el servicio compartido por la web pública y el panel.
   const quizzesApi = await readProjectFile('src/pages/api/quizzes.ts')
+  const quizService = await readProjectFile('src/lib/server/quizService.ts')
 
-  assert.match(quizzesApi, /routeCollisionRows/)
-  assert.match(quizzesApi, /Ya existe un cuestionario publicado para ese grado, asignatura y unidad/)
+  assert.match(quizzesApi, /createQuiz\(/)
+  assert.match(quizService, /async function assertAvailable/)
+  assert.match(quizService, /'route_collision'/)
+  assert.match(quizService, /Ya existe un cuestionario publicado/)
 })
 
 test('sitemap includes database-backed public quiz routes and fails closed', async () => {

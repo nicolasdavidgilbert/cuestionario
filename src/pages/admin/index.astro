@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import AdminSummary from '../../components/admin/AdminSummary.jsx'
+
+export const prerender = false
+
+---
+<AdminLayout title="Resumen" section="resumen">
+  <AdminSummary client:load  />
+</AdminLayout>

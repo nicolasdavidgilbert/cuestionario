@@ -1,0 +1,15 @@
+---
+import AdminLayout from '../../../layouts/AdminLayout.astro'
+import AdminQuizEditor from '../../../components/admin/AdminQuizEditor.jsx'
+
+export const prerender = false
+
+const id = Number(Astro.params.id)
+if (!Number.isInteger(id) || id <= 0) return Astro.redirect('/admin/cuestionarios')
+const pregunta = Astro.url.searchParams.get('pregunta')
+// Pregunta seleccionada desde la búsqueda transversal (índice desde 0).
+const initialQuestion = pregunta !== null && /^\d+$/.test(pregunta) ? Number(pregunta) : null
+---
+<AdminLayout title="Editar cuestionario" section="cuestionarios">
+  <AdminQuizEditor client:load id={id} initialQuestion={initialQuestion} />
+</AdminLayout>

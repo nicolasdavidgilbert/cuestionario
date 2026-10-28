@@ -1,24 +1,20 @@
 import type { APIRoute } from 'astro'
 import * as Sentry from '@sentry/astro'
-import { neon } from '@neondatabase/serverless'
-import { getDatabaseUrl } from '../../../../lib/server/env'
-import { jsonResponse, serverErrorResponse } from '../../../../lib/server/http'
+import { getSql } from '../../../../lib/server/db'
+import { jsonResponse, noStore, serverErrorResponse } from '../../../../lib/server/http'
 import { rateLimit } from '../../../../lib/server/rateLimit'
 import { logAudit } from '../../../../lib/server/audit'
 
 export const prerender = false
 
-function getSql() {
-  return neon(getDatabaseUrl())
-}
-
+// Reportes públicos: entran como incidencias de contenido pendientes y con prioridad normal.
 export const POST: APIRoute = async ({ params, request }) => {
   try {
     const limitError = await rateLimit(request, { key: 'report-quiz', limit: 10, windowMs: 60 * 60 * 1000 })
     if (limitError) return limitError
 
     const id = Number(params.id)
-    if (isNaN(id)) return jsonResponse({ message: 'ID inválido' }, 400)
+    if (!Number.isInteger(id)) return jsonResponse({ message: 'ID inválido' }, 400)
 
     const body = await request.json().catch(() => ({}))
     const reason = typeof body.reason === 'string' ? body.reason.trim().slice(0, 500) : ''
@@ -32,13 +28,13 @@ export const POST: APIRoute = async ({ params, request }) => {
     if (existing.length === 0) return jsonResponse({ message: 'Cuestionario no encontrado' }, 404)
 
     const rows = await sql`
-      INSERT INTO quiz_reports (quiz_id, reason)
-      VALUES (${id}, ${reason})
-      RETURNING *
+      INSERT INTO quiz_reports (quiz_id, reason, kind, priority, status, updated_at)
+      VALUES (${id}, ${reason}, 'contenido', 'normal', 'pendiente', NOW())
+      RETURNING id, quiz_id, status, created_at
     `
 
-    await logAudit(sql, 'quiz_reported', { quiz_id: id })
-    return jsonResponse(rows[0], 201)
+    await logAudit(sql, 'quiz_reported', { quiz_id: id }, { entityType: 'issue', entityId: rows[0].id, actor: 'public' })
+    return noStore(jsonResponse(rows[0], 201))
   } catch (error) {
     console.error('POST quiz report error:', error)
     Sentry.captureException(error)

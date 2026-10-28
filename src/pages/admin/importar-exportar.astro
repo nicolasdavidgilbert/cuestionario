@@ -1,0 +1,10 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro'
+import AdminTransfer from '../../components/admin/AdminTransfer.jsx'
+
+export const prerender = false
+
+---
+<AdminLayout title="Importar / exportar" section="transferencia">
+  <AdminTransfer client:load  />
+</AdminLayout>

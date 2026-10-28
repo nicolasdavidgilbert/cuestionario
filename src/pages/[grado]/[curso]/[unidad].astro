@@ -3,7 +3,7 @@ import Layout from '../../../layouts/Layout.astro'
 import Quiz from '../../../components/Quiz.tsx'
 import { neon } from '@neondatabase/serverless'
 import { getDatabaseUrl } from '../../../lib/server/env'
-import { getCourseInfo, getGradeInfo } from '../../../lib/curriculum'
+import { getCatalog, gradeInfo as findGradeInfo, subjectInfo, topicInfo, type Catalog } from '../../../lib/server/catalogService'
 
 export const prerender = false
 
@@ -36,8 +36,10 @@ function hasRenderableQuestions(row: QuizRow | null): row is QuizRow {
 let quiz: QuizRow | null = null
 let quizLoadFailed = false
 let relatedUnits: { unidad: string; title: string }[] = []
+let names: Catalog = { grades: [] }
 try {
   const sql = neon(getDatabaseUrl())
+  names = await getCatalog()
   const rows = await sql`
     SELECT id, title, description, grado, course_id, unidad, questions
     FROM user_quizzes
@@ -62,7 +64,8 @@ try {
       ORDER BY unidad, created_at DESC, id DESC
     `
     relatedUnits = (related as { unidad: string; title: string | null }[])
-      .map((row) => ({ unidad: row.unidad, title: row.title || row.unidad.toUpperCase() }))
+      .map((row) => ({ unidad: row.unidad, title: topicInfo(names, grado || '', curso || '', row.unidad, row.title || '').name }))
+      .sort((a, b) => topicInfo(names, grado || '', curso || '', a.unidad).sort_order - topicInfo(names, grado || '', curso || '', b.unidad).sort_order)
   }
 } catch (error) {
   quizLoadFailed = true
@@ -79,10 +82,12 @@ if (quizLoadFailed || quizContentInvalid) {
   Astro.response.status = 404
 }
 
-const gradeInfo = getGradeInfo(grado || '')
-const courseInfo = getCourseInfo(curso || '')
+const gradeInfo = findGradeInfo(names, grado || '')
+const courseInfo = subjectInfo(names, grado || '', curso || '')
+const topic = topicInfo(names, grado || '', curso || '', unidad || '', quiz?.title || '')
 const questionCount = Array.isArray(quiz?.questions) ? quiz.questions.length : 0
-const readableTitle = quiz?.title || [unidad, curso, grado].filter(Boolean).join(' - ')
+// Nombre del tema administrado en el catálogo; si no existe, el título del cuestionario.
+const readableTitle = topic.name || [unidad, curso, grado].filter(Boolean).join(' - ')
 const title = `${readableTitle}: test con soluciones · ${courseInfo.name}`
 const description = (quiz?.description
   ? `${quiz.description} ${questionCount} preguntas tipo test con respuesta y explicación.`
@@ -143,7 +148,7 @@ const description = (quiz?.description
       curso={curso}
       unidad={unidad}
       quizId={renderableQuiz.id}
-      pageTitle={renderableQuiz.title || ''}
+      pageTitle={renderableQuiz.title || readableTitle}
       questions={renderableQuiz.questions}
       description={renderableQuiz.description || ''}
       gradeName={gradeInfo.name}

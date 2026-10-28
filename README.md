@@ -49,16 +49,22 @@ cuestionario/
 │   │   ├── useUnsavedChangesWarning.js
 │   │   ├── AdSenseAd.tsx / AdSenseManager.tsx / CookieConsentBanner.tsx
 │   │   ├── Landing.jsx           # FAQ_ITEMS de la portada
-│   │   └── Catalog.jsx           # Sin uso en ninguna página
+│   │   ├── Catalog.jsx           # Sin uso en ninguna página
+│   │   ├── ThemeInit.astro / ThemeSwitch.astro  # Tema claro/oscuro compartido con el panel
+│   │   └── admin/                # Islas React del panel /admin
 │   ├── layouts/
-│   │   └── Layout.astro          # Header, selector de tema, footer, SEO
+│   │   ├── Layout.astro          # Header, selector de tema, footer, SEO
+│   │   └── AdminLayout.astro     # Panel: navegación, noindex, sin anuncios
 │   ├── lib/
-│   │   ├── api.ts                # Cliente de API + caché en localStorage
-│   │   ├── curriculum.ts         # Nombres y descripciones de cursos y asignaturas
+│   │   ├── api.ts                # Cliente de API (caché en memoria de 60 s)
+│   │   ├── adminApi.ts           # Cliente del panel: CSRF, sesión caducada → login
 │   │   ├── motion.ts             # prefersReducedMotion / scrollBehavior
 │   │   ├── ads.ts / feedAds.ts   # Dónde se pueden servir anuncios y en qué posiciones
 │   │   ├── quizLimits.ts / quizValidator.ts / slug.ts / ownerToken.ts
-│   │   └── server/               # env, http, rateLimit, audit, hash, generateQuizFromPdf
+│   │   └── server/               # env, http, db, rateLimit, audit, hash, generateQuizFromPdf
+│   │                             # quizService, catalogService, issueService, transferService,
+│   │                             # adminAuth, adminSecurity, adminQueries, importPlan, csv
+│   ├── middleware.ts             # Protege /admin y /api/admin/*
 │   ├── pages/
 │   │   ├── index.astro           # Portada: buscador + todos los temas
 │   │   ├── cursos.astro          # Catálogo de cursos
@@ -69,15 +75,18 @@ cuestionario/
 │   │   ├── prompt.astro          # Prompt para generar JSON con IA
 │   │   ├── sobre.astro / contact.astro / privacy-policy.astro / terms.astro
 │   │   ├── sitemap.xml.ts
+│   │   ├── admin/                # Panel privado (ver «Panel de administración»)
 │   │   └── api/
 │   │       ├── quizzes.ts, quizzes/[id].ts, quizzes/[id]/report.ts
 │   │       ├── generate-quiz-from-pdf.ts
-│   │       ├── admin/export.ts
+│   │       ├── admin/            # login, logout, session, summary, catalog, quizzes, questions,
+│   │       │                     # issues, audit, export, import
 │   │       └── cron/cleanup-rate-limits.ts
 │   └── styles/
-│       └── global.css            # Todos los estilos y tokens de diseño
+│       ├── global.css            # Todos los estilos y tokens de diseño
+│       └── admin.css             # Estilos propios del panel
 ├── sql/                          # Migraciones (pnpm db:migrate)
-├── scripts/                      # run-sql.mjs, env-dev.mjs
+├── scripts/                      # run-sql, env-dev, inspect-db, admin-password, smoke-admin
 ├── tests/                        # node --test
 ├── neon-setup.sql                # Esquema inicial
 └── vercel.json                   # Cron diario de limpieza de rate limits
@@ -205,7 +214,7 @@ CREATE INDEX IF NOT EXISTS idx_user_quizzes_grado ON user_quizzes(grado);
 CREATE INDEX IF NOT EXISTS idx_user_quizzes_created ON user_quizzes(created_at DESC);
 ```
 
-Las migraciones actuales están en `sql/public-growth-practices.sql` y `sql/rate-limits.sql` (`pnpm db:migrate` ejecuta ambas).
+Las migraciones están en `sql/`: `pnpm db:migrate` ejecuta `public-growth-practices.sql`, `rate-limits.sql` y `admin-panel.sql` (todas idempotentes). Las restricciones que dependen de limpiar datos van aparte en `admin-panel-constraints.sql` (`pnpm db:constraints`); ver «Panel de administración».
 
 ### Variables de entorno
 
@@ -214,7 +223,8 @@ Las migraciones actuales están en `sql/public-growth-practices.sql` y `sql/rate
 | `DATABASE_URL`| Connection string de Neon|
 | `GROQ_API_KEY`| Clave de Groq para generar desde PDF |
 | `GROQ_MODEL`| Modelo de Groq, opcional |
-| `ADMIN_API_KEY`| Clave admin para export y borrados admin |
+| `ADMIN_PASSWORD_HASH`| Hash de la contraseña del panel `/admin` (`pnpm admin:password`). Sin ella el panel responde 503 |
+| `ADMIN_API_KEY`| Clave técnica para scripts (export y borrado por API). Nunca llega al navegador; sin ella esas rutas se deniegan |
 | `CRON_SECRET`| Protege `/api/cron/cleanup-rate-limits` |
 | `PUBLIC_ADSENSE_CLIENT` / `PUBLIC_ADSENSE_SLOT` | Cliente y bloque de AdSense |
 | `PUBLIC_ADSENSE_INFEED_SLOT` / `PUBLIC_ADSENSE_INFEED_LAYOUT_KEY` | Bloque in-feed de los listados (opcional) |
@@ -555,8 +565,9 @@ src/components/UserQuiz.jsx
 Qué hace:
 
 - Añade un formulario para reportar un cuestionario.
-- Guarda el motivo en `quiz_reports`.
+- Guarda el motivo en `quiz_reports` con estado `pendiente` y prioridad `normal`.
 - Registra auditoría del reporte.
+- Se gestionan como incidencias en `/admin/incidencias` (ver «Panel de administración»).
 
 Por qué:
 
@@ -577,11 +588,9 @@ Tabla:
 audit_logs
 ```
 
-Eventos actuales:
+Cada entrada guarda acción, entidad (`entity_type`, `entity_id`), actor (`admin`, `public`, `script`) y campos cambiados. Los cambios del panel se registran en la misma transacción que la escritura. Nunca se guardan tokens de propietario, contraseñas, sesiones ni notas internas.
 
-- `quiz_created`
-- `quiz_reported`
-- `quiz_soft_deleted`
+Se consulta en `/admin/auditoria`.
 
 Por qué:
 
@@ -599,10 +608,10 @@ src/pages/api/admin/export.ts
 Endpoint:
 
 ```text
-GET /api/admin/export
+GET /api/admin/export?type=content|catalog|quizzes|issues
 ```
 
-Requiere header:
+Requiere sesión del panel o, para scripts, el header:
 
 ```text
 x-admin-api-key: <ADMIN_API_KEY>
@@ -610,9 +619,11 @@ x-admin-api-key: <ADMIN_API_KEY>
 
 Exporta:
 
-- cuestionarios
-- reportes
-- últimos eventos de auditoría
+- `content`: JSON versionado (`cuestionarios-export`, versión 1) con catálogo y cuestionarios, reimportable
+- `catalog`: solo el catálogo
+- `quizzes` / `issues`: CSV para hojas de cálculo
+
+Nunca incluye tokens de propietario, credenciales ni sesiones.
 
 Por qué:
 
@@ -625,20 +636,25 @@ Archivos:
 
 ```text
 sql/public-growth-practices.sql
+sql/rate-limits.sql
+sql/admin-panel.sql
+sql/admin-panel-constraints.sql
 scripts/run-sql.mjs
 ```
 
-Comando:
+Comandos:
 
 ```bash
-pnpm db:migrate
+pnpm db:migrate       # migraciones aditivas e idempotentes
+pnpm db:constraints   # índice único de rutas y CHECK de estados (tras revisar pnpm db:inspect)
+pnpm db:inspect       # informe de solo lectura: esquema e inconsistencias
 ```
 
 Qué hace:
 
 - Lee `DATABASE_URL` desde `.env`.
-- Ejecuta las sentencias de `sql/public-growth-practices.sql`.
-- Crea columnas y tablas necesarias para soft delete, reportes, auditoría y deduplicación.
+- Ejecuta las sentencias en orden; el separador respeta comillas y comentarios.
+- Crea columnas y tablas necesarias para soft delete, reportes, auditoría, deduplicación, catálogo, sesiones del panel y versiones.
 
 Por qué:
 
@@ -660,6 +676,16 @@ pnpm test
 | `tests/adsenseReadiness.test.mjs` | `ads.txt`, `robots.txt`, páginas legales enlazadas, soft-404, sitemap, sin anuncios en páginas sensibles |
 | `tests/feedAds.test.mjs` | Posiciones de los anuncios in-feed en los listados |
 | `tests/uxBehavior.test.mjs` | Borrado con deshacer (deshacer, expirar, reemplazar, error de API, salir de la página) y scroll con movimiento reducido |
+| `tests/adminSecurity.test.mjs` | Contraseña (scrypt), sesión, cookie, rutas protegidas, origen, filtro de secretos, CSV |
+| `tests/importPlan.test.mjs` | Clasificación de importaciones: nuevo, actualización, conflicto de versión/ruta, papelera, errores |
+
+Los tests importan TypeScript directamente gracias a `tests/helpers/register.mjs`.
+
+Prueba de humo del panel contra un servidor en marcha (crea y limpia el curso `zz-smoke`):
+
+```bash
+ADMIN_PASSWORD=... ADMIN_API_KEY=... node scripts/smoke-admin.mjs http://localhost:4321
+```
 
 Por qué:
 
@@ -760,6 +786,57 @@ Las buenas prácticas añadidas controlan daños sin bloquear el uso:
 - Auditoría ayuda a investigar.
 - Export facilita backups.
 - Token local permite gestión básica sin login.
+
+---
+
+## Panel de administración
+
+Panel privado en `/admin` para una sola cuenta con contraseña (sin registro). No lleva anuncios, se marca `noindex` y `robots.txt` lo excluye.
+
+| Página | Para qué |
+| --- | --- |
+| `/admin` | Resumen: totales, incidencias abiertas, últimos cambios |
+| `/admin/catalogo` | Cursos, asignaturas y temas: nombre, descripción y orden. Los identificadores forman la URL y no cambian. Borrar algo con contenido exige reasignarlo antes |
+| `/admin/cuestionarios` | Buscar, filtrar y editar cualquier cuestionario (también moverlo de tema) |
+| `/admin/preguntas` | Búsqueda en todas las preguntas; abre el editor en la pregunta encontrada |
+| `/admin/incidencias` | Reportes de usuarios e incidencias propias: estado, prioridad, notas internas |
+| `/admin/papelera` | Restaurar cuestionarios. No hay borrado definitivo desde el panel |
+| `/admin/auditoria` | Historial de cambios |
+| `/admin/importar-exportar` | Exportación JSON/CSV e importación con vista previa |
+
+### Configuración
+
+```bash
+pnpm db:migrate          # crea catálogo, sesiones, versiones e incidencias
+pnpm admin:password      # pide la contraseña y muestra el hash
+```
+
+Pon el hash en `ADMIN_PASSWORD_HASH` (en `.env` y en Vercel, por entorno). Para cambiar la contraseña se genera otro hash; las sesiones abiertas se cierran con «Cerrar todas las sesiones», en la barra lateral.
+
+### Seguridad
+
+- Sesión en cookie `HttpOnly`, `SameSite=Strict` (`__Host-` y `Secure` en HTTPS), 8 horas; en la base solo se guarda su hash.
+- Escrituras: mismo origen y token CSRF por sesión.
+- Acceso limitado a 5 intentos fallidos por IP cada 15 minutos.
+- `ADMIN_API_KEY` solo sirve para scripts; el panel nunca la usa ni la envía.
+
+### Ediciones concurrentes
+
+Cada cuestionario tiene `version`. Guardar con una versión antigua devuelve 409 y el editor ofrece cargar la versión actual. Lo mismo vale para la edición pública con token de propietario.
+
+### Importar
+
+1. Sube un JSON exportado. La vista previa clasifica cada registro: nuevo, actualización, sin cambios, conflicto o error. No escribe nada.
+2. Las actualizaciones se marcan una a una. Los conflictos (versión cambiada, ruta ocupada, duplicado, en papelera) y los errores nunca se escriben.
+3. Se escribe en lotes de 100, cada uno en una transacción: si falla un registro, el lote entero se revierte y se informa.
+
+### Pendiente antes de `db:constraints`
+
+`pnpm db:inspect` lista inconsistencias (rutas con varios cuestionarios activos, hashes vacíos, cuestionarios fuera de límites). Nada se borra ni se fusiona automáticamente: resuélvelas desde el panel (mover o enviar a la papelera) y después ejecuta `pnpm db:constraints`.
+
+### Recuperación
+
+Antes de migrar producción, crea una rama o anota la hora. Si algo sale mal: consola de Neon → Branches → *Restore* (instant restore a un momento anterior). En `dev`: **Reset from parent**.
 
 ---
 
